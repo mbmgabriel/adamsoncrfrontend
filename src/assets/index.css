@@ -1,0 +1,21 @@
+/* * {
+  font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans",
+  Garamond,serif,
+  "Helvetica Neue", Arial, sans-serif;
+  } */
+
+  input::placeholder {
+    font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans",
+      "Helvetica Neue", Arial, sans-serif !important;
+  }
+  
+  body{
+    --primary-color: #7daafb;
+    margin: 0;
+    background-color: #F5F5F5;
+  }
+  
+  
+
+
+  
