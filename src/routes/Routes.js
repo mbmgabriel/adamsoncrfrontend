@@ -5,10 +5,7 @@ import {
   Routes
 } from "react-router-dom";
 import Home from '../views//Home'
-
-
 export default function Routing() {
-
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -20,7 +17,6 @@ export default function Routing() {
       setLoading(false)
     }
   }, [])
-
 
   return (
     <div className="content">
@@ -39,9 +35,6 @@ export default function Routing() {
               </>
             )
           } */}
-          
-
-          
         </Routes>
       </BrowserRouter>
     </div>
