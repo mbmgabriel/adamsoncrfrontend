@@ -1,0 +1,36 @@
+
+#parentM li a:hover{
+  color: #274cc8  !important;
+  border-radius: 10px;
+  padding-left: 2rem;
+}
+#parentM li a:active{
+  background-color: transparent !important;
+}
+.border-r{
+  border-radius: 0px 40px 0px 0px !important;
+}
+.school_logo{
+  width: 5vw;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.dash-list{
+  font-size:20px !important;
+  color: #666362 !important;
+  margin-left: 0.5rem !important;
+}
+.nav-pills .nav-link.active{
+  background-color: transparent !important;
+  color: #274cc8 !important; 
+}
+.side-dropdown{
+  float: right !important;
+}
+
+.list{
+  background-color: #fbfbfb;
+  margin-left: 2rem;
+  margin-right: 1rem;
+
+}

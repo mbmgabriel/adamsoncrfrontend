@@ -5,6 +5,10 @@ import {
   Routes
 } from "react-router-dom";
 import Home from '../views//Home'
+import AuthRoute from "./components/AuthRoute";
+import PrivateRoute from "./components/PrivateRoute";
+import Dashboard from '../views/Dashboard/Dashboard'
+
 export default function Routing() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -23,7 +27,7 @@ export default function Routing() {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Home/>}/>
-
+          <Route path='/dashboard' element={<Dashboard/>} />
           {/* {
             !loading && isLoggedIn ? (
               <>

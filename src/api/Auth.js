@@ -15,9 +15,4 @@ export default class Auth extends Base {
     });
   };
 
-  theme = async () => {
-    return this.sendRequest({
-      path: `/api/School/Theme`,
-    });
-  };
 }
