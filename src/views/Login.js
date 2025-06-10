@@ -1,144 +1,151 @@
-import React, { useEffect, useState, useContext } from "react";
-import {Col, Row, Form, Container, InputGroup, Button} from 'react-bootstrap'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faEnvelope} from '@fortawesome/free-solid-svg-icons'
-import {faLock} from '@fortawesome/free-solid-svg-icons'
-import { faEye, faSchoolCircleExclamation } from '@fortawesome/free-solid-svg-icons'
-import { faEyeSlash} from '@fortawesome/free-solid-svg-icons'
-import { useHistory } from 'react-router-dom'
-import { UserContext } from '../context/UserContext'
-import Swal from 'sweetalert2';
-import errorIcon from '../assets/icons/error.gif';
-
-import admin from '../assets/icons/admin.svg'
-import logo from '../assets/icons/logo.png'
-import Auth from "../api/Auth";
+import React, { useState } from "react";
+import { Button, Form } from "react-bootstrap";
+import { FaLock, FaEyeSlash, FaEye, FaUser } from "react-icons/fa";
+import { TiInfoOutline } from "react-icons/ti";
+import Logo from "../assets/image/CRD_Logo.jpg";
+import CustomModal from "../components/Modal/CustomModal";
+import ForgotPassword from "./ForgotPassword/ForgotPassword";
+import ConfirmationButton from "../components/Buttons/ConfirmationButton";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [password, setPassword] = useState('')
-  const [username, setUserName] = useState('')
-  const [schoolCode, setSchoolCode] = useState('')
   const [showPassword, setShowPassword] = useState(false);
-  const history = useHistory()
+  const [privacyModal, setPrivacyModal] = useState(false);
+  const [accountResetModal, setAccountResetModal] = useState(false);
+  const [forgotPasswordModal, setForgotPasswordModal] = useState(false)
+  const navigate = useNavigate();
 
-  const userContext = useContext(UserContext);
-  const {user, refreshUser} = userContext.data
+  const onHide = () => setForgotPasswordModal(false)
 
-  const handleLogin = async(e) => {
-    e.preventDefault()
-    const data = {
-      "username": username,
-      "password": password,
-      "schoolCode": schoolCode
-    }
-    const response = await new Auth().login(data)
-    if(response.ok){
-      localStorage.setItem("token", response?.data?.token)
-      localStorage.setItem("userId", response?.data?.id)
-      localStorage.setItem('roleName', response?.data?.roleCode )
-      localStorage.setItem('roleId', response?.data?.roleId )
-      refreshUser()
-    }else{
-      Swal.fire({
-      imageUrl: errorIcon, 
-      imageWidth: 200,  
-      imageHeight: 200,
-      title: 'ERROR', 
-        text: 'Invalid credentials, please try again.',  
-        confirmButtonText: 'TRY AGAIN',
-        customClass: {
-          popup: 'custom-swal-popup',  
-          title: 'custom-swal-title',  
-          content: 'custom-swal-text',
-          confirmButton: 'custom-confirm-button' 
-      }
-      });
-    }
-  }
+  const privacyAndTerms = () => (
+    <CustomModal
+      title="Privacy and Terms of Use"
+      size="xl"
+      onClose={() => setPrivacyModal(false)}
+    >
+      <div>
+        <h5>Who may use the services?</h5>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+          velit sem, posuere eu libero eu, condimentum finibus nisi. In luctus
+          id ipsum ut gravida. Cras nibh erat, varius ut neque non, laoreet
+          pharetra urna. Etiam interdum venenatis ultrices. Mauris quis
+          sollicitudin arcu. Aliquam vitae dignissim massa. Nam id orci sit amet
+          velit condimentum rhoncus. Sed eget ex hendrerit, aliquam elit ut,
+          pharetra lacus. Integer rutrum, libero quis imperdiet venenatis, purus
+          magna efficitur risus, non fermentum sem dui vitae ante. Fusce a ex
+          nec magna tincidunt aliquet.
+        </p>
+        <h5>Privacy</h5>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+          velit sem, posuere eu libero eu, condimentum finibus nisi. In luctus
+          id ipsum ut gravida. Cras nibh erat, varius ut neque non, laoreet
+          pharetra urna. Etiam interdum venenatis ultrices. Mauris quis
+          sollicitudin arcu. Aliquam vitae dignissim massa. Nam id orci sit amet
+          velit condimentum rhoncus. Sed eget ex hendrerit, aliquam elit ut,
+          pharetra lacus. Integer rutrum, libero quis imperdiet venenatis, purus
+          magna efficitur risus, non fermentum sem dui vitae ante. Fusce a ex
+          nec magna tincidunt aliquet.
+        </p>
+      </div>
+    </CustomModal>
+  );
+
+  const accountReset = () => (
+    <CustomModal
+      title="Account Reset or Reactivation"
+      size="xl"
+      onClose={() => setAccountResetModal(false)}
+    >
+      <div className="account_reset">
+        <div className="info_icon">
+          <TiInfoOutline />
+        </div>
+        <div>
+          For reset or reactivation concern on your AdU CRD - REMAP account,
+          send an e-mail to <b>adu_crd@adamson.edu.ph</b> your ID number & full
+          name from 8-5pm Monday - Friday only.
+        </div>
+      </div>
+      <div className="center">
+        <ConfirmationButton label="Ok" onProceed={() => setAccountResetModal(false)} />
+      </div>
+    </CustomModal>
+  );
 
 
 
-  const handleClickLogin = () =>{
-    history.push('/dashboard')
+  return (
+    <div className="login_container">
+      <div className="login_logo">
+        <img src={Logo} alt="logo" className="logo" />
+        <h1 className="text-center login_title">Research Management Portal</h1>
+      </div>
+      <div className="login_form_container">
+        <Form className="login_form">
+          <h3>Welcome Back! Please Sign In your credentials to start.</h3>
 
-  } 
+          <Form.Group style={{ position: "relative" }}>
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              className="password_input"
+              type="text"
+              placeholder="(Enter you username)"
+            />
+            <span className="input_icon">
+              <FaUser />
+            </span>
+          </Form.Group>
 
-  // console.log('user:', user)
-
-    return (
-      <Container fluid>
-        <Row>
-          <Col sm={12} md={12} lg={6} xl={6}>
-            <div className='left-side'>
-              <div className='form-container'>
-                <h1 className="school-title"> <img src={logo} className='school-logo' /> HeadStart University</h1>
-                <Form onSubmit={(e) => handleLogin(e)} className='form'>
-                  <InputGroup className='mb-2' controlId="formBasicUsername">
-                    <div className="icon">
-                      <FontAwesomeIcon icon={faEnvelope} />
-                    </div>
-                    <Form.Control
-                      required
-                      type="text"
-                      placeholder="Email or username"
-                      className="icon-input"
-                      onChange={(e) => setUserName(e.target.value)}
-                    />
-                  </InputGroup>
-                  <InputGroup className="mb-2">
-                    <div className="icon">
-                      <FontAwesomeIcon icon={faLock} />
-                    </div>
-                    <Form.Control
-                      required
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Password"
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <span className="password-toggle-icon" onClick={() => setShowPassword(!showPassword)}>
-                      <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} />
-                    </span>
-                  </InputGroup>
-                  <InputGroup className='mb-2' controlId="formBasicUsername">
-                    <div className="icon">
-                      <FontAwesomeIcon icon={faSchoolCircleExclamation} />
-                    </div>
-                    <Form.Control
-                      required
-                      type="text"
-                      placeholder="School Code"
-                      className="icon-input"
-                      onChange={(e) => setSchoolCode(e.target.value)}
-                    />
-                  </InputGroup>
-
-                  <Form.Group className='mt-4 text-center'>
-                    <Button className='submit-btn' type='submit'>LOGIN</Button>
-                  </Form.Group>
-                </Form>
-
-              </div>
-            </div>
-          </Col>
-
-          <Col className='right-side' sm={12} md={12} lg={6} xl={6}>
-              <img src={admin} alt='' className='right-image' />
-          </Col>
-        </Row>
-
-        <Row>
-        <Col className='footer-col' sm={12} md={12} lg={12} xl={12}>
-          <div class="container mt-3">
-            <footer class="footer text-center">
-              <p class="mb-0">&copy;2019 All Rights Reserved. HeadStart University</p>
-            </footer>
+          <Form.Group style={{ position: "relative" }}>
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              className="password_input"
+              type={showPassword ? "text" : "password"}
+              placeholder="(Enter you password)"
+            />
+            <span
+              className="show_password_icon"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEye /> : <FaEyeSlash />}
+            </span>
+            <span className="input_icon">
+              <FaLock />
+            </span>
+          </Form.Group>
+          <div>
+          <p className="forgot_password" onClick={() => setForgotPasswordModal(true)}>Forgot Password?</p>
           </div>
-        </Col>
-      </Row>
 
-      </Container>
-    );
+          <Button className="primary" onClick={() => navigate('/dashboard')}> Sign In</Button>
+          <Button className="secondary">Sign In with Outlook</Button>
+
+          <div className="between">
+            <span 
+            onClick={() => setPrivacyModal(true)}
+            className="login-hover">
+              Privacy and Terms of Use
+            </span>
+            <span
+              onClick={() => setAccountResetModal(true)}
+              className="text-end login-hover"
+            >
+              Account Reset or Reactivation
+            </span>
+          </div>
+        </Form>
+      </div>
+
+      {privacyModal && privacyAndTerms()}
+      {accountResetModal && accountReset()}
+      {forgotPasswordModal && 
+      <ForgotPassword
+      onHide={() => onHide()}
+       />}
+    </div>
+  );
 }
 
 export default Login;
-

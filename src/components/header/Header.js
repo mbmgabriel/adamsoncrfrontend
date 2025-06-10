@@ -1,50 +1,73 @@
 import React from 'react'
-import { Container, Navbar, Col, Dropdown } from 'react-bootstrap'
-import schoolLogo from '../../assets/icons/logo8.png'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSearch } from '@fortawesome/free-solid-svg-icons'
-import { faBars } from '@fortawesome/free-solid-svg-icons'
-import user from '../../assets/icons/user.svg'
+import Logo from '../../assets/image/crd-logo.png'
+import { IoIosSearch } from "react-icons/io";
+import { Form, InputGroup } from 'react-bootstrap'
+import { useNavigate } from 'react-router-dom'; 
 
-function Header() {
-
-  const logout = async () => {
-    await window.localStorage.clear()
-    window.location.href = "/";
-  }
-
-
+function Header({activeHeader}) {
+  const navigate = useNavigate();
+  const navData = [
+    {
+      name: 'Home',
+      path: '/dashboard',
+    },
+    {
+      name: 'Research Proposal',
+      path: '/'
+    },
+    {
+      name: 'Research Presentation and Publication',
+      path: '/'
+    },
+    {
+      name: 'FAQs',
+      path: '/'
+    },
+    {
+      name: 'About CRD',
+      path: '/'
+    },
+  ]
   return (
-    <Navbar expand="lg" className='top-header'>
-      <Container fluid className="justify-content-between">
-        <div className="d-flex">
-          <Navbar.Brand >
-            <FontAwesomeIcon icon={faBars} />
-          </Navbar.Brand>
-          {/* <form className="input-group w-auto my-auto d-none d-sm-flex">
-            <input
-              autoComplete="off"
-              type="search"
-              className="form-control"
-              placeholder="Search for..."
-            />
-            <span className="input-group-text border-0 d-none d-lg-flex">
-              <FontAwesomeIcon icon={faSearch} />
-            </span>
-          </form> */}
+    <div className='header'>
+      <div className='top-header'>
+        <div className='school_logo'>
+          <img src={Logo} alt='logo' className='logo' />
+          <div className='text-container'>
+            <span className='school_name'>Adamson University <br />
+              Center for Research and Development</span>
+            <p className='site_name'>Research Management Portal</p>
+          </div>
         </div>
-        <Dropdown className='header-top'>
-          <Dropdown.Toggle className='user-dropdown'>
-            <img src={user} height="50" />
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            <Dropdown.Item> Profile</Dropdown.Item>
-            <Dropdown.Item onClick={() => logout()} > Log Out</Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown>
-
-      </Container>
-    </Navbar>
+        <div className='search-div'>
+          <InputGroup className="mb-3">
+            <InputGroup.Text><IoIosSearch className='icon' /></InputGroup.Text>
+            <Form.Control
+              className='header-search'
+              placeholder="(Search within AdU-CRD REMAP)"
+              aria-label="Username"
+              aria-describedby="basic-addon1"
+            />
+          </InputGroup>
+        </div>
+      </div>
+      <div className='header_nav'>
+        <div className='nav_bar'>
+          {navData.map((item) => {
+            return (
+              <div className={activeHeader === item.name ? `nav-pill-active` : `nav-pill`}
+              onClick={() => navigate(item.path)}>{item.name}</div>
+            )
+          })}
+        </div>
+      </div>
+      <div className='header_title'>
+        <div className='title_container'>
+          <h1 className='title'>Take the lead</h1>
+          <span className='sub'>— write, present, and publish your research to inspire change and drive innovation.</span>
+        </div>
+      </div>
+    </div>
   )
 }
 

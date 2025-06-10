@@ -4,10 +4,10 @@ import {
   Route,
   Routes
 } from "react-router-dom";
-import Home from '../views//Home'
-import AuthRoute from "./components/AuthRoute";
-import PrivateRoute from "./components/PrivateRoute";
+// import AuthRoute from "./components/AuthRoute";
+// import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from '../views/Dashboard/Dashboard'
+import Login from "../views/Login";
 
 export default function Routing() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -15,8 +15,8 @@ export default function Routing() {
 
   useEffect(() => {
     const token = window.localStorage.getItem("token")
-    console.log({token})
-    if(token != null){
+    console.log({ token })
+    if (token != null) {
       setIsLoggedIn(true)
       setLoading(false)
     }
@@ -26,8 +26,8 @@ export default function Routing() {
     <div className="content">
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<Home/>}/>
-          <Route path='/dashboard' element={<Dashboard/>} />
+          <Route path='/' element={<Login />} />
+          <Route path='/dashboard' element={<Dashboard />} />
           {/* {
             !loading && isLoggedIn ? (
               <>

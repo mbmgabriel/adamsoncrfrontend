@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Route } from 'react-router'
 import { UserContext } from '../../context/UserContext'
 

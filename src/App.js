@@ -5,7 +5,7 @@ import UserContextProvider from "./context/UserContext";
 export default function App() {
   return (
     <UserContextProvider >
-    <Routes/>
-  </UserContextProvider>
+      <Routes />
+    </UserContextProvider>
   );
 }

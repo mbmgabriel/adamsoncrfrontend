@@ -21,7 +21,7 @@ export default class Base {
     console.info('%cNew connection has established', 'color: red');
     console.log({config, url, data});
 
-    if (method != 'GET') {
+    if (method !== 'GET') {
       config.body = JSON.stringify(data);
     }
     let response = await fetch(url, config)

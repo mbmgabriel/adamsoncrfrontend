@@ -1,9 +1,94 @@
-import '../../assets/index.css';
-import React, { useEffect, useState } from "react";
+import React from "react";
+import MainContainer from "../../components/Layout/MainContainer";
+import CardCustom from "../../components/Card/CardCustom";
+import { MdAssignmentAdd } from "react-icons/md";
+import { FaFileCircleCheck } from "react-icons/fa6";
+import { FaChalkboardTeacher } from 'react-icons/fa';
+import { HiGiftTop } from "react-icons/hi2";
+import Notifications from "./component/Notifications";
 
 function Dashboard() {
+
+    const cardContent = [
+        {
+            icon: <MdAssignmentAdd />,
+            title: 'Write your new research proposals.',
+            footer: 'New Research Application'
+        },
+        {
+            icon: <FaFileCircleCheck />,
+            title: 'Have your completed research cleared.',
+            footer: 'Research Clearance Application'
+        },
+        {
+            icon: <FaChalkboardTeacher />,
+            title: 'Ask Research Presentation Assistance.',
+            footer: 'Research Paper Presentation Request for Assistance Application'
+        },
+        {
+            icon: <HiGiftTop />,
+            title: 'Receive Research Incentives',
+            footer: 'New Research Application'
+        },
+    ]
+
+    const notificationsData = [
+        {
+            date: 'April 3, 2025',
+            time: '10:30 PM',
+            description: 'A new remark on your applied new research proposal entitled “Research Title”.'
+        },
+        {
+            date: 'March 24, 2025',
+            time: '1:56 PM',
+            description: 'The college dean has endorsed your new research proposal.'
+        },
+        {
+            date: 'March 23, 2025',
+            time: '11:30 AM',
+            description: 'The department chairperson has endorsed your new research proposal.'
+        },
+        {
+            date: 'March 15, 2025',
+            time: '9:00 AM',
+            description: 'The research coordinator has endorsed your new research proposal.'
+        },
+        {
+            date: 'April 3, 2025',
+            time: '10:30 PM',
+            description: 'A new remark on your applied new research proposal entitled “Research Title”.'
+        },
+        {
+            date: 'March 24, 2025',
+            time: '1:56 PM',
+            description: 'The college dean has endorsed your new research proposal.'
+        },
+        {
+            date: 'March 23, 2025',
+            time: '11:30 AM',
+            description: 'The department chairperson has endorsed your new research proposal.'
+        },
+        {
+            date: 'March 15, 2025',
+            time: '9:00 AM',
+            description: 'The research coordinator has endorsed your new research proposal.'
+        },
+    ]
+
+
     return (
-    <div className=''>Dashboard</div>
+        <MainContainer activeHeader={'Home'}>
+            <div className="home">
+                <div className="card-holder">
+                    {cardContent.map((item) => (
+                        <CardCustom icon={item.icon} title={item.title} footer={item.footer} />
+                    ))}
+                </div>
+                <div className="center notification-holder">
+                    <Notifications item={notificationsData} />
+                </div>
+            </div>
+        </MainContainer>
     );
 }
 
