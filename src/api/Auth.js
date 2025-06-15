@@ -3,15 +3,15 @@ import Base from './Base';
 export default class Auth extends Base {
   login = async data => {
     return this.sendRequest({
-      path: `/api/Login`,
+      path: `/api/v1/user/login`,
       method: 'POST',
       data,
     });
   };
 
-  profile = async () => {
+  profile = async (id) => {
     return this.sendRequest({
-      path: `/api/Login`,
+      path: `/api/v1/user/${id}`,
     });
   };
 

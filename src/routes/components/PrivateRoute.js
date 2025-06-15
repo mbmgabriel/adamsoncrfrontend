@@ -1,22 +1,14 @@
-import React, { useContext, useEffect } from 'react'
-import { Route } from 'react-router'
-import { UserContext } from '../../context/UserContext'
+import React from "react";
+import { Route, Redirect } from "react-router-dom";
 
-export default function PrivateRoute(props) {
-
-  const userContext = useContext(UserContext)
-  const {user} = userContext.data
-
-  useEffect(() => {
-    if(user == null){
-     window.location.href = '/'
-     return 
-    }
-  }, [user])
-
-  if(user != null) return (
-    <Route {...props}/>
-  )
-
-  return <div/>
+export function PrivateRoute({ component: Component, ...rest }) {
+  const token = window.localStorage.getItem("token");
+  return (
+    <Route
+      {...rest}
+      render={props =>
+        token ? <Component {...props} /> : <Redirect to="/" />
+      }
+    />
+  );
 }

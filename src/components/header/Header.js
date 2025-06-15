@@ -2,10 +2,10 @@ import React from 'react'
 import Logo from '../../assets/image/crd-logo.png'
 import { IoIosSearch } from "react-icons/io";
 import { Form, InputGroup } from 'react-bootstrap'
-import { useNavigate } from 'react-router-dom'; 
+import { useHistory } from 'react-router-dom'; 
 
 function Header({activeHeader}) {
-  const navigate = useNavigate();
+  const history = useHistory();
   const navData = [
     {
       name: 'Home',
@@ -56,7 +56,7 @@ function Header({activeHeader}) {
           {navData.map((item) => {
             return (
               <div className={activeHeader === item.name ? `nav-pill-active` : `nav-pill`}
-              onClick={() => navigate(item.path)}>{item.name}</div>
+              onClick={() => history.push(item.path)}>{item.name}</div>
             )
           })}
         </div>
