@@ -1,16 +1,13 @@
-const BASE_URL = "https://api.vetdrums.org"
+const BASE_URL = "https://adamsoncr.tekteachlms.com"
 export default class Base {
   sendRequest = async ({path, method = 'GET', data = {}, base, headers}) => {
     let url = base ? base + path : BASE_URL + path;
-    var subdomain = window.location.host.split('.')[0]
 
     let config = {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        // 'X-LMS-KEY': `Web|${subdomain.includes("localhost") ? 'dev' : subdomain }.vetdrums.org`,
-        'X-LMS-KEY': `Web|${subdomain.includes("vetdrums") ? 'dev' : subdomain }.vetdrums.org`,
         Authorization: `Bearer ${await window.localStorage.getItem("token")}`,
       },
       method: method,

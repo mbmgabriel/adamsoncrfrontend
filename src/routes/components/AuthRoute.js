@@ -1,33 +1,14 @@
-import React, { useContext, useEffect } from 'react'
-import { Route } from 'react-router'
-import { UserContext } from '../../context/UserContext'
+import React from "react";
+import { Route, Redirect } from "react-router-dom";
 
-export default function AuthRoute(props) {
-
-  const userContext = useContext(UserContext)
-  const {user} = userContext.data
-
-  useEffect(() => {
-    if(user != null){
-      // if(user.isSystemAdmin) return window.location.href = "/dashboard"
-       return window.location.href = "/dashboard"
-
-      
-    // if(user.isTeacher && user.isAssessment_status == "true" )  return window.location.href = "/dashboard"
-
-    // if(user.isTeacher && user.isAssessment_status == "false") return window.location.href = "/assessmentpage1"
-      
-      // if(user.isTeacher && user.isAssessment_status){
-      //   return window.location.href = "/dashboard"
-      // }else{
-      //   if
-      // }
+export function AuthRoute({ component: Component, ...rest }) {
+  const token = window.localStorage.getItem("token");
+  return (
+    <Route
+      {...rest}
+      render={props =>
+        !token ? <Component {...props} /> : <Redirect to="/dashboard" />
       }
-  }, [user])
-
-  if(user == null) return (
-    <Route {...props}/>
-  )
-  return <div/>
-
+    />
+  );
 }

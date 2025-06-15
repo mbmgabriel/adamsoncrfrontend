@@ -1,46 +1,34 @@
 import React, { useEffect, useState } from "react";
 import {
-  BrowserRouter,
-  Route,
-  Routes
+  BrowserRouter as Router,
+  Switch
 } from "react-router-dom";
-// import AuthRoute from "./components/AuthRoute";
-// import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from '../views/Dashboard/Dashboard'
 import Login from "../views/Login";
+import { AuthRoute } from "./components/AuthRoute";
+import { PrivateRoute } from "./components/PrivateRoute";
 
 export default function Routing() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = window.localStorage.getItem("token")
-    console.log({ token })
-    if (token != null) {
-      setIsLoggedIn(true)
-      setLoading(false)
-    }
-  }, [])
+    const token = window.localStorage.getItem("token");
+    console.log({ token });
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="content">
-      <BrowserRouter>
-        <Routes>
-          <Route path='/' element={<Login />} />
-          <Route path='/dashboard' element={<Dashboard />} />
-          {/* {
-            !loading && isLoggedIn ? (
-              <>
-                <Route path='/home' element={<Home/>}/>
-              </>
-            ) : (
-              <>
-                <Route path='/home' element={<Home/>}/>
-              </>
-            )
-          } */}
-        </Routes>
-      </BrowserRouter>
+      <Router>
+        <Switch>
+          <AuthRoute path='/' exact component={Login} />
+          <PrivateRoute path='/dashboard' exact component={Dashboard} />
+        </Switch>
+      </Router>
     </div>
   );
 }

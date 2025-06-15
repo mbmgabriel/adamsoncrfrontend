@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Button, Form } from "react-bootstrap";
 import { FaLock, FaEyeSlash, FaEye, FaUser } from "react-icons/fa";
 import { TiInfoOutline } from "react-icons/ti";
@@ -6,14 +6,20 @@ import Logo from "../assets/image/CRD_Logo.jpg";
 import CustomModal from "../components/Modal/CustomModal";
 import ForgotPassword from "./ForgotPassword/ForgotPassword";
 import ConfirmationButton from "../components/Buttons/ConfirmationButton";
-import { useNavigate } from "react-router-dom";
+import { useHistory } from "react-router-dom";
+import Auth from "../api/Auth";
+import { UserContext } from "../context/UserContext";
 
 function Login() {
+  const userContext = useContext(UserContext);
+  const { refreshUser } = userContext.data
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false);
   const [privacyModal, setPrivacyModal] = useState(false);
   const [accountResetModal, setAccountResetModal] = useState(false);
   const [forgotPasswordModal, setForgotPasswordModal] = useState(false)
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const onHide = () => setForgotPasswordModal(false)
 
@@ -74,7 +80,24 @@ function Login() {
     </CustomModal>
   );
 
-
+  const login = async (e) => {
+    e.preventDefault();
+    let data = {
+      "username": username,
+      "password": password
+    }
+    let response = await new Auth().login(data)
+    if (response.ok) {
+      console.log(response.data)
+      window.localStorage.setItem("token", response.data.token)
+      window.localStorage.setItem("id", response.data.UserAccount.user_id)
+      history.push("/dashboard")
+      refreshUser()
+    } else {
+      alert("Login Failed: " + response.data.message)
+      console.error(response)
+    }
+  }
 
   return (
     <div className="login_container">
@@ -83,7 +106,7 @@ function Login() {
         <h1 className="text-center login_title">Research Management Portal</h1>
       </div>
       <div className="login_form_container">
-        <Form className="login_form">
+        <Form className="login_form" onSubmit={login}>
           <h3>Welcome Back! Please Sign In your credentials to start.</h3>
 
           <Form.Group style={{ position: "relative" }}>
@@ -92,6 +115,7 @@ function Login() {
               className="password_input"
               type="text"
               placeholder="(Enter you username)"
+              onChange={(e) => setUsername(e.target.value)}
             />
             <span className="input_icon">
               <FaUser />
@@ -104,6 +128,7 @@ function Login() {
               className="password_input"
               type={showPassword ? "text" : "password"}
               placeholder="(Enter you password)"
+              onChange={(e) => setPassword(e.target.value)}
             />
             <span
               className="show_password_icon"
@@ -116,16 +141,16 @@ function Login() {
             </span>
           </Form.Group>
           <div>
-          <p className="forgot_password" onClick={() => setForgotPasswordModal(true)}>Forgot Password?</p>
+            <p className="forgot_password" onClick={() => setForgotPasswordModal(true)}>Forgot Password?</p>
           </div>
 
-          <Button className="primary" onClick={() => navigate('/dashboard')}> Sign In</Button>
+          <Button className="primary" type="submit"> Sign In</Button>
           <Button className="secondary">Sign In with Outlook</Button>
 
           <div className="between">
-            <span 
-            onClick={() => setPrivacyModal(true)}
-            className="login-hover">
+            <span
+              onClick={() => setPrivacyModal(true)}
+              className="login-hover">
               Privacy and Terms of Use
             </span>
             <span
@@ -140,10 +165,10 @@ function Login() {
 
       {privacyModal && privacyAndTerms()}
       {accountResetModal && accountReset()}
-      {forgotPasswordModal && 
-      <ForgotPassword
-      onHide={() => onHide()}
-       />}
+      {forgotPasswordModal &&
+        <ForgotPassword
+          onHide={() => onHide()}
+        />}
     </div>
   );
 }
