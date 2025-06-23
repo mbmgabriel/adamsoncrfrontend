@@ -92,6 +92,10 @@ body {
   font-size: 20px;
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 // CSS ALIAS END //
 
 .login_container {
@@ -590,5 +594,20 @@ body {
         }
       }
     }
+  }
+}
+
+.form-card {
+  background-color: #E6EAF1 !important;
+  border-radius: 30px;
+  padding: 20px;
+}
+
+.application-form {
+  padding: 20px 50px;
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 }

@@ -6,29 +6,35 @@ import { FaFileCircleCheck } from "react-icons/fa6";
 import { FaChalkboardTeacher } from 'react-icons/fa';
 import { HiGiftTop } from "react-icons/hi2";
 import Notifications from "./component/Notifications";
+import { useHistory } from "react-router-dom";
 
 function Dashboard() {
+    const history = useHistory();
 
     const cardContent = [
         {
             icon: <MdAssignmentAdd />,
             title: 'Write your new research proposals.',
-            footer: 'New Research Application'
+            footer: 'New Research Application',
+            path: '/new-research-application',
         },
         {
             icon: <FaFileCircleCheck />,
             title: 'Have your completed research cleared.',
-            footer: 'Research Clearance Application'
+            footer: 'Research Clearance Application',
+            path: '/new-research-application',
         },
         {
             icon: <FaChalkboardTeacher />,
             title: 'Ask Research Presentation Assistance.',
-            footer: 'Research Paper Presentation Request for Assistance Application'
+            footer: 'Research Paper Presentation Request for Assistance Application',
+            path: '/new-research-application',
         },
         {
             icon: <HiGiftTop />,
             title: 'Receive Research Incentives',
-            footer: 'New Research Application'
+            footer: 'New Research Application',
+            path: '/new-research-application',
         },
     ]
 
@@ -81,7 +87,7 @@ function Dashboard() {
             <div className="home">
                 <div className="card-holder">
                     {cardContent.map((item) => (
-                        <CardCustom icon={item.icon} title={item.title} footer={item.footer} />
+                        <CardCustom icon={item.icon} title={item.title} footer={item.footer} path={() => history.push(item.path)} />
                     ))}
                 </div>
                 <div className="center notification-holder">
