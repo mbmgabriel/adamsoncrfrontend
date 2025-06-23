@@ -13,7 +13,7 @@ function Header({activeHeader}) {
     },
     {
       name: 'Research Proposal',
-      path: '/'
+      path: '/new-research-application'
     },
     {
       name: 'Research Presentation and Publication',
