@@ -88,9 +88,14 @@ function Login() {
     }
     let response = await new Auth().login(data)
     if (response.ok) {
-      console.log(response.data)
+      let user = `
+      ${response.data.UserAccount.first_name} 
+      ${response.data.UserAccount.middle_name} 
+      ${response.data.UserAccount.last_name}`
       window.localStorage.setItem("token", response.data.token)
       window.localStorage.setItem("id", response.data.UserAccount.user_id)
+      window.localStorage.setItem("name", user)
+      window.localStorage.setItem("role", response.data.UserAccount.role_name)
       history.push("/dashboard")
       refreshUser()
     } else {

@@ -16,4 +16,11 @@ export default class Auth extends Base {
     });
   };
 
+  fetchResearches = async () => {
+    return this.sendRequest({
+      path: `/api/v1/research/all`,
+      method: 'GET'
+    })
+  }
+
 }

@@ -541,8 +541,10 @@ body {
   justify-content: flex-end;
   align-items: end;
   padding: 10px 20px;
+  position: relative;
   .user-icon {
-    font-size: 30px !important;
+    font-size: 40px !important;
+    margin-left: 10px;
   }
 }
 
@@ -610,4 +612,8 @@ body {
     flex-direction: column;
     gap: 20px;
   }
+}
+
+.research-table {
+  padding: 50px 50px;
 }
