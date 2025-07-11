@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import FormCard from '../../../components/Card/FormCard';
 import TextInputCustom from '../../../components/Input/TextInputCustom';
-
-const researchAgenda = [
-  'Productivity and Competitiveness in Business and Education',
-  'Advancement of Science and Technology',
-  'Integrative Development Approaches in Social Science, Humanities and Communication',
-  'Community Health and the Effective Delivery of Health Care',
-  'Environmental Conservation and Preservation',
-];
+import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI';
 
 function ResearcherSection({ index, isMain }) {
   const numberLabel = isMain ? 'Researcher 1 (Main Author)' : `Researcher ${index + 1} (Co - author)`;
@@ -101,6 +94,92 @@ function ResearcherSection({ index, isMain }) {
 
 function ApplicationForm() {
   const [step, setStep] = useState(1);
+  const [categories, setCategories] = useState([])
+  const [title, setTitle] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [purposeId, setPurposeId] = useState(1);
+  const [version, setVersion] = useState('');
+  const [duration, setDuration] = useState('');
+  const [ethical, setEthical] = useState(false);
+  const [submittedBy, setSubmittedBy] = useState('');
+  const [submittedDate, setSubmittedDate] = useState('');
+
+  const fetchCategories = async () => {
+    let response = await new ResearchApplicationAPI().fetchCategories()
+    if (response.ok) {
+      setCategories(response.data.ResearchCategory)
+    } else {
+      console.error(response.error)
+    }
+  }
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((item) => item !== category)
+        : [...prev, category]
+    );
+  };
+
+  const createResearch = async () => {
+    if (selectedCategories.length < 1) {
+      alert('Please select at least one Research Agenda Category.');
+      return;
+    }
+
+    const data = {
+      title,
+      category: selectedCategories.join(', '),
+      purpose_id: purposeId,
+      version_number: version,
+      research_duration: duration,
+      ethical_considerations: ethical ? 1 : 0,
+      submitted_by: submittedBy,
+      submitted_date: submittedDate
+    };
+
+    try {
+      const response = await new ResearchApplicationAPI().createResearch(data);
+      if (response.ok) {
+        alert('Research submitted successfully.');
+      } else {
+        alert('Submission failed.');
+      }
+    } catch (error) {
+      console.error('API error:', error);
+      alert('An error occurred during submission.');
+    }
+  };
+
+  const createResearchInvestigators = async () => {
+    const data = {
+      "research_id": 0,
+      "id_number": "string",
+      "first_name": "string",
+      "middle_name": "string",
+      "last_name": "string",
+      "mobile_number": "string",
+      "email": "string",
+      "college": "string",
+      "dept": "string"
+    }
+
+    try {
+      const response = await new ResearchApplicationAPI().createResearchInvestigators(data)
+      if (response.ok) {
+        alert('Research submitted successfully.');
+      } else {
+        alert('Submission failed.');
+      }
+    } catch (error) {
+      console.error('API error:', error);
+      alert('An error occurred during submission.');
+    }
+  }
+
+  useEffect(() => {
+    fetchCategories()
+  },[])
 
   return (
     <div className="application-form">
@@ -108,7 +187,12 @@ function ApplicationForm() {
         {step === 1 && (
           <>
             <FormCard>
-              <TextInputCustom label="Title" type="text" className="mb-4" />
+              <TextInputCustom
+                label="Title"
+                type="text"
+                className="mb-4"
+                onChange={(e) => setTitle(e.target.value)}
+              />
             </FormCard>
 
             <FormCard>
@@ -116,8 +200,16 @@ function ApplicationForm() {
                 I. Protocol’s 5-point Research Agenda Category
                 <small className="ms-1 fst-italic">(check at least one)</small>
               </h5>
-              {researchAgenda.map((item, idx) => (
-                <Form.Check key={idx} id={`agenda-${idx}`} type="checkbox" label={item} className="mb-1" />
+              {categories?.map((item) => (
+                <Form.Check
+                  key={item.id}
+                  id={`agenda-${item.id}`}
+                  type="checkbox"
+                  label={item.research_name}
+                  className="mb-1"
+                  checked={selectedCategories.includes(item.id)}
+                  onChange={() => handleCategoryChange(item.id)}
+                />
               ))}
             </FormCard>
 
@@ -125,13 +217,31 @@ function ApplicationForm() {
               <h5 className="fw-bold mt-4 mb-3">II. Purpose of Submission</h5>
               <Row className="g-3">
                 <Col md={3}>
-                  <Form.Check id="purpose-initial" name="purpose" type="radio" label="Initial" defaultChecked />
+                  <Form.Check
+                    id="purpose-initial"
+                    name="purpose"
+                    type="radio"
+                    label="Initial"
+                    defaultChecked
+                    onChange={() => setPurposeId(1)}
+                  />
                 </Col>
                 <Col md={3}>
-                  <Form.Check id="purpose-resubmission" name="purpose" type="radio" label="Resubmission" />
+                  <Form.Check
+                    id="purpose-resubmission"
+                    name="purpose"
+                    type="radio"
+                    label="Resubmission"
+                    onChange={() => setPurposeId(2)}
+                  />
                 </Col>
                 <Col md={6}>
-                  <TextInputCustom label="Version Number" type="text" placeholder="e.g., v1.0" />
+                  <TextInputCustom
+                    label="Version Number"
+                    type="text"
+                    placeholder="e.g., v1.0"
+                    onChange={(e) => setVersion(e.target.value)}
+                  />
                 </Col>
               </Row>
             </FormCard>
@@ -154,22 +264,39 @@ function ApplicationForm() {
           <>
             <FormCard>
               <h5 className="fw-bold mb-3">IV. Research Duration</h5>
-              <TextInputCustom label="Research Duration (in semester)" type="text" />
+              <TextInputCustom
+                label="Research Duration (in semester)"
+                type="text"
+                onChange={(e) => setDuration(e.target.value)}
+              />
             </FormCard>
 
             <FormCard>
               <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
-              <Form.Check type="checkbox" id="ethics-human" label="with Human Participants" />
+              <Form.Check
+                type="checkbox"
+                id="ethics-human"
+                label="with Human Participants"
+                onChange={(e) => setEthical(e.target.checked)}
+              />
             </FormCard>
 
             <FormCard>
               <h5 className="fw-bold mb-3">VI. Submission</h5>
               <Row className="g-3">
                 <Col md={6}>
-                  <TextInputCustom label="Submitted by" type="text" />
+                  <TextInputCustom
+                    label="Submitted by"
+                    type="text"
+                    onChange={(e) => setSubmittedBy(e.target.value)}
+                  />
                 </Col>
                 <Col md={6}>
-                  <TextInputCustom label="Submission Date" type="date" />
+                  <TextInputCustom
+                    label="Submission Date"
+                    type="date"
+                    onChange={(e) => setSubmittedDate(e.target.value)}
+                  />
                 </Col>
               </Row>
             </FormCard>
@@ -238,7 +365,7 @@ function ApplicationForm() {
               <div>
                 <Button variant="outline-secondary" className="me-2" onClick={() => setStep(1)}>Cancel</Button>
                 <Button variant="outline-primary" className="me-2">Save as Draft</Button>
-                <Button variant="primary">Submit</Button>
+                <Button variant="primary" onClick={createResearch}>Submit</Button>
               </div>
             </div>
           </>
