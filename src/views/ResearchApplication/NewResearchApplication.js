@@ -4,7 +4,7 @@ import ApplicationForm from './component/ApplicationForm'
 
 function NewResearchApplication() {
   return (
-    <MainContainer activeHeader={'Research Proposal'}>
+    <MainContainer >
       <ApplicationForm />
     </MainContainer>
   )
