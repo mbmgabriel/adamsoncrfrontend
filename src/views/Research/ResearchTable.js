@@ -22,7 +22,7 @@ function ResearchTable() {
 
   return (
     <div className='research-table'>
-      <Table striped bordered hover variant="light">
+      <Table striped bordered hover variant="light" responsive>
         <thead>
           <tr>
             <th style={{ width: '40%' }}>Title</th>

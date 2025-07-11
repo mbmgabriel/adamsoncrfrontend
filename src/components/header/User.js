@@ -6,7 +6,7 @@ function User() {
   const role = window.localStorage.getItem('role')
   return (
     <div className='user-div'>
-      <span>Hello {role}, {name} <FaUserCircle className='user-icon' /> </span>
+      <span>Hello, {name} <FaUserCircle className='user-icon cursor-pointer' /> </span>
     </div>
   )
 }
