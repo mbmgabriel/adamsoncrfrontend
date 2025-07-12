@@ -220,7 +220,7 @@ function ApplicationForm() {
     try {
       const researchResponse = await new ResearchApplicationAPI().createResearch({
         title: data.title,
-        category: data.category.join(', '),
+        category: data.category.filter(Boolean).join(','),
         purpose_id: data.purpose_id,
         version_number: data.version_number,
         research_duration: data.research_duration,
@@ -280,7 +280,7 @@ function ApplicationForm() {
                   label={item.research_name}
                   type="checkbox"
                   {...register('category')}
-                  value={item.research_name}
+                  value={item.id}
                 />
               ))}
             </FormCard>
