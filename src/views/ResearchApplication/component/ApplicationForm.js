@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import FormCard from '../../../components/Card/FormCard';
 import TextInputCustom from '../../../components/Input/TextInputCustom';
 import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI';
+import TransparentLoader from '../../../components/Loader/TransparentLoader';
 
 export function ResearcherSection({ index, isMain, control, register, watch, setValue }) {
   const numberLabel = isMain ? 'Researcher 1 (Main Author)' : `Researcher ${index + 1} (Co-author)`;
@@ -147,10 +148,12 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
 }
 
 function ApplicationForm() {
+  const BASE_URL = "https://adamsoncr.tekteachlms.com"
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
-  const [documentTypes, setDocumentTypes] = useState([])
+  const [documentTypes, setDocumentTypes] = useState([]);
+  const [loading, setLoading] = useState(false)
   const toRoman = (num) => {
     const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
     return romans[num - 1] || num;
@@ -214,9 +217,10 @@ function ApplicationForm() {
   }, [reset, defaultValues]);
 
   const onSubmit = async (data) => {
-    alert('on process');
     console.log('✅ Final Submitted Data:', data);
     console.log('✅ Endorsements:', data.endorsements);
+    setLoading(true)
+
     try {
       const researchResponse = await new ResearchApplicationAPI().createResearch({
         title: data.title,
@@ -246,25 +250,59 @@ function ApplicationForm() {
         });
       }
 
-      for (const document of data.documents) {
-        if (document.file instanceof File) {
-          await new ResearchApplicationAPI().createDocument({
-            research_id: researchId,
-            document_title_id: document.document_title_id,
-            file: document.file,
-          });
+      for (const document of data.documents || []) {
+        if (!document || !document.file || !document.document_title_id) continue;
+
+        const file = document.file[0];
+        if (!(file instanceof File)) continue;
+
+        const formData = new FormData();
+        formData.append('document_filepath', file);
+
+        const token = await window.localStorage.getItem("token");
+
+        const response = await fetch(
+          `${BASE_URL}/api/v1/research_documents/create/${researchId}/${document.document_title_id}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          console.warn(`❌ Failed to upload document with title ID ${document.document_title_id}`);
+        } else {
+          console.log(`✅ Document ${document.document_title_id} uploaded successfully`);
         }
       }
 
       alert('Research submitted successfully.');
+
+      reset({
+        ...defaultValues,
+        endorsements: representative.map(r => ({
+          endorsement_rep_id: r.id,
+          endorsement_rep_name: '',
+          status: '',
+        })),
+      });
+      setStep(1);
+
     } catch (e) {
       console.error(e);
       alert('An error occurred during submission.');
+    } finally {
+      setLoading(false)
     }
   };
 
+
   return (
     <div className="application-form">
+      {loading && <TransparentLoader />}
       <Form onSubmit={handleSubmit(onSubmit)} className="form">
         {step === 1 && (
           <>
