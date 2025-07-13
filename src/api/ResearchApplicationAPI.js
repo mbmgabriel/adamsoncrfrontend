@@ -57,4 +57,11 @@ export default class Auth extends Base {
     })
   }
 
+  destroyResearch = async (id) => {
+    return this.sendRequest({
+      path: `/api/v1/research/${id}`,
+      method: 'DELETE'
+    })
+  }
+
 }
