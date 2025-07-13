@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Table } from 'react-bootstrap'
 import Auth from '../../api/Auth'
+import ResearchApplicationAPI from '../../api/ResearchApplicationAPI'
 
 function ResearchTable() {
   const [researches, setResearches] = useState([])
@@ -18,7 +19,15 @@ function ResearchTable() {
     fetchResearches()
   }, [])
 
-  console.log({ researches })
+  const destroyResearch = async (id) => {
+    let response = await new ResearchApplicationAPI().destroyResearch(id)
+    if (response.ok) {
+      alert('Research Deleted')
+      fetchResearches()
+    } else {
+      alert('Something went wrong')
+    }
+  }
 
   return (
     <div className='research-table'>
@@ -44,7 +53,7 @@ function ResearchTable() {
                   day: 'numeric',
                   year: 'numeric'
                 })}</td>
-                <td><Button>View</Button></td>
+                <td><Button>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td>
               </tr>
             )
           })}

@@ -12,6 +12,7 @@ export default class Auth extends Base {
   profile = async (id) => {
     return this.sendRequest({
       path: `/api/v1/user/${id}`,
+      method: 'GET'
     });
   };
 

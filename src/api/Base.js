@@ -1,35 +1,40 @@
 const BASE_URL = "https://adamsoncr.tekteachlms.com"
 export default class Base {
-  sendRequest = async ({path, method = 'GET', data = {}, base, headers}) => {
+  sendRequest = async ({ path, method = 'GET', data = {}, base, headers }) => {
     let url = base ? base + path : BASE_URL + path;
 
     let config = {
+      // headers: {
+      //   Accept: 'application/json',
+      //   'Content-Type': 'application/json',
+      //   'Access-Control-Allow-Origin': '*',
+      //   Authorization: `${await window.localStorage.getItem("token")}`,
+      // },
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
         Authorization: `Bearer ${await window.localStorage.getItem("token")}`,
       },
       method: method,
     };
 
-    if (headers) config = {...config, headers};
+    if (headers) config = { ...config, headers };
 
     console.info('%cNew connection has established', 'color: red');
-    console.log({config, url, data});
+    console.log({ config, url, data });
 
     if (method !== 'GET') {
       config.body = JSON.stringify(data);
     }
     let response = await fetch(url, config)
-      .then(async function(res) {
+      .then(async function (res) {
         return res;
       })
-      .catch(function(error) {
+      .catch(function (error) {
         if (error.message.match(/Network request failed/)) {
-          console.log({err: 'Failed to establish connection'});
+          console.log({ err: 'Failed to establish connection' });
           // alert("Please check your internet connection");
-          return {network_error: true, ok: false};
+          return { network_error: true, ok: false };
         }
         return error;
       })
@@ -56,7 +61,7 @@ export default class Base {
       data: responseData,
       statusMessage: this.getStatusMessage(response.status),
     };
-    console.log({output});
+    console.log({ output });
     return output;
   };
 
