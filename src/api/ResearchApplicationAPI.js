@@ -36,6 +36,13 @@ export default class Auth extends Base {
     });
   };
 
+  fetchResearchById = async (id) => {
+    return this.sendRequest({
+      path: `/api/v1/research/${id}`,
+      method: 'GET'
+    })
+  }
+
   fetchCategories = async (data) => {
     return this.sendRequest({
       path: `/api/v1/research_categories/all`,

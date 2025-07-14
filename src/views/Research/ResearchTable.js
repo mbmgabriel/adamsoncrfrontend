@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { Button, Table } from 'react-bootstrap'
 import Auth from '../../api/Auth'
 import ResearchApplicationAPI from '../../api/ResearchApplicationAPI'
+import ResearchModal from './modal/ResearchModal'
 
 function ResearchTable() {
   const [researches, setResearches] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [selectedResearch, setSelectedResearch] = useState()
 
   const fetchResearches = async () => {
     let response = await new Auth().fetchResearches()
@@ -12,6 +15,15 @@ function ResearchTable() {
       setResearches(response.data)
     } else {
       console.error(response.error)
+    }
+  }
+
+  const fetchResearchById = async (id) => {
+    let response = await new ResearchApplicationAPI().fetchResearchById(id)
+    if (response.ok) {
+      setSelectedResearch(response.data.Research)
+    } else {
+      console.error(response.errorMessage)
     }
   }
 
@@ -27,6 +39,11 @@ function ResearchTable() {
     } else {
       alert('Something went wrong')
     }
+  }
+
+  const handleViewResearch = (id) => {
+    setShowModal(true);
+    fetchResearchById(id);
   }
 
   return (
@@ -53,12 +70,18 @@ function ResearchTable() {
                   day: 'numeric',
                   year: 'numeric'
                 })}</td>
-                <td><Button>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td>
+                <td><Button onClick={() => handleViewResearch(item.id)}>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td>
               </tr>
             )
           })}
         </tbody>
       </Table>
+
+
+      <ResearchModal
+        showModal={showModal}
+        handleClose={() => setShowModal(false)}
+        research={selectedResearch} />
     </div>
   )
 }
