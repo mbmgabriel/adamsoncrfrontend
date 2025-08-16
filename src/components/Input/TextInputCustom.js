@@ -5,16 +5,16 @@ const TextInputCustom = React.forwardRef(({
   label,
   type = 'text',
   placeholder = '',
+  isForm = false,
   required = false,
   readOnly = false,
   disabled = false,
   ...rest
 }, ref) => {
   return (
-    <Form.Group className='custom-input'>
-      <Form.Label className='custom-label'>
-         {required && <span className="text-danger">*</span>}
-        {label}
+    <Form.Group className={`custom-input ${isForm ? 'flex-container' : ''}`}>
+      <Form.Label className={`custom-label ${required ? 'margin-left-18' : ''}`}>
+         {required && <span className="text-danger">*</span>} {label}
       </Form.Label>
       <Form.Control
         className='custom-control'

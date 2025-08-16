@@ -109,6 +109,31 @@ body {
   cursor: pointer;
 }
 
+.flex-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.mt--6 {
+  margin-top: -6px;
+}
+
+.margin-left-29 {
+  margin-left: -29px;
+}
+
+.margin-left-18 {
+  margin-left: -15px;
+}
+
+.form-input-container {
+  display: flex;
+  row-gap: 20px;
+  flex-direction: column;
+}
+
 // CSS ALIAS END //
 
 // GLOBAL CSS START //
@@ -336,6 +361,17 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+.custom-input {
+  padding: 10px 0px;
+  .custom-label {
+    width: 200px;
+    margin-bottom: 0;
+  }
+  .custom-control {
+    border-radius: 10px !important;
   }
 }
 
@@ -651,16 +687,41 @@ body {
 
 .form-card {
   background-color: #e6eaf1 !important;
-  border-radius: 30px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 20px 40px;
 }
 
 .application-form {
-  padding: 20px 50px;
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  padding: 50px 80px;
+  .form-container {
+    padding: 20px 50px;
+    background-color: $secondary-background;
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      .title {
+        font-weight: bold;
+        flex-direction: row;
+        margin-bottom: 15px;
+        font-size: 20px;
+      }
+      .form-labels {
+        width: 200px;
+      }
+      .content-checkbox {
+        padding: 0px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+    .btn-groups {
+      display: flex;
+      justify-content: end;
+      gap: 10px;
+      padding: 20px 0px;
+    }
   }
 }
 
