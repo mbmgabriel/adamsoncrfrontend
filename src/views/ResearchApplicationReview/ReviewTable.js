@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react'
 import { Button, Table, Nav, Badge } from 'react-bootstrap'
 import Auth from '../../api/Auth'
 import ResearchApplicationAPI from '../../api/ResearchApplicationAPI'
-import ResearchModal from './modal/ResearchModal'
 import SearchBar from '../../components/Search/SearchBar'
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
 import Tooltip from '../../components/Tooltip/Tooltip'
 import Pagination from '../../components/PaginationComponent/Pagination'
 
 
-function ResearchTable() {
+function ReviewTable() {
   const [researches, setResearches] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedResearch, setSelectedResearch] = useState()
@@ -58,7 +57,7 @@ function ResearchTable() {
   return (
     <div className='research-table'>
       <div className='research-container'>
-        <div className='title'>Research Proposals</div>
+        <div className='title'>New Research Application Review</div>
         <div className='search-div'>
           <SearchBar placeholder="(Type to search Research Title, Research Name)" />
           <Tooltip text="Export to PDF" position="bottom"><FaFilePdf size={30} className='cursor-pointer' color='white' /></Tooltip>
@@ -73,14 +72,14 @@ function ResearchTable() {
             <Nav.Link eventKey="link-0">All</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="link-1">For Approval</Nav.Link>
+            <Nav.Link eventKey="link-1">New</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="link-2">Ongoing</Nav.Link>
+            <Nav.Link eventKey="link-2">Revised</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link eventKey="link-3">
-              Completed
+              Endorsed
             </Nav.Link>
           </Nav.Item>
         </Nav>
@@ -94,15 +93,16 @@ function ResearchTable() {
               </tr>
             </thead>
             <tbody>
-              {researches.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.title}</td>
-                  <td>{item.submitted_by}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    <Badge>Completed</Badge>
-                  </td>
-                </tr>
-              ))}
+              {researches.map((item) => {
+                return (
+                  <tr>
+                    <td>{item.title}</td>
+                    <td>{item.submitted_by}</td>
+                    {/* <td><Button onClick={() => handleViewResearch(item.id)}>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td> */}
+                    <td style={{ textAlign: 'center' }}><Badge>Completed</Badge></td>
+                  </tr>
+                )
+              })}
             </tbody>
           </Table>
           <Pagination
@@ -113,13 +113,9 @@ function ResearchTable() {
             onPageChange={setPage}
           />
         </div>
-        <ResearchModal
-          showModal={showModal}
-          handleClose={() => setShowModal(false)}
-          research={selectedResearch} />
       </div>
     </div>
   )
 }
 
-export default ResearchTable
+export default ReviewTable

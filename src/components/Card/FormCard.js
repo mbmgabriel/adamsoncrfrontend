@@ -1,7 +1,7 @@
 import React from 'react'
 
-export default function FormCard({children}) {
+export default function FormCard({children, className}) {
   return (
-    <div className='form-card'>{children}</div>
+    <div className={`form-card ${className}`}>{children}</div>
   )
 }

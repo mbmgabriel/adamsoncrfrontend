@@ -11,11 +11,13 @@ const TextInputCustom = React.forwardRef(({
   ...rest
 }, ref) => {
   return (
-    <Form.Group>
-      <Form.Label>
-        {label} {required && <span className="text-danger">*</span>}
+    <Form.Group className='custom-input'>
+      <Form.Label className='custom-label'>
+         {required && <span className="text-danger">*</span>}
+        {label}
       </Form.Label>
       <Form.Control
+        className='custom-control'
         type={type}
         placeholder={placeholder}
         required={required}

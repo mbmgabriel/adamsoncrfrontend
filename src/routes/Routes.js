@@ -9,6 +9,7 @@ import { AuthRoute } from "./components/AuthRoute";
 import { PrivateRoute } from "./components/PrivateRoute";
 import NewResearchApplication from "../views/ResearchApplication/NewResearchApplication";
 import Research from "../views/Research/Research";
+import ResearchApplicationReview from "../views/ResearchApplicationReview/ResearchApplicationReview";
 
 export default function Routing() {
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,7 @@ export default function Routing() {
           <PrivateRoute path='/dashboard' exact component={Dashboard} />
           <PrivateRoute path='/new-research-application' exact component={NewResearchApplication} />
           <PrivateRoute path='/research' exact component={Research} />
+          <PrivateRoute path='/review' exact component={ResearchApplicationReview} />
         </Switch>
       </Router>
     </div>

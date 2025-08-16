@@ -17,7 +17,7 @@ function Header({activeHeader}) {
     },
     {
       name: 'Research Presentation and Publication',
-      path: '/'
+      path: '/review'
     },
     {
       name: 'FAQs',

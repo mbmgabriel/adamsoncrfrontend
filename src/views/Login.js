@@ -117,7 +117,7 @@ function Login() {
           <Form.Group style={{ position: "relative" }}>
             <Form.Label>Username</Form.Label>
             <Form.Control
-              className="password_input"
+              className="password_input form-control-login"
               type="text"
               placeholder="(Enter you username)"
               onChange={(e) => setUsername(e.target.value)}
@@ -130,7 +130,7 @@ function Login() {
           <Form.Group style={{ position: "relative" }}>
             <Form.Label>Password</Form.Label>
             <Form.Control
-              className="password_input"
+              className="password_input form-control-login"
               type={showPassword ? "text" : "password"}
               placeholder="(Enter you password)"
               onChange={(e) => setPassword(e.target.value)}
