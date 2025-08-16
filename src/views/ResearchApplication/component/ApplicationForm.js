@@ -5,6 +5,8 @@ import FormCard from '../../../components/Card/FormCard';
 import TextInputCustom from '../../../components/Input/TextInputCustom';
 import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI';
 import TransparentLoader from '../../../components/Loader/TransparentLoader';
+import OutlineButton from '../../../components/Buttons/OutlineButton';
+import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
 
 export function ResearcherSection({ index, isMain, control, register, watch, setValue }) {
   const numberLabel = isMain ? 'Researcher 1 (Main Author)' : `Researcher ${index + 1} (Co-author)`;
@@ -28,33 +30,68 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
   }, [index, isMain, sameDept, mainDept, setValue]);
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 px-4">
       {!isMain && (
         <Form.Check
           type="checkbox"
           id={`researcher-enable-${index}`}
           label={numberLabel}
-          className="mb-2"
+          className="mb-2 margin-left-29"
           {...register(`researchers.${index}.enabled`)}
         />
       )}
 
-      {isMain && <h6 className="fw-bold mb-3">{numberLabel} <span className="text-danger">*</span> Required Fields</h6>}
+      {isMain && <p className="fw-bold mb-3">{numberLabel}</p>}
 
-      <Row className="g-3">
-        <Col md={4}>
+      <Row>
+        <Col sm={12} md={12} lg={6} className="form-input-container">
           <TextInputCustom
             label="ID Number"
             type="text"
             required={isMain}
+            isForm={true}
             disabled={!enabled && !isMain}
             {...register(`researchers.${index}.id_number`, { required: isMain })}
           />
+          <TextInputCustom
+            label="First Name"
+            type="text"
+            required={isMain}
+            isForm={true}
+            disabled={!enabled && !isMain}
+            {...register(`researchers.${index}.first_name`, { required: isMain })}
+          />
+          <TextInputCustom
+            label="Last Name"
+            type="text"
+            required={isMain}
+            isForm={true}
+            disabled={!enabled && !isMain}
+            {...register(`researchers.${index}.last_name`, { required: isMain })}
+          />
+          <TextInputCustom
+            label="Mobile No."
+            type="text"
+            required={isMain}
+            isForm={true}
+            disabled={!enabled && !isMain}
+            {...register(`researchers.${index}.mobile_number`, { required: isMain })}
+          />
+          <TextInputCustom
+            label="Email"
+            type="email"
+            required={isMain}
+            isForm={true}
+            disabled={!enabled && !isMain}
+            {...register(`researchers.${index}.email`, { required: isMain })}
+          />
         </Col>
-        <Col md={4}>
-          <Form.Group>
-            <Form.Label>College</Form.Label>
+
+        <Col>
+          <Form.Group className='flex-container custom-input'>
+            <Form.Label className='custom-label'>College</Form.Label>
             <Form.Select
+              className='custom-control'
               disabled={(sameCollege && !isMain) || (!enabled && !isMain)}
               {...register(`researchers.${index}.college`)}
             >
@@ -63,8 +100,6 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
               <option value="college-2">College 2</option>
             </Form.Select>
           </Form.Group>
-        </Col>
-        <Col md={4} className="d-flex align-items-end">
           {isMain && (
             <Form.Check
               type="checkbox"
@@ -72,32 +107,11 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
               {...register("sameCollege")}
             />
           )}
-        </Col>
-      </Row>
 
-      <Row className="g-3 mt-0">
-        <Col md={4}>
-          <TextInputCustom
-            label="First Name"
-            type="text"
-            required={isMain}
-            disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.first_name`, { required: isMain })}
-          />
-        </Col>
-        <Col md={4}>
-          <TextInputCustom
-            label="Last Name"
-            type="text"
-            required={isMain}
-            disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.last_name`, { required: isMain })}
-          />
-        </Col>
-        <Col md={4}>
-          <Form.Group>
-            <Form.Label>Department</Form.Label>
+          <Form.Group className='flex-container custom-input'>
+            <Form.Label className='custom-label'>Department</Form.Label>
             <Form.Select
+              className='custom-control'
               disabled={(sameDept && !isMain) || (!enabled && !isMain)}
               {...register(`researchers.${index}.dept`)}
             >
@@ -106,41 +120,13 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
               <option value="dept-2">Department 2</option>
             </Form.Select>
           </Form.Group>
-        </Col>
-      </Row>
-
-      {isMain && (
-        <Row className="mt-2">
-          <Col md={4} />
-          <Col md={4} />
-          <Col md={4}>
+          {isMain && (
             <Form.Check
               type="checkbox"
               label="Same Department to all co-authors"
               {...register("sameDept")}
             />
-          </Col>
-        </Row>
-      )}
-
-      <Row className="g-3 mt-0">
-        <Col md={4}>
-          <TextInputCustom
-            label="Mobile No."
-            type="text"
-            required={isMain}
-            disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.mobile_number`, { required: isMain })}
-          />
-        </Col>
-        <Col md={4}>
-          <TextInputCustom
-            label="Email"
-            type="email"
-            required={isMain}
-            disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.email`, { required: isMain })}
-          />
+          )}
         </Col>
       </Row>
     </div>
@@ -303,7 +289,7 @@ function ApplicationForm() {
   return (
     <div className="application-form">
       {loading && <TransparentLoader />}
-      <Form onSubmit={handleSubmit(onSubmit)} className="form">
+      {/* <Form onSubmit={handleSubmit(onSubmit)} className="form">
         {step === 1 && (
           <>
             <FormCard>
@@ -432,7 +418,168 @@ function ApplicationForm() {
             </div>
           </>
         )}
-      </Form>
+      </Form> */}
+
+      <div className='form-container'>
+        <h1 className='mt-5 mb-5 fw-bold text-white'> New Research Application</h1>
+        <Form className="form" onSubmit={handleSubmit(onSubmit)}>
+          {step === 1 && (
+            <>
+              <FormCard className='flex-container'>
+                <Form.Label className='title me-3'>Title</Form.Label>
+                <Form.Control as="textarea" rows={4} {...register('title', { required: true })} />
+              </FormCard>
+              <FormCard>
+                <h5 className="title">I. Protocol’s 5-point Research Agenda Category</h5>
+                <div
+                  className='content-checkbox'>
+                  {categories.map(item => (
+                    <Form.Check
+                      key={item.id}
+                      label={item.research_name}
+                      type="checkbox"
+                      {...register('category')}
+                      value={item.id}
+                    />
+                  ))}
+                </div>
+              </FormCard>
+              <FormCard>
+                <h5 className="title">II. Purpose of Submission</h5>
+                <Row className='px-4'>
+                  <Col>
+                    <Row>
+                      <Col>
+                        <Form.Check label="Initial" type="radio" value={1} {...register('purpose_id')} defaultChecked />
+                      </Col>
+                      <Col>
+                        <Form.Check label="Resubmission" type="radio" value={2} {...register('purpose_id')} />
+                      </Col>
+                    </Row>
+                  </Col>
+                  <Col className='flex-container mt--6'>
+                    <Form.Label className='mb-0 form-labels'>Version Number</Form.Label>
+                    <Form.Control type='text'  {...register('version_number')} />
+                  </Col>
+                </Row>
+              </FormCard>
+              <FormCard>
+                <div className="title flex flex-row"><span className='me-4'>III. Investigators</span><span className="text-danger">*</span> Required Fields</div>
+                {[...Array(5)].map((_, i) => (
+                  <ResearcherSection
+                    key={i}
+                    index={i}
+                    isMain={i === 0}
+                    control={control}
+                    register={register}
+                    watch={watch}
+                    setValue={setValue}
+                  />
+                ))}
+              </FormCard>
+            </>)}
+
+          {step === 2 && (
+            <>
+              <FormCard>
+                <h5 className="fw-bold mb-3">IV. Research Duration</h5>
+                <TextInputCustom label="Duration (semesters)" isForm={true} type="text" {...register('research_duration')} />
+              </FormCard>
+
+              <FormCard>
+                <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
+                <Form.Check label="With Human Participants" isForm={true} type="checkbox" {...register('ethical_considerations')} />
+              </FormCard>
+
+              <FormCard>
+                <h5 className="fw-bold mb-3">VI. Submission</h5>
+                <Row>
+                  <Col>
+                    <TextInputCustom label="Submitted by" isForm={true} type="text" {...register('submitted_by')} />
+                  </Col>
+                  <Col>
+                    <TextInputCustom isForm={true} type="date" {...register('submitted_date')} />
+                  </Col>
+                </Row>
+              </FormCard>
+
+              <FormCard>
+                <h5 className="fw-bold mb-3">VII. Endorsement</h5>
+                {representative.map((item, index) => (
+                  <Row key={item.id}>
+                    <input
+                      type="hidden"
+                      {...register(`endorsements.${index}.endorsement_rep_id`)}
+                      value={item.id}
+                    />
+
+                    <Col>
+                      <TextInputCustom
+                        isForm={true}
+                        label={item.rep_name}
+                        type="text"
+                        placeholder=""
+                        {...register(`endorsements.${index}.endorsement_rep_name`)}
+                      />
+                    </Col>
+
+                    <Col>
+                      <TextInputCustom
+                        isForm={true}
+                        label="Status"
+                        type="text"
+                        placeholder="Not yet endorsed"
+                        {...register(`endorsements.${index}.status`)}
+                      />
+                    </Col>
+                  </Row>
+                ))}
+              </FormCard>
+
+              <h4 className='text-white'>Notes:</h4>
+
+              {documentTypes.map((doc, index) => (
+                <FormCard>
+                  <div key={doc.id} className="mb-4">
+                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name}`}</p>
+                    <p className="mb-2">{documentDescriptions[doc.document_name]}</p>
+
+                    {["Letter of Intent", "Research Proposal", "Researcher/s Curriculum Vitae (CV)", "Gantt Chart", "Detailed Budget Breakdown"].includes(doc.document_name) && (
+                      <>
+                        <Form.Control
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx"
+                          {...register(`documents.${index}.file`)}
+                        />
+
+                        <input
+                          type="hidden"
+                          {...register(`documents.${index}.document_title_id`)}
+                          value={doc.id}
+                        />
+                      </>
+                    )}
+                  </div>
+                </FormCard>
+              ))}
+            </>)}
+        </Form>
+        <div className='btn-groups'>
+          {step === 1 ? (
+            <>
+              <OutlineButton label="Cancel" />
+              <OutlineButton label="Save as Draft" />
+              <ConfirmationButton label="Next" onProceed={() => setStep(2)} />
+            </>
+          ) : (
+            <>
+              <OutlineButton label="Back" onCancel={() => setStep(1)} />
+              <OutlineButton label="Save as Draft" />
+              <Button className='btn-confirmation-custom' variant="primary" type="submit">Submit</Button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
