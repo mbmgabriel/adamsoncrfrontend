@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Table, Nav, Badge } from 'react-bootstrap'
-import Auth from '../../api/Auth'
-import ResearchApplicationAPI from '../../api/ResearchApplicationAPI'
-import SearchBar from '../../components/Search/SearchBar'
+import Auth from '../../../api/Auth'
+import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI'
+import SearchBar from '../../../components/Search/SearchBar'
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
-import Tooltip from '../../components/Tooltip/Tooltip'
-import Pagination from '../../components/PaginationComponent/Pagination'
+import Tooltip from '../../../components/Tooltip/Tooltip'
+import Pagination from '../../../components/PaginationComponent/Pagination'
+import { useHistory } from 'react-router-dom'
 
 
 function ReviewTable() {
+  const history = useHistory()
   const [researches, setResearches] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [selectedResearch, setSelectedResearch] = useState()
@@ -95,7 +97,7 @@ function ReviewTable() {
             <tbody>
               {researches.map((item) => {
                 return (
-                  <tr>
+                  <tr key={item.id} onClick={() => history.push(`/review-form/${item.id}`)}>
                     <td>{item.title}</td>
                     <td>{item.submitted_by}</td>
                     {/* <td><Button onClick={() => handleViewResearch(item.id)}>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td> */}

@@ -21,8 +21,8 @@ function Dashboard() {
         {
             icon: <FaFileCircleCheck />,
             title: 'Have your completed research cleared.',
-            footer: 'Research Clearance Application',
-            path: '/new-research-application',
+            footer: 'Revised Research Proposals',
+            path: '/research-application-review',
         },
         {
             icon: <FaChalkboardTeacher />,
