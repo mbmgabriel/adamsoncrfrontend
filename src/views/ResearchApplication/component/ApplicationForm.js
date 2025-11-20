@@ -285,141 +285,32 @@ function ApplicationForm() {
     }
   };
 
+  let breakdownDummyData = [
+    {
+      title: 'Transportation',
+      amount: '10,000.00'
+    },
+    {
+      title: 'Meal (Consultants and Respondents)',
+      amount: '18,500.00'
+    },
+    {
+      title: 'Supplies and Materials needed',
+      amount: '3,500.00'
+    },
+    {
+      title: 'Analysis and Laboratory test',
+      amount: '60,000.00'
+    },
+    {
+      title: 'Others',
+      amount: '123,750.00'
+    },
+  ]
 
   return (
     <div className="application-form">
       {loading && <TransparentLoader />}
-      {/* <Form onSubmit={handleSubmit(onSubmit)} className="form">
-        {step === 1 && (
-          <>
-            <FormCard>
-              <TextInputCustom label="Title" type="text" {...register('title', { required: true })} />
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">I. Protocol’s 5-point Research Agenda Category</h5>
-              {categories.map(item => (
-                <Form.Check
-                  key={item.id}
-                  label={item.research_name}
-                  type="checkbox"
-                  {...register('category')}
-                  value={item.id}
-                />
-              ))}
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">II. Purpose of Submission</h5>
-              <Form.Check label="Initial" type="radio" value={1} {...register('purpose_id')} defaultChecked />
-              <Form.Check label="Resubmission" type="radio" value={2} {...register('purpose_id')} />
-              <TextInputCustom label="Version Number" type="text" {...register('version_number')} />
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">III. Investigators</h5>
-              {[...Array(5)].map((_, i) => (
-                <ResearcherSection
-                  key={i}
-                  index={i}
-                  isMain={i === 0}
-                  control={control}
-                  register={register}
-                  watch={watch}
-                  setValue={setValue}
-                />
-              ))}
-            </FormCard>
-
-            <div className="d-flex justify-content-end mt-4">
-              <Button variant="primary" onClick={() => setStep(2)}>Next</Button>
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <FormCard>
-              <h5 className="fw-bold mb-3">IV. Research Duration</h5>
-              <TextInputCustom label="Duration (semesters)" type="text" {...register('research_duration')} />
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
-              <Form.Check label="With Human Participants" type="checkbox" {...register('ethical_considerations')} />
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">VI. Submission</h5>
-              <TextInputCustom label="Submitted by" type="text" {...register('submitted_by')} />
-              <TextInputCustom label="Submission Date" type="date" {...register('submitted_date')} />
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">VII. Endorsement</h5>
-              {representative.map((item, index) => (
-                <Row key={item.id} className="g-3 mb-2">
-                  <input
-                    type="hidden"
-                    {...register(`endorsements.${index}.endorsement_rep_id`)}
-                    value={item.id}
-                  />
-
-                  <Col>
-                    <TextInputCustom
-                      label={item.rep_name}
-                      type="text"
-                      placeholder=""
-                      {...register(`endorsements.${index}.endorsement_rep_name`)}
-                    />
-                  </Col>
-
-                  <Col>
-                    <TextInputCustom
-                      label="Status"
-                      type="text"
-                      placeholder="Not yet endorsed"
-                      {...register(`endorsements.${index}.status`)}
-                    />
-                  </Col>
-                </Row>
-              ))}
-            </FormCard>
-
-            <FormCard>
-              <h5 className="fw-bold mb-3">VII. Endorsement</h5>
-              {documentTypes.map((doc, index) => (
-                <div key={doc.id} className="mb-4">
-                  <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name}`}</p>
-                  <p className="mb-2">{documentDescriptions[doc.document_name]}</p>
-
-                  {["Letter of Intent", "Research Proposal", "Researcher/s Curriculum Vitae (CV)", "Gantt Chart", "Detailed Budget Breakdown"].includes(doc.document_name) && (
-                    <>
-                      <Form.Control
-                        type="file"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx"
-                        {...register(`documents.${index}.file`)}
-                      />
-
-                      <input
-                        type="hidden"
-                        {...register(`documents.${index}.document_title_id`)}
-                        value={doc.id}
-                      />
-                    </>
-                  )}
-                </div>
-              ))}
-            </FormCard>
-
-            <div className="d-flex justify-content-end mt-4">
-              <Button variant="outline-secondary" onClick={() => setStep(1)} className="me-2">Back</Button>
-              <Button variant="primary" type="submit">Submit</Button>
-            </div>
-          </>
-        )}
-      </Form> */}
-
       <div className='form-container'>
         <h1 className='mt-5 mb-5 fw-bold text-white'> New Research Application</h1>
         <Form className="form" onSubmit={handleSubmit(onSubmit)}>
@@ -557,6 +448,28 @@ function ApplicationForm() {
                           {...register(`documents.${index}.document_title_id`)}
                           value={doc.id}
                         />
+
+                        {doc.id == 7 &&
+                          <div className='breakdown mt-4'>
+                            <Row className='breakdown-column px-5'>
+                              <Col className='text-center mb-3'>Maintenance/Operational Fund</Col>
+                              <Col className='text-center mb-3'>Total (in Php)</Col>
+
+                              {breakdownDummyData.map((item, i) => {
+                                return (
+                                  <Row key={i} className='py-3'>
+                                    <Col><Form.Check type='checkbox' label={item.title} /></Col>
+                                    <Col><Form.Control placeholder={item.amount} className='text-end' /></Col>
+                                  </Row>
+                                )
+                              })}
+                              <Row className='my-3'>
+                                <Col className='ms-4'><b>Overall Total Amount</b></Col>
+                                <Col><Form.Control placeholder='215,750.00' className='text-end' /></Col>
+                              </Row>
+                            </Row>
+                          </div>
+                        }
                       </>
                     )}
                   </div>
