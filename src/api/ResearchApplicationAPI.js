@@ -78,4 +78,11 @@ export default class Auth extends Base {
     })
   }
 
+  fetchResearchDetails = async () => {
+    return this.sendRequest ({
+      path: `/api/v1/research/details/all`,
+      method: 'GET'
+    })
+  }
+
 }
