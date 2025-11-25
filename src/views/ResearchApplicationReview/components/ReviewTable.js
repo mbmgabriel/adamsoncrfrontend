@@ -8,19 +8,14 @@ import Tooltip from '../../../components/Tooltip/Tooltip'
 import Pagination from '../../../components/PaginationComponent/Pagination'
 import { useHistory } from 'react-router-dom'
 
-
 function ReviewTable() {
   const history = useHistory()
   const [researches, setResearches] = useState([])
-  const [showModal, setShowModal] = useState(false)
-  const [selectedResearch, setSelectedResearch] = useState()
-  const [page, setPage] = useState(1);
-  const pageSize = 15;
-  const totalItems = 60;
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(10)
 
   const fetchResearches = async () => {
-    let response = await new Auth().fetchResearches()
+    const response = await new Auth().fetchResearches()
     if (response.ok) {
       setResearches(response.data)
     } else {
@@ -28,33 +23,15 @@ function ReviewTable() {
     }
   }
 
-  const fetchResearchById = async (id) => {
-    let response = await new ResearchApplicationAPI().fetchResearchById(id)
-    if (response.ok) {
-      setSelectedResearch(response.data.Research)
-    } else {
-      console.error(response.errorMessage)
-    }
-  }
-
   useEffect(() => {
     fetchResearches()
   }, [])
 
-  const destroyResearch = async (id) => {
-    let response = await new ResearchApplicationAPI().destroyResearch(id)
-    if (response.ok) {
-      alert('Research Deleted')
-      fetchResearches()
-    } else {
-      alert('Something went wrong')
-    }
-  }
+  const displayedResearches = researches
+    .slice((page - 1) * pageSize, page * pageSize)
 
-  const handleViewResearch = (id) => {
-    setShowModal(true);
-    fetchResearchById(id);
-  }
+  const totalItems = researches.length
+  const totalPages = Math.ceil(totalItems / pageSize)
 
   return (
     <div className='research-table'>
@@ -62,12 +39,15 @@ function ReviewTable() {
         <div className='title'>New Research Application Review</div>
         <div className='search-div'>
           <SearchBar placeholder="(Type to search Research Title, Research Name)" />
-          <Tooltip text="Export to PDF" position="bottom"><FaFilePdf size={30} className='cursor-pointer' color='white' /></Tooltip>
-          <Tooltip text="Export to CSV" position="bottom"><FaFileCsv size={30} className='cursor-pointer' color='white' /></Tooltip>
+          <Tooltip text="Export to PDF" position="bottom">
+            <FaFilePdf size={30} className='cursor-pointer' color='white' />
+          </Tooltip>
+          <Tooltip text="Export to CSV" position="bottom">
+            <FaFileCsv size={30} className='cursor-pointer' color='white' />
+          </Tooltip>
         </div>
         <Nav
           className="mt-4 research-tabs"
-          // onSelect={(selectedKey) => alert(`selected ${selectedKey}`)}
           variant='underline'
         >
           <Nav.Item>
@@ -80,9 +60,7 @@ function ReviewTable() {
             <Nav.Link eventKey="link-2">Revised</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="link-3">
-              Endorsed
-            </Nav.Link>
+            <Nav.Link eventKey="link-3">Endorsed</Nav.Link>
           </Nav.Item>
         </Nav>
         <div className='table-div'>
@@ -95,16 +73,13 @@ function ReviewTable() {
               </tr>
             </thead>
             <tbody>
-              {researches.map((item) => {
-                return (
-                  <tr key={item.id} onClick={() => history.push(`/review-form/${item.id}`)}>
-                    <td>{item.title}</td>
-                    <td>{item.submitted_by}</td>
-                    {/* <td><Button onClick={() => handleViewResearch(item.id)}>View</Button><Button onClick={() => destroyResearch(item.id)} variant='danger'>Delete</Button></td> */}
-                    <td style={{ textAlign: 'center' }}><Badge>Completed</Badge></td>
-                  </tr>
-                )
-              })}
+              {displayedResearches.map((item) => (
+                <tr key={item.id} onClick={() => history.push(`/review-form/${item.id}`)}>
+                  <td>{item.title}</td>
+                  <td>{item.submitted_by}</td>
+                  <td style={{ textAlign: 'center' }}><Badge>Completed</Badge></td>
+                </tr>
+              ))}
             </tbody>
           </Table>
           <Pagination
