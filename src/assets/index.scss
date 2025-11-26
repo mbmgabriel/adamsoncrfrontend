@@ -626,16 +626,18 @@ body {
 }
 
 .user-div {
-  background-color: #f8feffb2;
+  background-color: #00703C;
   display: flex;
   justify-content: flex-end;
   align-items: end;
   padding: 10px 20px;
   position: relative;
+  color: #fff;
   .user-icon {
     font-size: 40px !important;
     margin-left: 10px;
   }
+
 }
 
 .home {
@@ -685,6 +687,15 @@ body {
           }
         }
       }
+    }
+  }
+  .graph-containers {
+    display: flex;
+    padding: 40px 40px;
+    flex-direction: column;
+    .graph-div {
+      display: flex;
+      gap: 10px
     }
   }
 }

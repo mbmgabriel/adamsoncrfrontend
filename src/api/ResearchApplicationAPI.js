@@ -36,6 +36,14 @@ export default class Auth extends Base {
     });
   };
 
+  createBudgetBreakdown = async (data) => {
+    return this.sendRequest ({
+      path: `/api/v1/budget_breakdowns/create`,
+      method: 'POST',
+      data
+    })
+  }
+
   fetchResearchById = async (id) => {
     return this.sendRequest({
       path: `/api/v1/research/${id}`,
@@ -75,6 +83,34 @@ export default class Auth extends Base {
     return this.sendRequest ({
       path: `/api/v1/research/${id}`,
       method: 'GET'
+    })
+  }
+
+  fetchResearchDetails = async () => {
+    return this.sendRequest ({
+      path: `/api/v1/research/details/all`,
+      method: 'GET'
+    })
+  }
+
+  fetchDepartments = async () => {
+    return this.sendRequest ({
+      path: `/api/v1/departments/all`,
+      method: 'GET'
+    })
+  }
+
+  fetchStatus = async () => {
+    return this.sendRequest ({
+      path: `/api/v1/status_tables/all`,
+      method: 'GET'
+    })
+  }
+
+  updateResearchStatus = async (id, status_id) => {
+    return this.sendRequest ({
+      path: `/api/v1/research/status/${id}/${status_id}`,
+      method: 'PUT',
     })
   }
 

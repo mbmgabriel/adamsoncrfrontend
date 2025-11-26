@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import FormCard from '../../../components/Card/FormCard';
 import TextInputCustom from '../../../components/Input/TextInputCustom';
 import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI';
@@ -140,10 +140,7 @@ function ApplicationForm() {
   const [representative, setRepresentative] = useState([]);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false)
-  const toRoman = (num) => {
-    const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
-    return romans[num - 1] || num;
-  };
+  const [budgetBreakdown, setBudgetBreakdown] = useState()
   const { control, handleSubmit, register, setValue, watch, reset, defaultValues } = useForm({
     defaultValues: {
       title: '',
@@ -156,8 +153,26 @@ function ApplicationForm() {
       submitted_date: '',
       researchers: Array(5).fill({}),
       endorsements: [],
+      breakdown: []
     },
   });
+  const breakdownValues = useWatch({
+    control,
+    name: 'breakdown',
+  }) || [];
+
+  const totalAmount = breakdownValues.reduce((acc, curr) => {
+    const isChecked = curr?.checked;
+    const amount = parseFloat(curr?.amount) || 0;
+    return isChecked ? acc + amount : acc;
+  }, 0);
+
+
+
+  const toRoman = (num) => {
+    const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
+    return romans[num - 1] || num;
+  };
 
   const documentDescriptions = {
     "Letter of Intent": "This application must be submitted together with the letter of intent to apply for research funding addressed to the CRD Executive Director, endorsed and signed by the College Research Coordinator, Department Chair and the College Dean.",
@@ -169,6 +184,8 @@ function ApplicationForm() {
     "Detailed Budget Breakdown": "Must have high-probability of estimation accuracy of project expenses."
   };
 
+  console.log({ budgetBreakdown })
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -177,20 +194,20 @@ function ApplicationForm() {
         setCategories(categoryRes.data.ResearchCategory);
       }
 
-      const repRes = await new ResearchApplicationAPI().fetchEndorsementRepresentative();
-      if (repRes.ok) {
-        const reps = repRes.data.EndorsementRepresentative;
-        setRepresentative(reps);
+      // const repRes = await new ResearchApplicationAPI().fetchEndorsementRepresentative();
+      // if (repRes.ok) {
+      //   const reps = repRes.data.EndorsementRepresentative;
+      //   setRepresentative(reps);
 
-        reset({
-          ...defaultValues,
-          endorsements: reps.map(r => ({
-            endorsement_rep_id: r.id,
-            endorsement_rep_name: '',
-            status: '',
-          }))
-        });
-      }
+      //   reset({
+      //     ...defaultValues,
+      //     endorsements: reps.map(r => ({
+      //       endorsement_rep_id: r.id,
+      //       endorsement_rep_name: '',
+      //       status: parseInt(4),
+      //     }))
+      //   });
+      // }
 
       const docTypesRes = await new ResearchApplicationAPI().fetchDocumentTypes();
       if (docTypesRes.ok) {
@@ -201,6 +218,36 @@ function ApplicationForm() {
 
     fetchData();
   }, [reset, defaultValues]);
+
+  useEffect(() => {
+    const fetchResearchDetails = async () => {
+      let res = await new ResearchApplicationAPI().fetchResearchDetails();
+      if (res.ok) {
+        setBudgetBreakdown(res.data?.Details?.BudgetBreakdownDetails);
+        setRepresentative(res?.data?.Details?.EndorsementRepresentative)
+      } else {
+        console.log("error fetching research details");
+      }
+    };
+
+
+    fetchResearchDetails();
+  }, [reset]);
+
+  useEffect(() => {
+    if (budgetBreakdown?.length) {
+      const breakdownDefaults = budgetBreakdown.map(item => ({
+        checked: false,
+        fund_id: item.id,
+        amount: ''
+      }));
+
+      reset(prev => ({
+        ...prev,
+        breakdown: breakdownDefaults
+      }));
+    }
+  }, [budgetBreakdown, reset]);
 
   const onSubmit = async (data) => {
     console.log('✅ Final Submitted Data:', data);
@@ -217,6 +264,7 @@ function ApplicationForm() {
         ethical_considerations: data.ethical_considerations ? 1 : 0,
         submitted_by: data.submitted_by,
         submitted_date: data.submitted_date,
+        status_id: 3 
       });
 
       if (!researchResponse.ok) return alert('Failed to create research.');
@@ -265,16 +313,26 @@ function ApplicationForm() {
         }
       }
 
+      for (const breakdown of data.breakdown) {
+        if (!breakdown.checked) continue;
+
+        await new ResearchApplicationAPI().createBudgetBreakdown({
+          research_id: researchId,
+          fund_id: parseInt(breakdown.fund_id),
+          amount: parseInt(breakdown.amount)
+        });
+      }
+
       alert('Research submitted successfully.');
 
-      reset({
-        ...defaultValues,
-        endorsements: representative.map(r => ({
-          endorsement_rep_id: r.id,
-          endorsement_rep_name: '',
-          status: '',
-        })),
-      });
+      // reset({
+      //   ...defaultValues,
+      //   endorsements: representative.map(r => ({
+      //     endorsement_rep_id: r.id,
+      //     endorsement_rep_name: '',
+      //     status: '',
+      //   })),
+      // });
       setStep(1);
 
     } catch (e) {
@@ -285,28 +343,7 @@ function ApplicationForm() {
     }
   };
 
-  let breakdownDummyData = [
-    {
-      title: 'Transportation',
-      amount: '10,000.00'
-    },
-    {
-      title: 'Meal (Consultants and Respondents)',
-      amount: '18,500.00'
-    },
-    {
-      title: 'Supplies and Materials needed',
-      amount: '3,500.00'
-    },
-    {
-      title: 'Analysis and Laboratory test',
-      amount: '60,000.00'
-    },
-    {
-      title: 'Others',
-      amount: '123,750.00'
-    },
-  ]
+  console.log({representative})
 
   return (
     <div className="application-form">
@@ -407,9 +444,10 @@ function ApplicationForm() {
                     <Col>
                       <TextInputCustom
                         isForm={true}
-                        label={item.rep_name}
+                        disabled={true}
+                        label={item.UserAccount.UserRole.role_desc}
                         type="text"
-                        placeholder=""
+                        placeholder={`${item.first_name} ${item.last_name}`}
                         {...register(`endorsements.${index}.endorsement_rep_name`)}
                       />
                     </Col>
@@ -419,8 +457,9 @@ function ApplicationForm() {
                         isForm={true}
                         label="Status"
                         type="text"
+                        disabled={true}
                         placeholder="Not yet endorsed"
-                        {...register(`endorsements.${index}.status`)}
+                      // {...register(`endorsements.${index}.status`)}
                       />
                     </Col>
                   </Row>
@@ -455,17 +494,41 @@ function ApplicationForm() {
                               <Col className='text-center mb-3'>Maintenance/Operational Fund</Col>
                               <Col className='text-center mb-3'>Total (in Php)</Col>
 
-                              {breakdownDummyData.map((item, i) => {
-                                return (
-                                  <Row key={i} className='py-3'>
-                                    <Col><Form.Check type='checkbox' label={item.title} /></Col>
-                                    <Col><Form.Control placeholder={item.amount} className='text-end' /></Col>
-                                  </Row>
-                                )
-                              })}
+                              {budgetBreakdown?.map((item, i) => (
+                                <Row key={i} className='py-3'>
+                                  <Col>
+                                    <Form.Check
+                                      type='checkbox'
+                                      label={item.fund_name}
+                                      {...register(`breakdown.${i}.checked`)}
+                                    />
+                                  </Col>
+                                  <Col>
+
+                                    <input
+                                      type="hidden"
+                                      {...register(`breakdown.${i}.fund_id`)}
+                                      value={item.id}
+                                    />
+                                    <Form.Control
+                                      type='number'
+                                      step='0.01'
+                                      className='text-end'
+                                      {...register(`breakdown.${i}.amount`)}
+                                    />
+                                  </Col>
+                                </Row>
+                              ))}
+
                               <Row className='my-3'>
                                 <Col className='ms-4'><b>Overall Total Amount</b></Col>
-                                <Col><Form.Control placeholder='215,750.00' className='text-end' /></Col>
+                                <Col>
+                                  <Form.Control
+                                    readOnly
+                                    value={(totalAmount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                    className='text-end'
+                                  />
+                                </Col>
                               </Row>
                             </Row>
                           </div>
@@ -476,22 +539,23 @@ function ApplicationForm() {
                 </FormCard>
               ))}
             </>)}
+
+          <div className='btn-groups'>
+            {step === 1 ? (
+              <>
+                <OutlineButton label="Cancel" />
+                <OutlineButton label="Save as Draft" />
+                <ConfirmationButton label="Next" onProceed={() => setStep(2)} />
+              </>
+            ) : (
+              <>
+                <OutlineButton label="Back" onCancel={() => setStep(1)} />
+                <OutlineButton label="Save as Draft" />
+                <Button className='btn-confirmation-custom' variant="primary" type="submit">Submit</Button>
+              </>
+            )}
+          </div>
         </Form>
-        <div className='btn-groups'>
-          {step === 1 ? (
-            <>
-              <OutlineButton label="Cancel" />
-              <OutlineButton label="Save as Draft" />
-              <ConfirmationButton label="Next" onProceed={() => setStep(2)} />
-            </>
-          ) : (
-            <>
-              <OutlineButton label="Back" onCancel={() => setStep(1)} />
-              <OutlineButton label="Save as Draft" />
-              <Button className='btn-confirmation-custom' variant="primary" type="submit">Submit</Button>
-            </>
-          )}
-        </div>
       </div>
     </div>
   );
