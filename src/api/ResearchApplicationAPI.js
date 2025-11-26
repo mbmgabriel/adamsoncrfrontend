@@ -107,4 +107,11 @@ export default class Auth extends Base {
     })
   }
 
+  updateResearchStatus = async (id, status_id) => {
+    return this.sendRequest ({
+      path: `/api/v1/research/status/${id}/${status_id}`,
+      method: 'PUT',
+    })
+  }
+
 }

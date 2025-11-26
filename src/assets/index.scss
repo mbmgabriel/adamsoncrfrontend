@@ -689,6 +689,15 @@ body {
       }
     }
   }
+  .graph-containers {
+    display: flex;
+    padding: 40px 40px;
+    flex-direction: column;
+    .graph-div {
+      display: flex;
+      gap: 10px
+    }
+  }
 }
 
 .form-card {
@@ -704,7 +713,7 @@ body {
     background-color: $secondary-background;
     .form {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 20px;
       .title {
         font-weight: bold;
