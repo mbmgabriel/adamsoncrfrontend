@@ -713,7 +713,7 @@ body {
     background-color: $secondary-background;
     .form {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 20px;
       .title {
         font-weight: bold;
