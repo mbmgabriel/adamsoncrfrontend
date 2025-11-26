@@ -1,21 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Row, Col, Button } from 'react-bootstrap';
-import { useForm, useWatch } from 'react-hook-form';
-import FormCard from '../../../components/Card/FormCard';
-import TextInputCustom from '../../../components/Input/TextInputCustom';
-import ResearchApplicationAPI from '../../../api/ResearchApplicationAPI';
-import TransparentLoader from '../../../components/Loader/TransparentLoader';
-import OutlineButton from '../../../components/Buttons/OutlineButton';
-import ConfirmationButton from '../../../components/Buttons/ConfirmationButton';
+import React, { useEffect, useState } from "react";
+import { Form, Row, Col, Button } from "react-bootstrap";
+import { useForm, useWatch } from "react-hook-form";
+import FormCard from "../../../components/Card/FormCard";
+import TextInputCustom from "../../../components/Input/TextInputCustom";
+import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
+import TransparentLoader from "../../../components/Loader/TransparentLoader";
+import OutlineButton from "../../../components/Buttons/OutlineButton";
+import ConfirmationButton from "../../../components/Buttons/ConfirmationButton";
 
-export function ResearcherSection({ index, isMain, control, register, watch, setValue }) {
-  const numberLabel = isMain ? 'Researcher 1 (Main Author)' : `Researcher ${index + 1} (Co-author)`;
+export function ResearcherSection({
+  index,
+  isMain,
+  control,
+  register,
+  watch,
+  setValue,
+}) {
+  const numberLabel = isMain
+    ? "Researcher 1 (Main Author)"
+    : `Researcher ${index + 1} (Co-author)`;
 
   const enabled = isMain ? true : watch(`researchers.${index}.enabled`);
-  const sameCollege = watch('sameCollege');
-  const sameDept = watch('sameDept');
-  const mainCollege = watch('researchers.0.college');
-  const mainDept = watch('researchers.0.dept');
+  const sameCollege = watch("sameCollege");
+  const sameDept = watch("sameDept");
+  const mainCollege = watch("researchers.0.college");
+  const mainDept = watch("researchers.0.dept");
 
   useEffect(() => {
     if (!isMain && sameCollege && mainCollege) {
@@ -51,7 +60,9 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
             required={isMain}
             isForm={true}
             disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.id_number`, { required: isMain })}
+            {...register(`researchers.${index}.id_number`, {
+              required: isMain,
+            })}
           />
           <TextInputCustom
             label="First Name"
@@ -59,7 +70,9 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
             required={isMain}
             isForm={true}
             disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.first_name`, { required: isMain })}
+            {...register(`researchers.${index}.first_name`, {
+              required: isMain,
+            })}
           />
           <TextInputCustom
             label="Last Name"
@@ -67,7 +80,9 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
             required={isMain}
             isForm={true}
             disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.last_name`, { required: isMain })}
+            {...register(`researchers.${index}.last_name`, {
+              required: isMain,
+            })}
           />
           <TextInputCustom
             label="Mobile No."
@@ -75,7 +90,9 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
             required={isMain}
             isForm={true}
             disabled={!enabled && !isMain}
-            {...register(`researchers.${index}.mobile_number`, { required: isMain })}
+            {...register(`researchers.${index}.mobile_number`, {
+              required: isMain,
+            })}
           />
           <TextInputCustom
             label="Email"
@@ -88,10 +105,10 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
         </Col>
 
         <Col>
-          <Form.Group className='flex-container custom-input'>
-            <Form.Label className='custom-label'>College</Form.Label>
+          <Form.Group className="flex-container custom-input">
+            <Form.Label className="custom-label">College</Form.Label>
             <Form.Select
-              className='custom-control'
+              className="custom-control"
               disabled={(sameCollege && !isMain) || (!enabled && !isMain)}
               {...register(`researchers.${index}.college`)}
             >
@@ -108,10 +125,10 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
             />
           )}
 
-          <Form.Group className='flex-container custom-input'>
-            <Form.Label className='custom-label'>Department</Form.Label>
+          <Form.Group className="flex-container custom-input">
+            <Form.Label className="custom-label">Department</Form.Label>
             <Form.Select
-              className='custom-control'
+              className="custom-control"
               disabled={(sameDept && !isMain) || (!enabled && !isMain)}
               {...register(`researchers.${index}.dept`)}
             >
@@ -134,32 +151,42 @@ export function ResearcherSection({ index, isMain, control, register, watch, set
 }
 
 function ApplicationForm() {
-  const BASE_URL = "https://adamsoncr.tekteachlms.com"
+  const BASE_URL = "https://adamsoncr.tekteachlms.com";
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
   const [documentTypes, setDocumentTypes] = useState([]);
-  const [loading, setLoading] = useState(false)
-  const [budgetBreakdown, setBudgetBreakdown] = useState()
-  const { control, handleSubmit, register, setValue, watch, reset, defaultValues } = useForm({
+  const [loading, setLoading] = useState(false);
+  const [budgetBreakdown, setBudgetBreakdown] = useState();
+  const {
+    control,
+    handleSubmit,
+    register,
+    setValue,
+    watch,
+    reset,
+    defaultValues,
+  } = useForm({
     defaultValues: {
-      title: '',
+      title: "",
       category: [],
       purpose_id: 1,
-      version_number: '',
-      research_duration: '',
+      version_number: "",
+      research_duration: "",
       ethical_considerations: false,
-      submitted_by: '',
-      submitted_date: '',
+      submitted_by: "",
+      submitted_date: "",
       researchers: Array(5).fill({}),
       endorsements: [],
-      breakdown: []
+      breakdown: [],
     },
   });
-  const breakdownValues = useWatch({
-    control,
-    name: 'breakdown',
-  }) || [];
+  const breakdownValues =
+    useWatch({
+      control,
+      name: "breakdown",
+    }) || [];
+  const checkedValues = watch("breakdown");
 
   const totalAmount = breakdownValues.reduce((acc, curr) => {
     const isChecked = curr?.checked;
@@ -167,25 +194,40 @@ function ApplicationForm() {
     return isChecked ? acc + amount : acc;
   }, 0);
 
-
-
   const toRoman = (num) => {
-    const romans = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x'];
+    const romans = [
+      "I",
+      "II",
+      "III",
+      "IV",
+      "V",
+      "VI",
+      "VII",
+      "VIII",
+      "IX",
+      "X",
+    ];
     return romans[num - 1] || num;
   };
 
   const documentDescriptions = {
-    "Letter of Intent": "This application must be submitted together with the letter of intent to apply for research funding addressed to the CRD Executive Director, endorsed and signed by the College Research Coordinator, Department Chair and the College Dean.",
-    "Research Proposal": "Full proposal should be submitted together with this form which includes Background of the Study, Review of Related Literature and Methodology.",
-    "Researcher/s Curriculum Vitae (CV)": "A copy of the Researcher/s Curriculum Vitae (CV) should also be submitted. The content of the CV must include the list of previous research done by the researcher, incorporating his/her thesis or dissertation topic/study.",
-    "Initial Review and Screening": "All researches will undergo initial review and screening prior to approval.",
-    "Ethics Review": "Proposals with human participants must undergo Ethics Review by the UERC.",
-    "Gantt Chart": "Activities related to project implementation. Exclude proposal preparation.",
-    "Detailed Budget Breakdown": "Must have high-probability of estimation accuracy of project expenses."
+    "Letter of Intent":
+      "This application must be submitted together with the letter of intent to apply for research funding addressed to the CRD Executive Director, endorsed and signed by the College Research Coordinator, Department Chair and the College Dean.",
+    "Research Proposal":
+      "Full proposal should be submitted together with this form which includes Background of the Study, Review of Related Literature and Methodology.",
+    "Researcher/s Curriculum Vitae (CV)":
+      "A copy of the Researcher/s Curriculum Vitae (CV) should also be submitted. The content of the CV must include the list of previous research done by the researcher, incorporating his/her thesis or dissertation topic/study.",
+    "Initial Review and Screening":
+      "All researches will undergo initial review and screening prior to approval.",
+    "Ethics Review":
+      "Proposals with human participants must undergo Ethics Review by the UERC.",
+    "Gantt Chart":
+      "Activities related to project implementation. Exclude proposal preparation.",
+    "Detailed Budget Breakdown":
+      "Must have high-probability of estimation accuracy of project expenses.",
   };
 
-  console.log({ budgetBreakdown })
-
+  console.log({ budgetBreakdown });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -209,7 +251,8 @@ function ApplicationForm() {
       //   });
       // }
 
-      const docTypesRes = await new ResearchApplicationAPI().fetchDocumentTypes();
+      const docTypesRes =
+        await new ResearchApplicationAPI().fetchDocumentTypes();
       if (docTypesRes.ok) {
         const dox = docTypesRes.data.DocumentTypes;
         setDocumentTypes(dox);
@@ -224,53 +267,53 @@ function ApplicationForm() {
       let res = await new ResearchApplicationAPI().fetchResearchDetails();
       if (res.ok) {
         setBudgetBreakdown(res.data?.Details?.BudgetBreakdownDetails);
-        setRepresentative(res?.data?.Details?.EndorsementRepresentative)
+        setRepresentative(res?.data?.Details?.EndorsementRepresentative);
       } else {
         console.log("error fetching research details");
       }
     };
-
 
     fetchResearchDetails();
   }, [reset]);
 
   useEffect(() => {
     if (budgetBreakdown?.length) {
-      const breakdownDefaults = budgetBreakdown.map(item => ({
+      const breakdownDefaults = budgetBreakdown.map((item) => ({
         checked: false,
         fund_id: item.id,
-        amount: ''
+        amount: "",
       }));
 
-      reset(prev => ({
+      reset((prev) => ({
         ...prev,
-        breakdown: breakdownDefaults
+        breakdown: breakdownDefaults,
       }));
     }
   }, [budgetBreakdown, reset]);
 
   const onSubmit = async (data) => {
-    console.log('✅ Final Submitted Data:', data);
-    console.log('✅ Endorsements:', data.endorsements);
-    setLoading(true)
+    console.log("✅ Final Submitted Data:", data);
+    console.log("✅ Endorsements:", data.endorsements);
+    setLoading(true);
 
     try {
-      const researchResponse = await new ResearchApplicationAPI().createResearch({
-        title: data.title,
-        category: data.category.filter(Boolean).join(','),
-        purpose_id: data.purpose_id,
-        version_number: data.version_number,
-        research_duration: data.research_duration,
-        ethical_considerations: data.ethical_considerations ? 1 : 0,
-        submitted_by: data.submitted_by,
-        submitted_date: data.submitted_date,
-        status_id: 3 
-      });
+      const researchResponse =
+        await new ResearchApplicationAPI().createResearch({
+          title: data.title,
+          category: data.category.filter(Boolean).join(","),
+          purpose_id: data.purpose_id,
+          version_number: data.version_number,
+          research_duration: data.research_duration,
+          ethical_considerations: data.ethical_considerations ? 1 : 0,
+          submitted_by: data.submitted_by,
+          submitted_date: data.submitted_date,
+          status_id: 3,
+        });
 
-      if (!researchResponse.ok) return alert('Failed to create research.');
+      if (!researchResponse.ok) return alert("Failed to create research.");
       const researchId = researchResponse.data.Research.id;
 
-      for (const investigator of data.researchers.filter(r => r.id_number)) {
+      for (const investigator of data.researchers.filter((r) => r.id_number)) {
         await new ResearchApplicationAPI().createResearchInvestigators({
           research_id: researchId,
           ...investigator,
@@ -285,20 +328,21 @@ function ApplicationForm() {
       }
 
       for (const document of data.documents || []) {
-        if (!document || !document.file || !document.document_title_id) continue;
+        if (!document || !document.file || !document.document_title_id)
+          continue;
 
         const file = document.file[0];
         if (!(file instanceof File)) continue;
 
         const formData = new FormData();
-        formData.append('document_filepath', file);
+        formData.append("document_filepath", file);
 
         const token = await window.localStorage.getItem("token");
 
         const response = await fetch(
           `${BASE_URL}/api/v1/research_documents/create/${researchId}/${document.document_title_id}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -307,9 +351,13 @@ function ApplicationForm() {
         );
 
         if (!response.ok) {
-          console.warn(`❌ Failed to upload document with title ID ${document.document_title_id}`);
+          console.warn(
+            `❌ Failed to upload document with title ID ${document.document_title_id}`
+          );
         } else {
-          console.log(`✅ Document ${document.document_title_id} uploaded successfully`);
+          console.log(
+            `✅ Document ${document.document_title_id} uploaded successfully`
+          );
         }
       }
 
@@ -319,11 +367,11 @@ function ApplicationForm() {
         await new ResearchApplicationAPI().createBudgetBreakdown({
           research_id: researchId,
           fund_id: parseInt(breakdown.fund_id),
-          amount: parseInt(breakdown.amount)
+          amount: parseInt(breakdown.amount),
         });
       }
 
-      alert('Research submitted successfully.');
+      alert("Research submitted successfully.");
 
       // reset({
       //   ...defaultValues,
@@ -334,39 +382,46 @@ function ApplicationForm() {
       //   })),
       // });
       setStep(1);
-
     } catch (e) {
       console.error(e);
-      alert('An error occurred during submission.');
+      alert("An error occurred during submission.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
-  console.log({representative})
+  console.log({ representative });
 
   return (
     <div className="application-form">
       {loading && <TransparentLoader />}
-      <div className='form-container'>
-        <h1 className='mt-5 mb-5 fw-bold text-white'> New Research Application</h1>
+      <div className="form-container">
+        <h1 className="mt-5 mb-5 fw-bold text-white">
+          {" "}
+          New Research Application
+        </h1>
         <Form className="form" onSubmit={handleSubmit(onSubmit)}>
           {step === 1 && (
             <>
-              <FormCard className='flex-container'>
-                <Form.Label className='title me-3'>Title</Form.Label>
-                <Form.Control as="textarea" rows={4} {...register('title', { required: true })} />
+              <FormCard className="flex-container">
+                <Form.Label className="title me-3">Title</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  {...register("title", { required: true })}
+                />
               </FormCard>
               <FormCard>
-                <h5 className="title">I. Protocol’s 5-point Research Agenda Category</h5>
-                <div
-                  className='content-checkbox'>
-                  {categories.map(item => (
+                <h5 className="title">
+                  I. Protocol’s 5-point Research Agenda Category
+                </h5>
+                <div className="content-checkbox">
+                  {categories.map((item) => (
                     <Form.Check
                       key={item.id}
                       label={item.research_name}
                       type="checkbox"
-                      {...register('category')}
+                      {...register("category")}
                       value={item.id}
                     />
                   ))}
@@ -374,25 +429,41 @@ function ApplicationForm() {
               </FormCard>
               <FormCard>
                 <h5 className="title">II. Purpose of Submission</h5>
-                <Row className='px-4'>
+                <Row className="px-4">
                   <Col>
                     <Row>
                       <Col>
-                        <Form.Check label="Initial" type="radio" value={1} {...register('purpose_id')} defaultChecked />
+                        <Form.Check
+                          label="Initial"
+                          type="radio"
+                          value={1}
+                          {...register("purpose_id")}
+                          defaultChecked
+                        />
                       </Col>
                       <Col>
-                        <Form.Check label="Resubmission" type="radio" value={2} {...register('purpose_id')} />
+                        <Form.Check
+                          label="Resubmission"
+                          type="radio"
+                          value={2}
+                          {...register("purpose_id")}
+                        />
                       </Col>
                     </Row>
                   </Col>
-                  <Col className='flex-container mt--6'>
-                    <Form.Label className='mb-0 form-labels'>Version Number</Form.Label>
-                    <Form.Control type='text'  {...register('version_number')} />
+                  <Col className="flex-container mt--6">
+                    <Form.Label className="mb-0 form-labels">
+                      Version Number
+                    </Form.Label>
+                    <Form.Control type="text" {...register("version_number")} />
                   </Col>
                 </Row>
               </FormCard>
               <FormCard>
-                <div className="title flex flex-row"><span className='me-4'>III. Investigators</span><span className="text-danger">*</span> Required Fields</div>
+                <div className="title flex flex-row">
+                  <span className="me-4">III. Investigators</span>
+                  <span className="text-danger">*</span> Required Fields
+                </div>
                 {[...Array(5)].map((_, i) => (
                   <ResearcherSection
                     key={i}
@@ -405,28 +476,48 @@ function ApplicationForm() {
                   />
                 ))}
               </FormCard>
-            </>)}
+            </>
+          )}
 
           {step === 2 && (
             <>
               <FormCard>
                 <h5 className="fw-bold mb-3">IV. Research Duration</h5>
-                <TextInputCustom label="Duration (semesters)" isForm={true} type="text" {...register('research_duration')} />
+                <TextInputCustom
+                  label="Duration (semesters)"
+                  isForm={true}
+                  type="text"
+                  {...register("research_duration")}
+                />
               </FormCard>
 
               <FormCard>
                 <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
-                <Form.Check label="With Human Participants" isForm={true} type="checkbox" {...register('ethical_considerations')} />
+                <Form.Check
+                  label="With Human Participants"
+                  isForm={true}
+                  type="checkbox"
+                  {...register("ethical_considerations")}
+                />
               </FormCard>
 
               <FormCard>
                 <h5 className="fw-bold mb-3">VI. Submission</h5>
                 <Row>
                   <Col>
-                    <TextInputCustom label="Submitted by" isForm={true} type="text" {...register('submitted_by')} />
+                    <TextInputCustom
+                      label="Submitted by"
+                      isForm={true}
+                      type="text"
+                      {...register("submitted_by")}
+                    />
                   </Col>
                   <Col>
-                    <TextInputCustom isForm={true} type="date" {...register('submitted_date')} />
+                    <TextInputCustom
+                      isForm={true}
+                      type="date"
+                      {...register("submitted_date")}
+                    />
                   </Col>
                 </Row>
               </FormCard>
@@ -448,7 +539,9 @@ function ApplicationForm() {
                         label={item.UserAccount.UserRole.role_desc}
                         type="text"
                         placeholder={`${item.first_name} ${item.last_name}`}
-                        {...register(`endorsements.${index}.endorsement_rep_name`)}
+                        {...register(
+                          `endorsements.${index}.endorsement_rep_name`
+                        )}
                       />
                     </Col>
 
@@ -459,22 +552,32 @@ function ApplicationForm() {
                         type="text"
                         disabled={true}
                         placeholder="Not yet endorsed"
-                      // {...register(`endorsements.${index}.status`)}
+                        // {...register(`endorsements.${index}.status`)}
                       />
                     </Col>
                   </Row>
                 ))}
               </FormCard>
 
-              <h4 className='text-white'>Notes:</h4>
+              <h4 className="text-white">Notes:</h4>
 
               {documentTypes.map((doc, index) => (
                 <FormCard>
                   <div key={doc.id} className="mb-4">
-                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name}`}</p>
-                    <p className="mb-2">{documentDescriptions[doc.document_name]}</p>
+                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${
+                      doc.document_name
+                    }`}</p>
+                    <p className="mb-2">
+                      {documentDescriptions[doc.document_name]}
+                    </p>
 
-                    {["Letter of Intent", "Research Proposal", "Researcher/s Curriculum Vitae (CV)", "Gantt Chart", "Detailed Budget Breakdown"].includes(doc.document_name) && (
+                    {[
+                      "Letter of Intent",
+                      "Research Proposal",
+                      "Researcher/s Curriculum Vitae (CV)",
+                      "Gantt Chart",
+                      "Detailed Budget Breakdown",
+                    ].includes(doc.document_name) && (
                       <>
                         <Form.Control
                           type="file"
@@ -488,59 +591,71 @@ function ApplicationForm() {
                           value={doc.id}
                         />
 
-                        {doc.id == 7 &&
-                          <div className='breakdown mt-4'>
-                            <Row className='breakdown-column px-5'>
-                              <Col className='text-center mb-3'>Maintenance/Operational Fund</Col>
-                              <Col className='text-center mb-3'>Total (in Php)</Col>
+                        {doc.id == 7 && (
+                          <div className="breakdown mt-4">
+                            <Row className="breakdown-column px-5">
+                              <Col className="text-center mb-3">
+                                Maintenance/Operational Fund
+                              </Col>
+                              <Col className="text-center mb-3">
+                                Total (in Php)
+                              </Col>
 
                               {budgetBreakdown?.map((item, i) => (
-                                <Row key={i} className='py-3'>
+                                <Row key={i} className="py-3">
                                   <Col>
                                     <Form.Check
-                                      type='checkbox'
+                                      type="checkbox"
                                       label={item.fund_name}
                                       {...register(`breakdown.${i}.checked`)}
                                     />
                                   </Col>
-                                  <Col>
 
+                                  <Col>
                                     <input
                                       type="hidden"
                                       {...register(`breakdown.${i}.fund_id`)}
                                       value={item.id}
                                     />
+
                                     <Form.Control
-                                      type='number'
-                                      step='0.01'
-                                      className='text-end'
+                                      type="number"
+                                      step="0.01"
+                                      className="text-end"
                                       {...register(`breakdown.${i}.amount`)}
+                                      disabled={!checkedValues?.[i]?.checked}
                                     />
                                   </Col>
                                 </Row>
                               ))}
 
-                              <Row className='my-3'>
-                                <Col className='ms-4'><b>Overall Total Amount</b></Col>
+                              <Row className="my-3">
+                                <Col className="ms-4">
+                                  <b>Overall Total Amount</b>
+                                </Col>
                                 <Col>
                                   <Form.Control
                                     readOnly
-                                    value={(totalAmount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
-                                    className='text-end'
+                                    value={(totalAmount || 0).toLocaleString(
+                                      "en-PH",
+                                      { minimumFractionDigits: 2 }
+                                    )}
+                                    className="text-end"
                                   />
                                 </Col>
                               </Row>
                             </Row>
                           </div>
-                        }
+                        )}
                       </>
                     )}
                   </div>
                 </FormCard>
               ))}
-            </>)}
+            </>
+          )}
 
-          <div className='btn-groups'>
+          <div className="btn-groups">
             {step === 1 ? (
               <>
                 <OutlineButton label="Cancel" />
@@ -551,7 +666,13 @@ function ApplicationForm() {
               <>
                 <OutlineButton label="Back" onCancel={() => setStep(1)} />
                 <OutlineButton label="Save as Draft" />
-                <Button className='btn-confirmation-custom' variant="primary" type="submit">Submit</Button>
+                <Button
+                  className="btn-confirmation-custom"
+                  variant="primary"
+                  type="submit"
+                >
+                  Submit
+                </Button>
               </>
             )}
           </div>
