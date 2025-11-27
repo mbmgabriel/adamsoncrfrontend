@@ -69,7 +69,7 @@ function ResearchTable() {
   const filteredResearches = researches.filter((r) => {
     if (activeTab === "All") return true;
 
-    const statusObj = status.find((s) => s.id === r.status_id);
+    const statusObj = status?.find((s) => s.id === r.status_id);
     if (!statusObj) return false;
 
     return statusObj.status === activeTab;
@@ -148,7 +148,7 @@ function ResearchTable() {
                       }
                     >
                       {Array.isArray(status)
-                        ? status.find((s) => s.id === item.status_id)?.status || "Unknown"
+                        ? status?.find((s) => s.id === item.status_id)?.status || "Unknown"
                         : "Unknown"}
                     </Badge>
                   </td>

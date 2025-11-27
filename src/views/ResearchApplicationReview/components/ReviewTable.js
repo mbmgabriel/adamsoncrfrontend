@@ -44,7 +44,7 @@ function ReviewTable() {
   // 🔥 FILTERING BY TAB
   // -----------------------
   const filteredResearches = researches.filter((item) => {
-    const userEndorsement = item.Endorsements.find(
+    const userEndorsement = item.Endorsements?.find(
       (e) => e.endorsement_rep_id.toString() === userID
     );
 
@@ -136,7 +136,7 @@ function ReviewTable() {
             </thead>
             <tbody className="cursor-pointer">
               {displayedResearches.map((item) => {
-                const userEndorsement = item.Endorsements.find(
+                const userEndorsement = item.Endorsements?.find(
                   (e) => e.endorsement_rep_id.toString() === userID
                 );
 
