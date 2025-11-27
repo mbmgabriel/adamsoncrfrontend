@@ -159,7 +159,9 @@ function ResearchApplicationReviewForm() {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [researchData, setResearchData] = useState(null);
+  const [remarks, setRemarks] = useState("");
   const { id } = useParams();
+  const userID = localStorage.getItem("id");
 
   const { control, handleSubmit, register, setValue, watch, reset } = useForm({
     defaultValues: {
@@ -209,7 +211,6 @@ function ResearchApplicationReviewForm() {
     return romans[num - 1] || num;
   };
 
-  // Fetch research data by ID and pre-populate form
   useEffect(() => {
     const fetchResearchByID = async () => {
       setLoading(true);
@@ -221,10 +222,8 @@ function ResearchApplicationReviewForm() {
           const research = response.data.Research;
           setResearchData(research);
 
-          // Pre-populate form data
           setValue("title", research.title || "");
 
-          // Pre-populate protocol categories - check boxes based on IDs from backend
           if (research.category && Array.isArray(research.category)) {
             const categoryIds = research.category.map((cat) =>
               cat.id.toString()
@@ -232,12 +231,10 @@ function ResearchApplicationReviewForm() {
             setValue("category", categoryIds);
           }
 
-          // Pre-populate purpose - check the correct radio based on purpose_id
           setValue("purpose_id", research.purpose_id?.toString() || "1");
           setValue("version_number", research.version_number || "");
           setValue("research_duration", research.research_duration || "");
 
-          // Pre-populate ethical considerations - check if ethical_considerations is 1
           setValue(
             "ethical_considerations",
             research.ethical_considerations === 1
@@ -249,7 +246,6 @@ function ResearchApplicationReviewForm() {
             research.submitted_date ? research.submitted_date.split("T")[0] : ""
           );
 
-          // Pre-populate researchers
           const researchersData = Array(5).fill({ enabled: false });
           if (research.research_investigators) {
             research.research_investigators.forEach((investigator, index) => {
@@ -273,7 +269,6 @@ function ResearchApplicationReviewForm() {
           }
           setValue("researchers", researchersData);
 
-          // Pre-populate endorsements
           if (research.endorsements && representative.length > 0) {
             const endorsementsData = representative.map((rep, index) => {
               const researchEndorsement = research.endorsements?.find(
@@ -303,7 +298,6 @@ function ResearchApplicationReviewForm() {
     }
   }, [id, setValue, representative]);
 
-  // Fetch categories, representatives, and document types
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -340,8 +334,17 @@ function ResearchApplicationReviewForm() {
     console.log("Form Data:", data);
   };
 
-  const updateResearchStatus = async (status_id) => {
-    const response = await new ResearchApplicationAPI().updateResearchStatus(id, status_id);
+  const updateEndorsementStatus = async () => {
+    let data = {
+      research_id: id,
+      endorsement_rep_id: userID,
+      status_id: 6,
+      remarks: remarks,
+    };
+    const response = await new ResearchApplicationAPI().updateEndorsementStatus(
+      userID,
+      data
+    );
     if (response.ok) {
       alert("Successfully endorsed research");
       setConfirmationModal(!confirmationModal);
@@ -383,7 +386,10 @@ function ResearchApplicationReviewForm() {
           }}
         />
         {proceedStep === 1 && (
-          <OutlineButton label="Yes" onCancel={() => updateResearchStatus(1)} />
+          <OutlineButton
+            label="Yes"
+            onCancel={() => updateEndorsementStatus()}
+          />
         )}
       </div>
     </CustomModal>
@@ -414,7 +420,7 @@ function ResearchApplicationReviewForm() {
     },
   ];
 
-  console.log({ breakdownDummyData });
+  console.log({ remarks });
   return (
     <MainContainer>
       {loading && <TransparentLoader />}
@@ -699,7 +705,8 @@ function ResearchApplicationReviewForm() {
                       as="textarea"
                       placeholder="Type in your comments/suggestions."
                       rows={8}
-                      {...register("remarks")}
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)} 
                     />
                   </FormCard>
                 </div>

@@ -9,6 +9,14 @@ export default class Auth extends Base {
     });
   };
 
+  createFullResearch = async (data) => {
+    return this.sendRequest ({
+      path: `/api/v1/research/full/create`,
+      method: 'POST',
+      data
+    })
+  }
+
   createResearchInvestigators = async (data) => {
     return this.sendRequest({
       path: `/api/v1/research_investigators/create`,
@@ -111,6 +119,14 @@ export default class Auth extends Base {
     return this.sendRequest ({
       path: `/api/v1/research/status/${id}/${status_id}`,
       method: 'PUT',
+    })
+  }
+
+  updateEndorsementStatus = async (id, data) => {
+    return this.sendRequest ({
+      path: `/api/v1/endorsements/${id}`,
+      method: 'PUT',
+      data
     })
   }
 

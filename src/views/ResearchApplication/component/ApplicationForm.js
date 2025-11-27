@@ -298,7 +298,7 @@ function ApplicationForm() {
 
     try {
       const researchResponse =
-        await new ResearchApplicationAPI().createResearch({
+        await new ResearchApplicationAPI().createFullResearch({
           title: data.title,
           category: data.category.filter(Boolean).join(","),
           purpose_id: data.purpose_id,
@@ -308,24 +308,32 @@ function ApplicationForm() {
           submitted_by: data.submitted_by,
           submitted_date: data.submitted_date,
           status_id: 3,
+
+          research_investigators: data.researchers
+            .filter((r) => r.id_number)
+            .map((r) => ({
+              id_number: r.id_number,
+              first_name: r.first_name,
+              middle_name: r.middle_name,
+              last_name: r.last_name,
+              mobile_number: r.mobile_number,
+              email: r.email,
+              college: r.college,
+              dept: r.dept,
+            })),
+
+          budget_breakdowns: data.breakdown
+            .filter((b) => b.checked)
+            .map((b) => ({
+              fund_id: parseInt(b.fund_id),
+              amount: parseInt(b.amount),
+            })),
         });
 
-      if (!researchResponse.ok) return alert("Failed to create research.");
+      if (!researchResponse.ok)
+        return alert("Failed to create research application.");
+
       const researchId = researchResponse.data.Research.id;
-
-      for (const investigator of data.researchers.filter((r) => r.id_number)) {
-        await new ResearchApplicationAPI().createResearchInvestigators({
-          research_id: researchId,
-          ...investigator,
-        });
-      }
-
-      for (const endorsement of data.endorsements) {
-        await new ResearchApplicationAPI().createEndorsement({
-          research_id: researchId,
-          ...endorsement,
-        });
-      }
 
       for (const document of data.documents || []) {
         if (!document || !document.file || !document.document_title_id)
@@ -337,7 +345,7 @@ function ApplicationForm() {
         const formData = new FormData();
         formData.append("document_filepath", file);
 
-        const token = await window.localStorage.getItem("token");
+        const token = window.localStorage.getItem("token");
 
         const response = await fetch(
           `${BASE_URL}/api/v1/research_documents/create/${researchId}/${document.document_title_id}`,
@@ -361,29 +369,10 @@ function ApplicationForm() {
         }
       }
 
-      for (const breakdown of data.breakdown) {
-        if (!breakdown.checked) continue;
-
-        await new ResearchApplicationAPI().createBudgetBreakdown({
-          research_id: researchId,
-          fund_id: parseInt(breakdown.fund_id),
-          amount: parseInt(breakdown.amount),
-        });
-      }
-
       alert("Research submitted successfully.");
-
-      // reset({
-      //   ...defaultValues,
-      //   endorsements: representative.map(r => ({
-      //     endorsement_rep_id: r.id,
-      //     endorsement_rep_name: '',
-      //     status: '',
-      //   })),
-      // });
       setStep(1);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       alert("An error occurred during submission.");
     } finally {
       setLoading(false);

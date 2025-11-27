@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Table, Nav, Badge } from "react-bootstrap";
+import { Table, Nav, Badge } from "react-bootstrap";
 import Auth from "../../api/Auth";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
 import ResearchModal from "./modal/ResearchModal";
@@ -16,7 +16,7 @@ function ResearchTable() {
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("All");
 
-  const pageSize = 10; // changed from 15
+  const pageSize = 10;
 
   const fetchResearches = async () => {
     const response = await new Auth().fetchResearches();
@@ -65,24 +65,27 @@ function ResearchTable() {
     fetchResearchById(id);
   };
 
+  // 🔥 FILTER BY STATUS ID
   const filteredResearches = researches.filter((r) => {
     if (activeTab === "All") return true;
+
     const statusObj = status.find((s) => s.id === r.status_id);
     if (!statusObj) return false;
+
     return statusObj.status === activeTab;
   });
 
   const totalItems = filteredResearches.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const displayedResearches = filteredResearches.reverse().slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
+  const displayedResearches = [...filteredResearches]
+    .reverse()
+    .slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="research-table">
       <div className="research-container">
         <div className="title">Research Proposals</div>
+
         <div className="search-div">
           <SearchBar placeholder="(Type to search Research Title, Research Name)" />
           <Tooltip text="Export to PDF" position="bottom">
@@ -92,6 +95,8 @@ function ResearchTable() {
             <FaFileCsv size={30} className="cursor-pointer" color="white" />
           </Tooltip>
         </div>
+
+        {/* 🔥 FIXED TABS TO MATCH BACKEND STATUS NAMES */}
         <Nav
           className="mt-4 research-tabs"
           variant="underline"
@@ -108,25 +113,20 @@ function ResearchTable() {
             <Nav.Link eventKey="For Approval">For Approval</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="Ongoing">Ongoing</Nav.Link>
+            <Nav.Link eventKey="On-going">Ongoing</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link eventKey="Completed">Completed</Nav.Link>
           </Nav.Item>
         </Nav>
+
         <div className="table-div">
           <Table striped bordered hover variant="light" responsive>
             <thead>
               <tr>
-                <th style={{ width: "55%", textAlign: "center" }}>
-                  Research Title
-                </th>
-                <th style={{ width: "25%", textAlign: "center" }}>
-                  Lead Researcher Name
-                </th>
-                <th style={{ width: "20%", textAlign: "center" }}>
-                  Research Status
-                </th>
+                <th style={{ width: "55%", textAlign: "center" }}>Research Title</th>
+                <th style={{ width: "25%", textAlign: "center" }}>Lead Researcher Name</th>
+                <th style={{ width: "20%", textAlign: "center" }}>Research Status</th>
               </tr>
             </thead>
             <tbody>
@@ -138,18 +138,17 @@ function ResearchTable() {
                     <Badge
                       pill
                       bg={
-                        item?.status_id === 1
+                        item.status_id === 1
                           ? "warning"
-                          : item?.status_id === 2
+                          : item.status_id === 2
                           ? "success"
-                          : item?.status_id === 3
+                          : item.status_id === 3
                           ? "danger"
                           : "secondary"
                       }
                     >
                       {Array.isArray(status)
-                        ? status.find((s) => s.id === item.status_id)?.status ||
-                          "Unknown"
+                        ? status.find((s) => s.id === item.status_id)?.status || "Unknown"
                         : "Unknown"}
                     </Badge>
                   </td>
@@ -157,6 +156,7 @@ function ResearchTable() {
               ))}
             </tbody>
           </Table>
+
           <Pagination
             currentPage={page}
             totalPages={totalPages}
@@ -165,6 +165,7 @@ function ResearchTable() {
             onPageChange={setPage}
           />
         </div>
+
         <ResearchModal
           showModal={showModal}
           handleClose={() => setShowModal(false)}
