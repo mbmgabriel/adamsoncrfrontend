@@ -122,9 +122,9 @@ export default class Auth extends Base {
     })
   }
 
-  updateEndorsementStatus = async (id, data) => {
+  updateEndorsementStatus = async (research_id, user_account_id, data) => {
     return this.sendRequest ({
-      path: `/api/v1/endorsements/${id}`,
+      path: `/api/v1/endorsements/status/${research_id}/${user_account_id}`,
       method: 'PUT',
       data
     })

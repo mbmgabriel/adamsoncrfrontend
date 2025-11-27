@@ -8,7 +8,7 @@ import ConfirmationButton from "../../../components/Buttons/ConfirmationButton";
 import MainContainer from "../../../components/Layout/MainContainer";
 import CustomModal from "../../../components/Modal/CustomModal";
 import { RxQuestionMarkCircled } from "react-icons/rx";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import TransparentLoader from "../../../components/Loader/TransparentLoader";
 
@@ -162,6 +162,7 @@ function ResearchApplicationReviewForm() {
   const [remarks, setRemarks] = useState("");
   const { id } = useParams();
   const userID = localStorage.getItem("id");
+  const history = useHistory()
 
   const { control, handleSubmit, register, setValue, watch, reset } = useForm({
     defaultValues: {
@@ -335,19 +336,19 @@ function ResearchApplicationReviewForm() {
   };
 
   const updateEndorsementStatus = async () => {
-    let data = {
-      research_id: id,
-      endorsement_rep_id: userID,
+    let payload = {
       status_id: 6,
-      remarks: remarks,
-    };
+      remarks: remarks
+    }
     const response = await new ResearchApplicationAPI().updateEndorsementStatus(
+      id,
       userID,
-      data
+      payload
     );
     if (response.ok) {
       alert("Successfully endorsed research");
       setConfirmationModal(!confirmationModal);
+      history.push("/research-application-review")
     } else {
       console.log(response.data);
     }
@@ -620,9 +621,8 @@ function ResearchApplicationReviewForm() {
                   return (
                     <FormCard key={doc.id}>
                       <div className="mb-4">
-                        <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${
-                          doc.document_name
-                        }`}</p>
+                        <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name
+                          }`}</p>
                         <p className="mb-2">
                           {documentDescriptions[doc.document_name]}
                         </p>
@@ -706,7 +706,7 @@ function ResearchApplicationReviewForm() {
                       placeholder="Type in your comments/suggestions."
                       rows={8}
                       value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)} 
+                      onChange={(e) => setRemarks(e.target.value)}
                     />
                   </FormCard>
                 </div>

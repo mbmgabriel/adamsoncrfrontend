@@ -7,6 +7,7 @@ import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import TransparentLoader from "../../../components/Loader/TransparentLoader";
 import OutlineButton from "../../../components/Buttons/OutlineButton";
 import ConfirmationButton from "../../../components/Buttons/ConfirmationButton";
+import { useHistory } from "react-router-dom";
 
 export function ResearcherSection({
   index,
@@ -152,6 +153,7 @@ export function ResearcherSection({
 
 function ApplicationForm() {
   const BASE_URL = "https://adamsoncr.tekteachlms.com";
+  const history = useHistory()
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
@@ -366,6 +368,7 @@ function ApplicationForm() {
           console.log(
             `✅ Document ${document.document_title_id} uploaded successfully`
           );
+          history.push('/dashboard')
         }
       }
 
@@ -541,7 +544,7 @@ function ApplicationForm() {
                         type="text"
                         disabled={true}
                         placeholder="Not yet endorsed"
-                        // {...register(`endorsements.${index}.status`)}
+                      // {...register(`endorsements.${index}.status`)}
                       />
                     </Col>
                   </Row>
@@ -553,9 +556,8 @@ function ApplicationForm() {
               {documentTypes.map((doc, index) => (
                 <FormCard>
                   <div key={doc.id} className="mb-4">
-                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${
-                      doc.document_name
-                    }`}</p>
+                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name
+                      }`}</p>
                     <p className="mb-2">
                       {documentDescriptions[doc.document_name]}
                     </p>
@@ -567,77 +569,77 @@ function ApplicationForm() {
                       "Gantt Chart",
                       "Detailed Budget Breakdown",
                     ].includes(doc.document_name) && (
-                      <>
-                        <Form.Control
-                          type="file"
-                          accept=".pdf,.doc,.docx,.xls,.xlsx"
-                          {...register(`documents.${index}.file`)}
-                        />
+                        <>
+                          <Form.Control
+                            type="file"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx"
+                            {...register(`documents.${index}.file`)}
+                          />
 
-                        <input
-                          type="hidden"
-                          {...register(`documents.${index}.document_title_id`)}
-                          value={doc.id}
-                        />
+                          <input
+                            type="hidden"
+                            {...register(`documents.${index}.document_title_id`)}
+                            value={doc.id}
+                          />
 
-                        {doc.id == 7 && (
-                          <div className="breakdown mt-4">
-                            <Row className="breakdown-column px-5">
-                              <Col className="text-center mb-3">
-                                Maintenance/Operational Fund
-                              </Col>
-                              <Col className="text-center mb-3">
-                                Total (in Php)
-                              </Col>
+                          {doc.id == 7 && (
+                            <div className="breakdown mt-4">
+                              <Row className="breakdown-column px-5">
+                                <Col className="text-center mb-3">
+                                  Maintenance/Operational Fund
+                                </Col>
+                                <Col className="text-center mb-3">
+                                  Total (in Php)
+                                </Col>
 
-                              {budgetBreakdown?.map((item, i) => (
-                                <Row key={i} className="py-3">
-                                  <Col>
-                                    <Form.Check
-                                      type="checkbox"
-                                      label={item.fund_name}
-                                      {...register(`breakdown.${i}.checked`)}
-                                    />
+                                {budgetBreakdown?.map((item, i) => (
+                                  <Row key={i} className="py-3">
+                                    <Col>
+                                      <Form.Check
+                                        type="checkbox"
+                                        label={item.fund_name}
+                                        {...register(`breakdown.${i}.checked`)}
+                                      />
+                                    </Col>
+
+                                    <Col>
+                                      <input
+                                        type="hidden"
+                                        {...register(`breakdown.${i}.fund_id`)}
+                                        value={item.id}
+                                      />
+
+                                      <Form.Control
+                                        type="number"
+                                        step="0.01"
+                                        className="text-end"
+                                        {...register(`breakdown.${i}.amount`)}
+                                        disabled={!checkedValues?.[i]?.checked}
+                                      />
+                                    </Col>
+                                  </Row>
+                                ))}
+
+                                <Row className="my-3">
+                                  <Col className="ms-4">
+                                    <b>Overall Total Amount</b>
                                   </Col>
-
                                   <Col>
-                                    <input
-                                      type="hidden"
-                                      {...register(`breakdown.${i}.fund_id`)}
-                                      value={item.id}
-                                    />
-
                                     <Form.Control
-                                      type="number"
-                                      step="0.01"
+                                      readOnly
+                                      value={(totalAmount || 0).toLocaleString(
+                                        "en-PH",
+                                        { minimumFractionDigits: 2 }
+                                      )}
                                       className="text-end"
-                                      {...register(`breakdown.${i}.amount`)}
-                                      disabled={!checkedValues?.[i]?.checked}
                                     />
                                   </Col>
                                 </Row>
-                              ))}
-
-                              <Row className="my-3">
-                                <Col className="ms-4">
-                                  <b>Overall Total Amount</b>
-                                </Col>
-                                <Col>
-                                  <Form.Control
-                                    readOnly
-                                    value={(totalAmount || 0).toLocaleString(
-                                      "en-PH",
-                                      { minimumFractionDigits: 2 }
-                                    )}
-                                    className="text-end"
-                                  />
-                                </Col>
                               </Row>
-                            </Row>
-                          </div>
-                        )}
-                      </>
-                    )}
+                            </div>
+                          )}
+                        </>
+                      )}
                   </div>
                 </FormCard>
               ))}
