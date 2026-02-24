@@ -88,10 +88,7 @@ function Login() {
     }
     let response = await new Auth().login(data)
     if (response.ok) {
-      let user = `
-      ${response.data.UserAccount.first_name} 
-      ${response.data.UserAccount.middle_name} 
-      ${response.data.UserAccount.last_name}`
+      let user = `${response.data.UserAccount.first_name} ${response.data.UserAccount.middle_name} ${response.data.UserAccount.last_name}`.trim()
       window.localStorage.setItem("token", response.data.token)
       window.localStorage.setItem("id", response.data.UserAccount.user_id)
       window.localStorage.setItem("name", user)

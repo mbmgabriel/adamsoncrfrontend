@@ -160,6 +160,7 @@ function ApplicationForm() {
   const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [budgetBreakdown, setBudgetBreakdown] = useState();
+  const name = localStorage.getItem("name")
   const {
     control,
     handleSubmit,
@@ -382,7 +383,12 @@ function ApplicationForm() {
     }
   };
 
-  console.log({ representative });
+  useEffect(() => {
+    setValue("submitted_by", name);
+    setValue("submitted_date", new Date().toISOString().split("T")[0]);
+  })
+
+  console.log({ name });
 
   return (
     <div className="application-form">
@@ -501,6 +507,8 @@ function ApplicationForm() {
                       label="Submitted by"
                       isForm={true}
                       type="text"
+                      defaultValues={name}
+                      disabled={true}
                       {...register("submitted_by")}
                     />
                   </Col>
@@ -508,6 +516,7 @@ function ApplicationForm() {
                     <TextInputCustom
                       isForm={true}
                       type="date"
+                      disabled={true}
                       {...register("submitted_date")}
                     />
                   </Col>
@@ -610,12 +619,25 @@ function ApplicationForm() {
                                       />
 
                                       <Form.Control
-                                        type="number"
-                                        step="0.01"
-                                        className="text-end"
-                                        {...register(`breakdown.${i}.amount`)}
-                                        disabled={!checkedValues?.[i]?.checked}
-                                      />
+  type="text"
+  className="text-end"
+  disabled={!checkedValues?.[i]?.checked}
+  {...register(`breakdown.${i}.amount`)}
+  onInput={(e) => {
+    // Allow only numbers and decimal point while typing
+    e.target.value = e.target.value.replace(/[^0-9.]/g, "")
+  }}
+  onBlur={(e) => {
+    let value = e.target.value.replace(/,/g, "")
+
+    if (!isNaN(value) && value !== "") {
+      e.target.value = parseFloat(value).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    }
+  }}
+/>
                                     </Col>
                                   </Row>
                                 ))}
