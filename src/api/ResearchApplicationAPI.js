@@ -130,4 +130,11 @@ export default class Auth extends Base {
     })
   }
 
+  getAllEndorsementComments = async (research_id) => {
+    return this.sendRequest ({
+      path: `/api/v1/endorsements/research/${research_id}`,
+      method: 'GET'
+    })
+  }
+
 }

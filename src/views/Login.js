@@ -93,6 +93,7 @@ function Login() {
       window.localStorage.setItem("id", response.data.UserAccount.user_id)
       window.localStorage.setItem("name", user)
       window.localStorage.setItem("role", response.data.UserAccount.role_name)
+      window.localStorage.setItem("role_id", response.data.UserAccount.role_id)
       history.push("/dashboard")
       refreshUser()
     } else {
