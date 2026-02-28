@@ -12,9 +12,9 @@ function ReviewTable() {
   const history = useHistory();
   const [researches, setResearches] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(5);
   const [status, setStatus] = useState([]);
-  const [activeTab, setActiveTab] = useState("all"); // NEW
+  const [activeTab, setActiveTab] = useState("all");
   const userID = localStorage.getItem("id");
 
   const fetchResearches = async () => {
@@ -40,14 +40,10 @@ function ReviewTable() {
     fetchStatus();
   }, []);
 
-  // -----------------------
-  // 🔥 FILTERING BY TAB
-  // -----------------------
   const filteredResearches = researches.filter((item) => {
     const userEndorsement = item.Endorsements?.find(
       (e) => e.endorsement_rep_id.toString() === userID
     );
-
     const statusID = userEndorsement?.status_id;
 
     switch (activeTab) {
@@ -58,25 +54,26 @@ function ReviewTable() {
       case "endorsed":
         return statusID === 6;
       default:
-        return true; // all
+        return true;
     }
   });
 
-  // -----------------------
-  // 🔥 PAGINATION ON FILTERED RESULTS
-  // -----------------------
-  const displayedResearches = filteredResearches.slice(
+  const sortedResearches = [...filteredResearches].sort(
+    (a, b) => new Date(b.submitted_date) - new Date(a.submitted_date)
+  );
+
+  const totalItems = sortedResearches.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const displayedResearches = sortedResearches.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
-
-  const totalItems = filteredResearches.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <div className="research-table">
       <div className="research-container">
         <div className="title">New Research Application Review</div>
+
         <div className="search-div">
           <SearchBar placeholder="(Type to search Research Title, Research Name)" />
           <Tooltip text="Export to PDF" position="bottom">
@@ -87,17 +84,20 @@ function ReviewTable() {
           </Tooltip>
         </div>
 
-        {/* -----------------------
-            🔥 WORKING TABS
-        ------------------------ */}
         <Nav className="mt-4 research-tabs" variant="underline" activeKey={activeTab}>
           <Nav.Item>
-            <Nav.Link eventKey="all" onClick={() => { setActiveTab("all"); setPage(1); }}>
+            <Nav.Link
+              eventKey="all"
+              onClick={() => { setActiveTab("all"); setPage(1); }}
+            >
               All
             </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="new" onClick={() => { setActiveTab("new"); setPage(1); }}>
+            <Nav.Link
+              eventKey="new"
+              onClick={() => { setActiveTab("new"); setPage(1); }}
+            >
               New
             </Nav.Link>
           </Nav.Item>
@@ -123,15 +123,9 @@ function ReviewTable() {
           <Table striped bordered hover variant="light" responsive>
             <thead>
               <tr>
-                <th style={{ width: "55%", textAlign: "center" }}>
-                  Research Title
-                </th>
-                <th style={{ width: "25%", textAlign: "center" }}>
-                  Lead Researcher Name
-                </th>
-                <th style={{ width: "20%", textAlign: "center" }}>
-                  Research Status
-                </th>
+                <th style={{ width: "55%", textAlign: "center" }}>Research Title</th>
+                <th style={{ width: "25%", textAlign: "center" }}>Lead Researcher Name</th>
+                <th style={{ width: "20%", textAlign: "center" }}>Research Status</th>
               </tr>
             </thead>
             <tbody className="cursor-pointer">
@@ -157,10 +151,10 @@ function ReviewTable() {
                           userStatusID === 6
                             ? "success"
                             : userStatusID === 4
-                            ? "danger"
-                            : userStatusID === 5
-                            ? "warning"
-                            : "secondary"
+                              ? "danger"
+                              : userStatusID === 5
+                                ? "warning"
+                                : "secondary"
                         }
                       >
                         {userStatus || "Not Reviewed"}
@@ -172,7 +166,6 @@ function ReviewTable() {
             </tbody>
           </Table>
 
-          {/* PAGINATION */}
           <Pagination
             currentPage={page}
             totalPages={totalPages}

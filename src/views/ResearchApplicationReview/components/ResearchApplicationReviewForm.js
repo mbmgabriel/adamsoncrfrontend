@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Form, Row, Col, Button } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import FormCard from "../../../components/Card/FormCard";
@@ -11,6 +11,7 @@ import { RxQuestionMarkCircled } from "react-icons/rx";
 import { useParams, useHistory } from "react-router-dom";
 import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import TransparentLoader from "../../../components/Loader/TransparentLoader";
+import { UserContext } from "../../../context/UserContext";
 
 export function ResearcherSection({
   index,
@@ -151,6 +152,8 @@ export function ResearcherSection({
 }
 
 function ResearchApplicationReviewForm() {
+  const userContext = useContext(UserContext);
+  const { user } = userContext.data
   const [step, setStep] = useState(1);
   const [proceedStep, setProceedStep] = useState(1);
   const [confirmationModal, setConfirmationModal] = useState(false);
@@ -160,6 +163,8 @@ function ResearchApplicationReviewForm() {
   const [loading, setLoading] = useState(false);
   const [researchData, setResearchData] = useState(null);
   const [remarks, setRemarks] = useState("");
+  const [remarksHistory, setRemarksHistory] = useState([])
+  const [checked, setChecked] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("id");
   const history = useHistory()
@@ -336,23 +341,52 @@ function ResearchApplicationReviewForm() {
   };
 
   const updateEndorsementStatus = async () => {
+    const hasUserRemarks = remarksHistory?.some(
+      (endorsement) =>
+        Number(endorsement.endorsement_rep_id) === Number(userID) &&
+        endorsement.remarks &&
+        endorsement.remarks.trim() !== ""
+    );
+
+    if (hasUserRemarks) {
+      alert("You already left a remark.");
+      return;
+    }
+
     let payload = {
       status_id: 6,
       remarks: remarks
-    }
+    };
+
     const response = await new ResearchApplicationAPI().updateEndorsementStatus(
       id,
       userID,
       payload
     );
+
     if (response.ok) {
       alert("Successfully endorsed research");
-      setConfirmationModal(!confirmationModal);
-      history.push("/research-application-review")
+      setConfirmationModal(false);
+      history.push("/research-application-review");
     } else {
       console.log(response.data);
     }
   };
+
+  useEffect(() => {
+    const getAllEndorsementComments = async (research_id) => {
+      const response = await new ResearchApplicationAPI().getAllEndorsementComments(research_id)
+      if (response.ok) {
+        setRemarksHistory(response?.data?.Endorsements)
+      } else {
+        console.error("Failed to fetch endorsement comments:", response.data);
+      }
+    }
+
+    getAllEndorsementComments(id)
+  }, [])
+
+  console.log({ remarksHistory })
 
   const handleViewDocument = (document) => {
     // Open document in new tab or modal for viewing
@@ -421,7 +455,15 @@ function ResearchApplicationReviewForm() {
     },
   ];
 
+  const hasUserRemarks = remarksHistory?.some(
+    (endorsement) =>
+      Number(endorsement.endorsement_rep_id) === Number(userID) &&
+      endorsement.remarks &&
+      endorsement.remarks.trim() !== ""
+  );
+
   console.log({ remarks });
+  console.log({ user })
   return (
     <MainContainer>
       {loading && <TransparentLoader />}
@@ -699,16 +741,56 @@ function ResearchApplicationReviewForm() {
                     type="checkbox"
                     label="Remarks"
                     className="mb-3 mt-5 text-white"
+                    checked={checked}
+                    onChange={(e) => setChecked(e.target.checked)}
                   />
-                  <FormCard className="bg-ccit">
-                    <Form.Control
-                      as="textarea"
-                      placeholder="Type in your comments/suggestions."
-                      rows={8}
-                      value={remarks}
-                      onChange={(e) => setRemarks(e.target.value)}
-                    />
-                  </FormCard>
+
+                  {/* Show existing remarks */}
+                  {remarksHistory
+                    ?.filter(
+                      (endorsement) =>
+                        endorsement.remarks && endorsement.remarks.trim() !== ""
+                    )
+                    .map((endorsement) => (
+                      <FormCard
+                        key={endorsement.endorsement_rep_id}
+                        className="bg-ccit mb-3"
+                      >
+                        <Form.Label className="text-white">
+                          {endorsement.User.first_name}{" "}
+                          {endorsement.User.middle_name}{" "}
+                          {endorsement.User.last_name} -{" "}
+                          {endorsement.User.UserAccount.UserRole.role_desc}{" "}
+                          ({endorsement.StatusTable.status})
+                        </Form.Label>
+
+                        <Form.Control
+                          as="textarea"
+                          rows={4}
+                          value={endorsement.remarks}
+                          disabled
+                        />
+                      </FormCard>
+                    ))}
+
+                  {/* Show textarea ONLY if current user has NO remarks */}
+                  {!remarksHistory?.some(
+                    (endorsement) =>
+                      Number(endorsement.endorsement_rep_id) === Number(userID) &&
+                      endorsement.remarks &&
+                      endorsement.remarks.trim() !== ""
+                  ) && (
+                      <FormCard className="bg-ccit">
+                        <Form.Control
+                          as="textarea"
+                          placeholder="Type in your comments/suggestions."
+                          rows={8}
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          disabled={!checked}
+                        />
+                      </FormCard>
+                    )}
                 </div>
               </>
             )}
@@ -732,7 +814,13 @@ function ResearchApplicationReviewForm() {
                 </Button>
                 <OutlineButton
                   label="Endorse"
-                  onCancel={() => setConfirmationModal(true)}
+                  onCancel={() => {
+                    if (hasUserRemarks) {
+                      alert("You already left a remark.");
+                      return;
+                    }
+                    setConfirmationModal(true);
+                  }}
                 />
               </>
             )}
