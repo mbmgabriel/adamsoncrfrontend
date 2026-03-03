@@ -137,4 +137,25 @@ export default class Auth extends Base {
     })
   }
 
+  getBudgetBreakdownById = async (id) => {
+    return this.sendRequest ({
+      path: `/api/v1/budget_breakdowns/${id}`,
+      method: 'GET'
+    })
+  }
+
+  getBreakdownDetails = async () => {
+    return this.sendRequest ({
+      path: `/api/v1/budget_breakdown_details/all`,
+      method: 'GET'
+    })
+  }
+
+  getResearchById = async (id) => {
+    return this.sendRequest ({
+      path: `/api/v1/research/${id}`,
+      method: 'GET'
+    })
+  }
+
 }
