@@ -7,6 +7,8 @@ import SearchBar from "../../components/Search/SearchBar";
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
 import Tooltip from "../../components/Tooltip/Tooltip";
 import Pagination from "../../components/PaginationComponent/Pagination";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 function ResearchTable() {
   const [researches, setResearches] = useState([]);
@@ -15,34 +17,26 @@ function ResearchTable() {
   const [selectedResearch, setSelectedResearch] = useState();
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const pageSize = 10;
 
   const fetchResearches = async () => {
     const response = await new Auth().fetchResearches();
-    if (response.ok) {
-      setResearches(response.data);
-    } else {
-      console.error(response.error);
-    }
+    if (response.ok) setResearches(response.data);
+    else console.error(response.error);
   };
 
   const fetchStatus = async () => {
     const response = await new ResearchApplicationAPI().fetchStatus();
-    if (response.ok) {
-      setStatus(response.data?.StatusTables);
-    } else {
-      console.log(response.data);
-    }
+    if (response.ok) setStatus(response.data?.StatusTables);
+    else console.log(response.data);
   };
 
   const fetchResearchById = async (id) => {
     const response = await new ResearchApplicationAPI().fetchResearchById(id);
-    if (response.ok) {
-      setSelectedResearch(response.data.Research);
-    } else {
-      console.error(response.errorMessage);
-    }
+    if (response.ok) setSelectedResearch(response.data.Research);
+    else console.error(response.errorMessage);
   };
 
   useEffect(() => {
@@ -65,15 +59,22 @@ function ResearchTable() {
     fetchResearchById(id);
   };
 
-  // 🔥 FILTER BY STATUS ID
-  const filteredResearches = researches.filter((r) => {
-    if (activeTab === "All") return true;
+  const filteredResearches = researches
+    .filter((r) => {
+      if (activeTab === "All") return true;
 
-    const statusObj = status?.find((s) => s.id === r.status_id);
-    if (!statusObj) return false;
-
-    return statusObj.status === activeTab;
-  });
+      const statusObj = status?.find((s) => s.id === r.status_id);
+      if (!statusObj) return false;
+      return statusObj.status === activeTab;
+    })
+    .filter((r) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        r.title?.toLowerCase().includes(term) ||
+        r.submitted_by?.toLowerCase().includes(term)
+      );
+    });
 
   const totalItems = filteredResearches.length;
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -81,22 +82,73 @@ function ResearchTable() {
     .reverse()
     .slice((page - 1) * pageSize, page * pageSize);
 
+  const exportToCSV = () => {
+    const headers = ["Research Title", "Lead Researcher Name", "Research Status"];
+    const rows = filteredResearches.map((r) => {
+      const statusName = status?.find((s) => s.id === r.status_id)?.status || "Unknown";
+      return [r.title, r.submitted_by, statusName];
+    });
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "researches.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["Research Title", "Lead Researcher Name", "Research Status"];
+    const tableRows = filteredResearches.map((r) => {
+      const statusName = status?.find((s) => s.id === r.status_id)?.status || "Unknown";
+      return [r.title, r.submitted_by, statusName];
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save("researches.pdf");
+  };
+
   return (
     <div className="research-table">
       <div className="research-container">
         <div className="title">Research Proposals</div>
 
         <div className="search-div">
-          <SearchBar placeholder="(Type to search Research Title, Research Name)" />
+          <SearchBar
+            placeholder="(Type to search Research Title, Research Name)"
+            onSearch={(value) => {
+              setSearchTerm(value);
+              setPage(1);
+            }}
+          />
           <Tooltip text="Export to PDF" position="bottom">
-            <FaFilePdf size={30} className="cursor-pointer" color="white" />
+            <FaFilePdf
+              size={30}
+              className="cursor-pointer"
+              color="white"
+              onClick={exportToPDF}
+            />
           </Tooltip>
           <Tooltip text="Export to CSV" position="bottom">
-            <FaFileCsv size={30} className="cursor-pointer" color="white" />
+            <FaFileCsv
+              size={30}
+              className="cursor-pointer"
+              color="white"
+              onClick={exportToCSV}
+            />
           </Tooltip>
         </div>
 
-        {/* 🔥 FIXED TABS TO MATCH BACKEND STATUS NAMES */}
         <Nav
           className="mt-4 research-tabs"
           variant="underline"
@@ -147,9 +199,7 @@ function ResearchTable() {
                           : "secondary"
                       }
                     >
-                      {Array.isArray(status)
-                        ? status?.find((s) => s.id === item.status_id)?.status || "Unknown"
-                        : "Unknown"}
+                      {status?.find((s) => s.id === item.status_id)?.status || "Unknown"}
                     </Badge>
                   </td>
                 </tr>
