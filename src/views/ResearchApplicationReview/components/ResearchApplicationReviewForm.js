@@ -1,17 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Form, Row, Col, Button } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import FormCard from "../../../components/Card/FormCard";
 import TextInputCustom from "../../../components/Input/TextInputCustom";
+import TransparentLoader from "../../../components/Loader/TransparentLoader";
 import OutlineButton from "../../../components/Buttons/OutlineButton";
 import ConfirmationButton from "../../../components/Buttons/ConfirmationButton";
-import MainContainer from "../../../components/Layout/MainContainer";
-import CustomModal from "../../../components/Modal/CustomModal";
-import { RxQuestionMarkCircled } from "react-icons/rx";
-import { useParams, useHistory } from "react-router-dom";
-import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
-import TransparentLoader from "../../../components/Loader/TransparentLoader";
+import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI"
+import { useParams } from "react-router-dom";
+import { toRoman } from '../../../components/Helper/Roman';
+import { documentDescriptions } from '../../../components/Helper/DocumentDescription';
 import { UserContext } from "../../../context/UserContext";
+import { useHistory } from "react-router-dom";
 
 export function ResearcherSection({
   index,
@@ -20,7 +20,6 @@ export function ResearcherSection({
   register,
   watch,
   setValue,
-  isDisabled = false,
 }) {
   const numberLabel = isMain
     ? "Researcher 1 (Main Author)"
@@ -32,6 +31,18 @@ export function ResearcherSection({
   const mainCollege = watch("researchers.0.college");
   const mainDept = watch("researchers.0.dept");
 
+  useEffect(() => {
+    if (!isMain && sameCollege && mainCollege) {
+      setValue(`researchers.${index}.college`, mainCollege);
+    }
+  }, [index, isMain, sameCollege, mainCollege, setValue]);
+
+  useEffect(() => {
+    if (!isMain && sameDept && mainDept) {
+      setValue(`researchers.${index}.dept`, mainDept);
+    }
+  }, [index, isMain, sameDept, mainDept, setValue]);
+
   return (
     <div className="mb-4 px-4">
       {!isMain && (
@@ -41,7 +52,6 @@ export function ResearcherSection({
           label={numberLabel}
           className="mb-2 margin-left-29"
           {...register(`researchers.${index}.enabled`)}
-          disabled={isDisabled}
         />
       )}
 
@@ -52,50 +62,37 @@ export function ResearcherSection({
           <TextInputCustom
             label="ID Number"
             type="text"
-            required={isMain}
             isForm={true}
-            disabled={isDisabled || (!enabled && !isMain)}
-            {...register(`researchers.${index}.id_number`, {
-              required: isMain,
-            })}
+            disabled={true}
+            {...register(`researchers.${index}.id_number`)}
           />
           <TextInputCustom
             label="First Name"
             type="text"
-            required={isMain}
             isForm={true}
-            disabled={isDisabled || (!enabled && !isMain)}
-            {...register(`researchers.${index}.first_name`, {
-              required: isMain,
-            })}
+            disabled={true}
+            {...register(`researchers.${index}.first_name`)}
           />
           <TextInputCustom
             label="Last Name"
             type="text"
-            required={isMain}
             isForm={true}
-            disabled={isDisabled || (!enabled && !isMain)}
-            {...register(`researchers.${index}.last_name`, {
-              required: isMain,
-            })}
+            disabled={true}
+            {...register(`researchers.${index}.last_name`)}
           />
           <TextInputCustom
             label="Mobile No."
             type="text"
-            required={isMain}
             isForm={true}
-            disabled={isDisabled || (!enabled && !isMain)}
-            {...register(`researchers.${index}.mobile_number`, {
-              required: isMain,
-            })}
+            disabled={true}
+            {...register(`researchers.${index}.mobile_number`)}
           />
           <TextInputCustom
             label="Email"
             type="email"
-            required={isMain}
             isForm={true}
-            disabled={isDisabled || (!enabled && !isMain)}
-            {...register(`researchers.${index}.email`, { required: isMain })}
+            disabled={true}
+            {...register(`researchers.${index}.email`)}
           />
         </Col>
 
@@ -104,9 +101,7 @@ export function ResearcherSection({
             <Form.Label className="custom-label">College</Form.Label>
             <Form.Select
               className="custom-control"
-              disabled={
-                isDisabled || (sameCollege && !isMain) || (!enabled && !isMain)
-              }
+              disabled={(sameCollege && !isMain) || (true)}
               {...register(`researchers.${index}.college`)}
             >
               <option value="">Select College</option>
@@ -119,7 +114,7 @@ export function ResearcherSection({
               type="checkbox"
               label="Same College to all co-authors"
               {...register("sameCollege")}
-              disabled={isDisabled}
+              disabled
             />
           )}
 
@@ -127,9 +122,7 @@ export function ResearcherSection({
             <Form.Label className="custom-label">Department</Form.Label>
             <Form.Select
               className="custom-control"
-              disabled={
-                isDisabled || (sameDept && !isMain) || (!enabled && !isMain)
-              }
+              disabled={(sameDept && !isMain) || (true)}
               {...register(`researchers.${index}.dept`)}
             >
               <option value="">Select Department</option>
@@ -141,8 +134,8 @@ export function ResearcherSection({
             <Form.Check
               type="checkbox"
               label="Same Department to all co-authors"
+              disabled
               {...register("sameDept")}
-              disabled={isDisabled}
             />
           )}
         </Col>
@@ -152,24 +145,42 @@ export function ResearcherSection({
 }
 
 function ResearchApplicationReviewForm() {
-  const userContext = useContext(UserContext);
-  const { user } = userContext.data
+  const BASE_URL = "https://adamsoncr.tekteachlms.com";
   const [step, setStep] = useState(1);
-  const [proceedStep, setProceedStep] = useState(1);
-  const [confirmationModal, setConfirmationModal] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [representative, setRepresentative] = useState([]);
-  const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [researchData, setResearchData] = useState(null);
+  const { id } = useParams()
+  const name = localStorage.getItem("name") || "John Doe";
+  const [research, setResearch] = useState()
   const [remarks, setRemarks] = useState("");
   const [remarksHistory, setRemarksHistory] = useState([])
-  const [checked, setChecked] = useState(false);
-  const { id } = useParams();
+  const [checked, setChecked] = useState(false)
+  const [confirmationModal, setConfirmationModal] = useState(false)
   const userID = localStorage.getItem("id");
   const history = useHistory()
 
-  const { control, handleSubmit, register, setValue, watch, reset } = useForm({
+  const documentTypes = [
+    { id: 1, document_name: "Letter of Intent" },
+    { id: 2, document_name: "Research Proposal" },
+    { id: 3, document_name: "Researcher/s Curriculum Vitae (CV)" },
+    { id: 6, document_name: "Gantt Chart" },
+    { id: 7, document_name: "Detailed Budget Breakdown" },
+  ];
+
+  const budgetBreakdown = [
+    { id: 1, fund_name: "Equipment" },
+    { id: 2, fund_name: "Transportation" },
+    { id: 3, fund_name: "Supplies" },
+    { id: 4, fund_name: "Analysis and Laboratory Test" },
+  ];
+
+  const {
+    control,
+    handleSubmit,
+    register,
+    setValue,
+    watch,
+    reset,
+  } = useForm({
     defaultValues: {
       title: "",
       category: [],
@@ -177,167 +188,124 @@ function ResearchApplicationReviewForm() {
       version_number: "",
       research_duration: "",
       ethical_considerations: false,
-      submitted_by: "",
-      submitted_date: "",
-      researchers: Array(5).fill({ enabled: false }),
-      endorsements: [],
-      remarks: "",
+      submitted_by: name,
+      submitted_date: new Date().toISOString().split("T")[0],
+      researchers: Array(5).fill({}),
+      breakdown: budgetBreakdown.map((item) => ({
+        checked: false,
+        fund_id: item.id,
+        amount: "",
+      })),
+      documents: [],
     },
   });
 
-  const documentDescriptions = {
-    "Letter of Intent":
-      "This application must be submitted together with the letter of intent...",
-    "Research Proposal":
-      "Full proposal should be submitted together with this form...",
-    "Researcher/s Curriculum Vitae (CV)":
-      "A copy of the Researcher/s Curriculum Vitae (CV)...",
-    "Initial Review and Screening":
-      "All researches will undergo initial review...",
-    "Ethics Review":
-      "Proposals with human participants must undergo Ethics Review...",
-    "Gantt Chart": "Activities related to project implementation...",
-    "Detailed Budget Breakdown":
-      "Must have high-probability of estimation accuracy...",
-  };
-
-  const toRoman = (num) => {
-    const romans = [
-      "i",
-      "ii",
-      "iii",
-      "iv",
-      "v",
-      "vi",
-      "vii",
-      "viii",
-      "ix",
-      "x",
-    ];
-    return romans[num - 1] || num;
-  };
-
-  useEffect(() => {
-    const fetchResearchByID = async () => {
-      setLoading(true);
-      try {
-        const response = await new ResearchApplicationAPI().fetchResearchByID(
-          id
-        );
-        if (response.ok) {
-          const research = response.data.Research;
-          setResearchData(research);
-
-          setValue("title", research.title || "");
-
-          if (research.category && Array.isArray(research.category)) {
-            const categoryIds = research.category.map((cat) =>
-              cat.id.toString()
-            );
-            setValue("category", categoryIds);
-          }
-
-          setValue("purpose_id", research.purpose_id?.toString() || "1");
-          setValue("version_number", research.version_number || "");
-          setValue("research_duration", research.research_duration || "");
-
-          setValue(
-            "ethical_considerations",
-            research.ethical_considerations === 1
-          );
-
-          setValue("submitted_by", research.submitted_by || "");
-          setValue(
-            "submitted_date",
-            research.submitted_date ? research.submitted_date.split("T")[0] : ""
-          );
-
-          const researchersData = Array(5).fill({ enabled: false });
-          if (research.research_investigators) {
-            research.research_investigators.forEach((investigator, index) => {
-              if (index < 5) {
-                const nameParts = investigator.name?.split(" ") || [];
-                const firstName = nameParts[0] || "";
-                const lastName = nameParts.slice(1).join(" ") || "";
-
-                researchersData[index] = {
-                  enabled: true,
-                  id_number: investigator.id_number || "",
-                  first_name: firstName,
-                  last_name: lastName,
-                  mobile_number: investigator.mobile_number || "",
-                  email: investigator.email || "",
-                  college: investigator.college || "",
-                  dept: investigator.dept || "",
-                };
-              }
-            });
-          }
-          setValue("researchers", researchersData);
-
-          if (research.endorsements && representative.length > 0) {
-            const endorsementsData = representative.map((rep, index) => {
-              const researchEndorsement = research.endorsements?.find(
-                (e) => e.rep_name === rep.rep_name
-              );
-              return {
-                endorsement_rep_id: rep.id,
-                endorsement_rep_name:
-                  researchEndorsement?.rep_name || rep.rep_name,
-                status: researchEndorsement?.status || "Not yet endorsed",
-              };
-            });
-            setValue("endorsements", endorsementsData);
-          }
-        } else {
-          console.error("Failed to fetch research data:", response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching research data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchResearchByID();
+  const getResearchById = async () => {
+    setLoading(true);
+    const response = await new ResearchApplicationAPI().getResearchById(id)
+    setLoading(false);
+    if (response.ok) {
+      setResearch(response?.data?.Research)
+    } else {
+      console.error(response.data)
     }
-  }, [id, setValue, representative]);
+  }
+
+  const getAllEndorsementComments = async () => {
+    const response = await new ResearchApplicationAPI().getAllEndorsementComments(id)
+    if (response.ok) {
+      setRemarksHistory(response?.data?.Endorsements)
+    } else {
+      console.error("Failed to fetch endorsement comments:", response.data);
+    }
+  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [categoryRes, repRes, docTypesRes] = await Promise.all([
-          new ResearchApplicationAPI().fetchCategories(),
-          new ResearchApplicationAPI().fetchEndorsementRepresentative(),
-          new ResearchApplicationAPI().fetchDocumentTypes(),
-        ]);
+    getResearchById()
+    getAllEndorsementComments()
+  }, [id])
 
-        if (categoryRes.ok) {
-          setCategories(categoryRes.data.ResearchCategory);
-        }
+  // Map research data to form
+  useEffect(() => {
+    if (research) {
+      const researchers = Array(5).fill({});
+      research.research_investigators.forEach((inv, i) => {
+        const names = inv.name.split(" ");
+        researchers[i] = {
+          id_number: inv.id_number,
+          first_name: names[0] || "",
+          last_name: names.slice(-1)[0] || "",
+          mobile_number: inv.mobile_number,
+          email: inv.email,
+          college: inv.college,
+          dept: inv.dept,
+          enabled: true,
+        };
+      });
 
-        if (repRes.ok) {
-          const reps = repRes.data.EndorsementRepresentative;
-          setRepresentative(reps);
-        }
+      const breakdown = budgetBreakdown.map((item) => {
+        const existing = research.budget_breakdowns.find((b) => b.fund_id === item.id);
+        return {
+          fund_id: item.id,
+          checked: !!existing,
+          amount: existing ? existing.amount : "",
+        };
+      });
 
-        if (docTypesRes.ok) {
-          setDocumentTypes(docTypesRes.data.DocumentTypes);
-        }
-      } catch (error) {
-        console.error("Error fetching form data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const documents = documentTypes.map((doc) => {
+        const existing = research.research_documents.find((d) => d.document_title_id === doc.id);
+        return {
+          document_title_id: doc.id,
+          document_name: doc.document_name,
+          file: existing ? existing.document_filepath : null,
+        };
+      });
 
-    fetchData();
-  }, []);
+      const endorsements = research.endorsements.map((e) => ({
+        endorsement_rep_name: e.endorsement_rep_name,
+        status: e.status,
+        endorsement_rep_id: e.user_account_id
+      }));
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
+      reset({
+        title: research.title,
+        version_number: research.version_number,
+        category: research.category.map((c) => c.id),
+        research_duration: research.research_duration,
+        ethical_considerations: research.ethical_considerations === 1,
+        submitted_by: research.submitted_by,
+        submitted_date: research.submitted_date.split("T")[0],
+        researchers,
+        breakdown,
+        documents,
+        endorsements,
+        purpose_id: research.purpose_id
+      });
+    }
+  }, [research, reset]);
+
+  const breakdownValues = useWatch({ control, name: "breakdown" }) || [];
+  const checkedValues = watch("breakdown");
+  const totalAmount = breakdownValues.reduce((acc, curr) => {
+    const isChecked = curr?.checked;
+    const amount = parseFloat(curr?.amount) || 0;
+    return isChecked ? acc + amount : acc;
+  }, 0);
+
+  const handleViewDocument = (doc) => {
+    if (!doc || !doc.document_filepath) {
+      alert("No document available");
+      return;
+    }
+
+    let filePath = doc.document_filepath.replace(/\\/g, "/");
+
+    if (!filePath.startsWith("http")) {
+      filePath = filePath.replace(/^\/+/, "");
+      filePath = `${BASE_URL}/${filePath}`;
+    }
+
+    window.open(filePath, "_blank", "noopener,noreferrer");
   };
 
   const updateEndorsementStatus = async () => {
@@ -373,462 +341,337 @@ function ResearchApplicationReviewForm() {
     }
   };
 
-  useEffect(() => {
-    const getAllEndorsementComments = async (research_id) => {
-      const response = await new ResearchApplicationAPI().getAllEndorsementComments(research_id)
-      if (response.ok) {
-        setRemarksHistory(response?.data?.Endorsements)
-      } else {
-        console.error("Failed to fetch endorsement comments:", response.data);
-      }
-    }
-
-    getAllEndorsementComments(id)
-  }, [])
-
-  console.log({ remarksHistory })
-
-  const handleViewDocument = (document) => {
-    // Open document in new tab or modal for viewing
-    if (document.document_filepath) {
-      const fullUrl = `https://adamsoncr.tekteachlms.com${document.document_filepath}`;
-      window.open(fullUrl, "_blank");
-    }
+  const onSubmit = () => {
+    updateEndorsementStatus()
   };
 
-  const endorsementConfirmation = () => (
-    <CustomModal
-      title="College Coordinator Endorsement Confirmation"
-      size="xl"
-      onClose={() => setConfirmationModal(false)}
-    >
-      <div className="account_reset">
-        <div className="info_icon">
-          <RxQuestionMarkCircled />
-        </div>
-        <div>
-          {proceedStep === 1
-            ? `Are you sure you want to endorse this research "${researchData?.title}" to the department's chairperson?`
-            : `The research "${researchData?.title}" is endorsed to the department's chairperson `}
-        </div>
-      </div>
-      <div className="center gap-5 mt-2">
-        <ConfirmationButton
-          label={proceedStep === 1 ? "Cancel" : "Ok"}
-          onProceed={() => {
-            setConfirmationModal(false);
-            setProceedStep(1);
-          }}
-        />
-        {proceedStep === 1 && (
-          <OutlineButton
-            label="Yes"
-            onCancel={() => updateEndorsementStatus()}
-          />
-        )}
-      </div>
-    </CustomModal>
-  );
-
-  const isFormDisabled = true;
-
-  let breakdownDummyData = [
-    {
-      title: "Transportation",
-      amount: "10,000.00",
-    },
-    {
-      title: "Meal (Consultants and Respondents)",
-      amount: "18,500.00",
-    },
-    {
-      title: "Supplies and Materials needed",
-      amount: "3,500.00",
-    },
-    {
-      title: "Analysis and Laboratory test",
-      amount: "60,000.00",
-    },
-    {
-      title: "Others",
-      amount: "123,750.00",
-    },
-  ];
-
-  const hasUserRemarks = remarksHistory?.some(
-    (endorsement) =>
-      Number(endorsement.endorsement_rep_id) === Number(userID) &&
-      endorsement.remarks &&
-      endorsement.remarks.trim() !== ""
-  );
-
-  console.log({ remarks });
-  console.log({ user })
   return (
-    <MainContainer>
+    <div className="application-form">
       {loading && <TransparentLoader />}
-      <div className="application-form">
-        <div className="form-container">
-          <h1 className="mt-5 mb-5 fw-bold text-white">
-            Research Application Review
-          </h1>
-          <Form className="form" onSubmit={handleSubmit(onSubmit)}>
-            {step === 1 && (
-              <>
-                <FormCard className="flex-container">
-                  <Form.Label className="title me-3">Title</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={4}
-                    {...register("title", { required: true })}
-                    disabled={isFormDisabled}
-                  />
-                </FormCard>
+      <div className="form-container">
+        <h1 className="mt-5 mb-5 fw-bold text-white">
+          Review Research Application
+        </h1>
+        <Form className="form" onSubmit={handleSubmit(onSubmit)}>
+          {step === 1 && (
+            <>
+              <FormCard className="flex-container">
+                <Form.Label className="title me-3">Title</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  value={research?.title || ""}
+                  disabled={true}
+                />
+              </FormCard>
 
-                <FormCard>
-                  <h5 className="title">
-                    I. Protocol's 5-point Research Agenda Category
-                  </h5>
-                  <div className="content-checkbox">
-                    {categories.map((item) => (
-                      <Form.Check
-                        key={item.id}
-                        label={item.research_name}
-                        type="checkbox"
-                        {...register("category")}
-                        value={item.id.toString()}
-                        disabled={isFormDisabled}
-                        defaultChecked={researchData?.category?.some(
-                          (cat) => cat.id === item.id
-                        )}
-                      />
-                    ))}
-                  </div>
-                </FormCard>
-
-                <FormCard>
-                  <h5 className="title">II. Purpose of Submission</h5>
-                  <Row className="px-4">
-                    <Col>
-                      <Row>
-                        <Col>
-                          <Form.Check
-                            label="Initial"
-                            type="radio"
-                            value="1"
-                            {...register("purpose_id")}
-                            disabled={isFormDisabled}
-                            defaultChecked={researchData?.purpose_id === 1}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            label="Resubmission"
-                            type="radio"
-                            value="2"
-                            {...register("purpose_id")}
-                            disabled={isFormDisabled}
-                            defaultChecked={researchData?.purpose_id === 2}
-                          />
-                        </Col>
-                      </Row>
-                    </Col>
-                    <Col className="flex-container mt--6">
-                      <Form.Label className="mb-0 form-labels">
-                        Version Number
-                      </Form.Label>
-                      <Form.Control
-                        type="text"
-                        {...register("version_number")}
-                        disabled={isFormDisabled}
-                      />
-                    </Col>
-                  </Row>
-                </FormCard>
-
-                <FormCard>
-                  <div className="title flex flex-row">
-                    <span className="me-4">III. Investigators</span>
-                    <span className="text-danger">*</span> Required Fields
-                  </div>
-                  {[...Array(5)].map((_, i) => (
-                    <ResearcherSection
-                      key={i}
-                      index={i}
-                      isMain={i === 0}
-                      control={control}
-                      register={register}
-                      watch={watch}
-                      setValue={setValue}
-                      isDisabled={isFormDisabled}
+              <FormCard>
+                <h5 className="title">
+                  I. Protocol’s 5-point Research Agenda Category
+                </h5>
+                <div className="content-checkbox">
+                  {research?.category?.map((item) => (
+                    <Form.Check
+                      key={item.id}
+                      label={item.research_name}
+                      type="checkbox"
+                      value={item.id}
+                      checked
+                      disabled
                     />
                   ))}
-                </FormCard>
-              </>
-            )}
+                </div>
+              </FormCard>
 
-            {step === 2 && (
-              <>
-                <FormCard>
-                  <h5 className="fw-bold mb-3">IV. Research Duration</h5>
-                  <TextInputCustom
-                    label="Duration (semesters)"
-                    isForm={true}
-                    type="text"
-                    {...register("research_duration")}
-                    disabled={isFormDisabled}
-                  />
-                </FormCard>
-
-                <FormCard>
-                  <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
-                  <Form.Check
-                    label="With Human Participants"
-                    isForm={true}
-                    type="checkbox"
-                    {...register("ethical_considerations")}
-                    disabled={isFormDisabled}
-                    defaultChecked={researchData?.ethical_considerations === 1}
-                  />
-                </FormCard>
-
-                <FormCard>
-                  <h5 className="fw-bold mb-3">VI. Submission</h5>
-                  <Row>
-                    <Col>
-                      <TextInputCustom
-                        label="Submitted by"
-                        isForm={true}
-                        type="text"
-                        {...register("submitted_by")}
-                        disabled={isFormDisabled}
-                      />
-                    </Col>
-                    <Col>
-                      <TextInputCustom
-                        isForm={true}
-                        type="date"
-                        {...register("submitted_date")}
-                        disabled={isFormDisabled}
-                      />
-                    </Col>
-                  </Row>
-                </FormCard>
-
-                <FormCard>
-                  <h5 className="fw-bold mb-3">VII. Endorsement</h5>
-                  {representative.map((item, index) => (
-                    <Row key={item.id}>
-                      <input
-                        type="hidden"
-                        {...register(
-                          `endorsements.${index}.endorsement_rep_id`
-                        )}
-                        value={item.id}
-                      />
-
+              <FormCard>
+                <h5 className="title">II. Purpose of Submission</h5>
+                <Row className="px-4">
+                  <Col>
+                    <Row>
                       <Col>
-                        <TextInputCustom
-                          isForm={true}
-                          label={item.rep_name}
-                          type="text"
-                          {...register(
-                            `endorsements.${index}.endorsement_rep_name`
-                          )}
-                          disabled={isFormDisabled}
+                        <Form.Check
+                          label="Initial"
+                          type="radio"
+                          value={1}
+                          {...register("purpose_id")}
+                          checked={research?.purpose_id === 1}
+                          disabled
                         />
                       </Col>
-
                       <Col>
-                        <TextInputCustom
-                          isForm={true}
-                          label="Status"
-                          type="text"
-                          placeholder="Not yet endorsed"
-                          {...register(`endorsements.${index}.status`)}
-                          disabled={isFormDisabled}
+                        <Form.Check
+                          label="Resubmission"
+                          type="radio"
+                          value={2}
+                          {...register("purpose_id")}
+                          checked={research?.purpose_id === 2}
+                          disabled
                         />
                       </Col>
                     </Row>
-                  ))}
-                </FormCard>
+                  </Col>
+                  <Col className="flex-container mt--6">
+                    <Form.Label className="mb-0 form-labels">
+                      Version Number
+                    </Form.Label>
+                    <Form.Control type="text" value={research?.version_number} disabled />
+                  </Col>
+                </Row>
+              </FormCard>
 
-                <h4 className="text-white">Notes:</h4>
-                {documentTypes.map((doc, index) => {
-                  const researchDocument =
-                    researchData?.research_documents?.find(
-                      (d) => d.document_title_id === doc.id
-                    );
+              <FormCard>
+                <div className="title flex flex-row">
+                  <span className="me-4">III. Investigators</span>
+                  <span className="text-danger">*</span> Required Fields
+                </div>
+                {[...Array(5)].map((_, i) => (
+                  <ResearcherSection
+                    key={i}
+                    index={i}
+                    isMain={i === 0}
+                    control={control}
+                    register={register}
+                    watch={watch}
+                    setValue={setValue}
+                  />
+                ))}
+              </FormCard>
+            </>
+          )}
 
-                  return (
-                    <FormCard key={doc.id}>
-                      <div className="mb-4">
-                        <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name
-                          }`}</p>
-                        <p className="mb-2">
-                          {documentDescriptions[doc.document_name]}
-                        </p>
+          {step === 2 && (
+            <>
+              <FormCard>
+                <h5 className="fw-bold mb-3">IV. Research Duration</h5>
+                <TextInputCustom
+                  label="Duration (semesters)"
+                  isForm={true}
+                  type="text"
+                  {...register("research_duration")}
+                  disabled
+                />
+              </FormCard>
 
-                        {researchDocument ? (
-                          <div className="d-flex align-items-center gap-3">
-                            <span className="text-success">
-                              ✓ Document Submitted
-                            </span>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              onClick={() =>
-                                handleViewDocument(researchDocument)
-                              }
-                            >
-                              View Document
-                            </Button>
-                          </div>
-                        ) : (
-                          <span className="text-muted">
-                            No document submitted
-                          </span>
-                        )}
+              <FormCard>
+                <h5 className="fw-bold mb-3">V. Ethical Considerations</h5>
+                <Form.Check
+                  label="With Human Participants"
+                  isForm={true}
+                  type="checkbox"
+                  {...register("ethical_considerations")}
+                  checked={research?.ethical_considerations === 1}
+                  disabled
+                />
+              </FormCard>
+
+              <FormCard>
+                <h5 className="fw-bold mb-3">VI. Submission</h5>
+                <Row>
+                  <Col>
+                    <TextInputCustom
+                      label="Submitted by"
+                      isForm={true}
+                      type="text"
+                      disabled={true}
+                      {...register("submitted_by")}
+                    />
+                  </Col>
+                  <Col>
+                    <TextInputCustom
+                      isForm={true}
+                      type="date"
+                      disabled={true}
+                      {...register("submitted_date")}
+                    />
+                  </Col>
+                </Row>
+              </FormCard>
+
+              <FormCard>
+                <h5 className="fw-bold mb-3">VII. Endorsement</h5>
+                {research?.endorsements?.map((item, index) => (
+                  <Row key={item.endorsement_rep_id}>
+                    <Col>
+                      <TextInputCustom
+                        isForm={true}
+                        disabled={true}
+                        label={`Representative${""}${index + 1}`}
+                        type="text"
+                        value={item.endorsement_rep_name}
+                      />
+                    </Col>
+                    <Col>
+                      <TextInputCustom
+                        isForm={true}
+                        label="Status"
+                        type="text"
+                        disabled={true}
+                        value={item.status}
+                      />
+                    </Col>
+                  </Row>
+                ))}
+              </FormCard>
+
+              <h4 className="text-white">Notes:</h4>
+
+              {documentTypes.map((doc, index) => (
+                <FormCard key={doc.id}>
+                  <div className="mb-4">
+                    <p className="fw-bold mb-1">{`${toRoman(index + 1)}. ${doc.document_name}`}</p>
+                    <p className="mb-2">{documentDescriptions[doc.document_name]}</p>
+
+                    {/* Show uploaded file link if exists */}
+                    {research?.research_documents?.find(d => d.document_title_id === doc.id)?.document_filepath ? (
+                      <div className="d-flex align-items-center gap-3">
+                        <span className="text-success">
+                          ✓ Document Submitted
+                        </span>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() =>
+                            handleViewDocument(
+                              research?.research_documents?.find(d => d.document_title_id === doc.id)
+                            )
+                          }
+                        >
+                          View Document
+                        </Button>
                       </div>
-                      {doc.id == 7 && (
-                        <div className="breakdown">
-                          <Row className="breakdown-column px-5">
-                            <Col className="text-center mb-3">
-                              Maintenance/Operational Fund
-                            </Col>
-                            <Col className="text-center mb-3">
-                              Total (in Php)
-                            </Col>
+                    ) : (
+                      <span className="text-muted">No file uploaded</span>
+                    )}
 
-                            {breakdownDummyData.map((item, i) => {
-                              return (
-                                <Row key={i} className="py-3">
-                                  <Col>
-                                    <Form.Check
-                                      type="checkbox"
-                                      label={item.title}
-                                    />
-                                  </Col>
-                                  <Col>
-                                    <Form.Control
-                                      placeholder={item.amount}
-                                      className="text-end"
-                                    />
-                                  </Col>
-                                </Row>
-                              );
-                            })}
-                            <Row className="my-3">
-                              <Col className="ms-4">
-                                <b>Overall Total Amount</b>
+                    {/* Only show budget breakdown if Detailed Budget Breakdown */}
+                    {doc.id === 7 && (
+                      <div className="breakdown mt-4">
+                        <Row className="breakdown-column px-5">
+                          <Col className="text-center mb-3">Maintenance/Operational Fund</Col>
+                          <Col className="text-center mb-3">Total (in Php)</Col>
+
+                          {budgetBreakdown.map((item, i) => (
+                            <Row key={i} className="py-3">
+                              <Col>
+                                <Form.Check
+                                  type="checkbox"
+                                  label={item.fund_name}
+                                  checked={checkedValues?.[i]?.checked || false}
+                                  disabled
+                                />
                               </Col>
                               <Col>
                                 <Form.Control
-                                  placeholder="215,750.00"
+                                  type="text"
                                   className="text-end"
+                                  value={checkedValues?.[i]?.amount || ""}
+                                  disabled
                                 />
                               </Col>
                             </Row>
+                          ))}
+
+                          <Row className="my-3">
+                            <Col className="ms-4"><b>Overall Total Amount</b></Col>
+                            <Col>
+                              <Form.Control
+                                readOnly
+                                value={(totalAmount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                                className="text-end"
+                              />
+                            </Col>
                           </Row>
-                        </div>
-                      )}
-                    </FormCard>
-                  );
-                })}
-
-                <div>
-                  <Form.Check
-                    type="checkbox"
-                    label="Remarks"
-                    className="mb-3 mt-5 text-white"
-                    checked={checked}
-                    onChange={(e) => setChecked(e.target.checked)}
-                  />
-
-                  {/* Show existing remarks */}
-                  {remarksHistory
-                    ?.filter(
-                      (endorsement) =>
-                        endorsement.remarks && endorsement.remarks.trim() !== ""
-                    )
-                    .map((endorsement) => (
-                      <FormCard
-                        key={endorsement.endorsement_rep_id}
-                        className="bg-ccit mb-3"
-                      >
-                        <Form.Label className="text-white">
-                          {endorsement.User.first_name}{" "}
-                          {endorsement.User.middle_name}{" "}
-                          {endorsement.User.last_name} -{" "}
-                          {endorsement.User.UserAccount.UserRole.role_desc}{" "}
-                          ({endorsement.StatusTable.status})
-                        </Form.Label>
-
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          value={endorsement.remarks}
-                          disabled
-                        />
-                      </FormCard>
-                    ))}
-
-                  {/* Show textarea ONLY if current user has NO remarks */}
-                  {!remarksHistory?.some(
-                    (endorsement) =>
-                      Number(endorsement.endorsement_rep_id) === Number(userID) &&
-                      endorsement.remarks &&
-                      endorsement.remarks.trim() !== ""
-                  ) && (
-                      <FormCard className="bg-ccit">
-                        <Form.Control
-                          as="textarea"
-                          placeholder="Type in your comments/suggestions."
-                          rows={8}
-                          value={remarks}
-                          onChange={(e) => setRemarks(e.target.value)}
-                          disabled={!checked}
-                        />
-                      </FormCard>
+                        </Row>
+                      </div>
                     )}
-                </div>
-              </>
-            )}
-          </Form>
+                  </div>
+                </FormCard>
+              ))}
+
+              <div>
+                <Form.Check
+                  type="checkbox"
+                  label="Remarks"
+                  className="mb-3 mt-5 text-white"
+                  checked={checked}
+                  onChange={(e) => setChecked(e.target.checked)}
+                />
+
+                {/* Show existing remarks */}
+                {remarksHistory
+                  ?.filter(
+                    (endorsement) =>
+                      endorsement.remarks && endorsement.remarks.trim() !== ""
+                  )
+                  .map((endorsement) => (
+                    <FormCard
+                      key={endorsement.endorsement_rep_id}
+                      className="bg-ccit mb-3"
+                    >
+                      <Form.Label className="text-white">
+                        {endorsement.User.first_name}{" "}
+                        {endorsement.User.middle_name}{" "}
+                        {endorsement.User.last_name} -{" "}
+                        {endorsement.User.UserAccount.UserRole.role_desc}{" "}
+                        ({endorsement.StatusTable.status})
+                      </Form.Label>
+
+                      <Form.Control
+                        as="textarea"
+                        rows={4}
+                        value={endorsement.remarks}
+                        disabled
+                      />
+                    </FormCard>
+                  ))}
+
+                {!remarksHistory?.some(
+                  (endorsement) =>
+                    Number(endorsement.endorsement_rep_id) === Number(userID) &&
+                    endorsement.remarks &&
+                    endorsement.remarks.trim() !== ""
+                ) && (
+                    <FormCard className="bg-ccit">
+                      <Form.Control
+                        as="textarea"
+                        placeholder="Type in your comments/suggestions."
+                        rows={8}
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        disabled={!checked}
+                      />
+                    </FormCard>
+                  )}
+              </div>
+            </>
+          )}
 
           <div className="btn-groups">
             {step === 1 ? (
               <>
-                <OutlineButton label="Cancel" />
+                <OutlineButton label="Close" onCancel={() => history.push('/research-application-review')} />
+                {/* <OutlineButton label="Save as Draft" /> */}
                 <ConfirmationButton label="Next" onProceed={() => setStep(2)} />
               </>
             ) : (
               <>
+                <OutlineButton label="Close" onCancel={() => history.push('/research-application-review')} />
                 <OutlineButton label="Back" onCancel={() => setStep(1)} />
                 <Button
                   className="btn-confirmation-custom"
                   variant="primary"
-                  type="submit"
                 >
-                  Submit Review
+                  Save
                 </Button>
-                <OutlineButton
-                  label="Endorse"
-                  onCancel={() => {
-                    if (hasUserRemarks) {
-                      alert("You already left a remark.");
-                      return;
-                    }
-                    setConfirmationModal(true);
-                  }}
-                />
+                <OutlineButton label="Endorse" 
+                  type="submit" />
               </>
             )}
           </div>
-        </div>
+        </Form>
       </div>
-      {confirmationModal && endorsementConfirmation()}
-    </MainContainer>
+      {confirmationModal && <confirmationModal />}
+    </div>
   );
 }
 
