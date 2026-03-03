@@ -14,7 +14,7 @@ function ReviewTable() {
   const history = useHistory();
   const [researches, setResearches] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const [status, setStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
