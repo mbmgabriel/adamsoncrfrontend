@@ -7,6 +7,8 @@ import { FaFilePdf, FaFileCsv } from "react-icons/fa";
 import Tooltip from "../../../components/Tooltip/Tooltip";
 import Pagination from "../../../components/PaginationComponent/Pagination";
 import { useHistory } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 function ReviewTable() {
   const history = useHistory();
@@ -15,24 +17,19 @@ function ReviewTable() {
   const [pageSize] = useState(5);
   const [status, setStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const userID = localStorage.getItem("id");
 
   const fetchResearches = async () => {
     const response = await new Auth().fetchResearches();
-    if (response.ok) {
-      setResearches(response.data);
-    } else {
-      console.error(response.error);
-    }
+    if (response.ok) setResearches(response.data);
+    else console.error(response.error);
   };
 
   const fetchStatus = async () => {
     const response = await new ResearchApplicationAPI().fetchStatus();
-    if (response.ok) {
-      setStatus(response.data?.StatusTables);
-    } else {
-      console.log(response.data);
-    }
+    if (response.ok) setStatus(response.data?.StatusTables);
+    else console.log(response.data);
   };
 
   useEffect(() => {
@@ -62,12 +59,60 @@ function ReviewTable() {
     (a, b) => new Date(b.submitted_date) - new Date(a.submitted_date)
   );
 
-  const totalItems = sortedResearches.length;
+  const searchedResearches = sortedResearches.filter(
+    (item) =>
+      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.submitted_by?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalItems = searchedResearches.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const displayedResearches = sortedResearches.slice(
+  const displayedResearches = searchedResearches.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
+
+  const exportToCSV = () => {
+    const headers = ["Research Title", "Lead Researcher Name", "Research Status"];
+    const rows = searchedResearches.map((item) => {
+      const userEndorsement = item.Endorsements?.find(
+        (e) => e.endorsement_rep_id.toString() === userID
+      );
+      const userStatus = userEndorsement?.StatusTable?.status || "Not Reviewed";
+      return [item.title, item.submitted_by, userStatus];
+    });
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "researches.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["Research Title", "Lead Researcher Name", "Research Status"];
+    const tableRows = searchedResearches.map((item) => {
+      const userEndorsement = item.Endorsements?.find(
+        (e) => e.endorsement_rep_id.toString() === userID
+      );
+      const userStatus = userEndorsement?.StatusTable?.status || "Not Reviewed";
+      return [item.title, item.submitted_by, userStatus];
+    });
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save("researches.pdf");
+  };
 
   return (
     <div className="research-table">
@@ -75,48 +120,45 @@ function ReviewTable() {
         <div className="title">New Research Application Review</div>
 
         <div className="search-div">
-          <SearchBar placeholder="(Type to search Research Title, Research Name)" />
+          <SearchBar
+            placeholder="(Type to search Research Title, Research Name)"
+            onSearch={(value) => {
+              setSearchTerm(value);
+              setPage(1);
+            }}
+          />
           <Tooltip text="Export to PDF" position="bottom">
-            <FaFilePdf size={30} className="cursor-pointer" color="white" />
+            <FaFilePdf
+              size={30}
+              className="cursor-pointer"
+              color="white"
+              onClick={exportToPDF}
+            />
           </Tooltip>
           <Tooltip text="Export to CSV" position="bottom">
-            <FaFileCsv size={30} className="cursor-pointer" color="white" />
+            <FaFileCsv
+              size={30}
+              className="cursor-pointer"
+              color="white"
+              onClick={exportToCSV}
+            />
           </Tooltip>
         </div>
 
         <Nav className="mt-4 research-tabs" variant="underline" activeKey={activeTab}>
-          <Nav.Item>
-            <Nav.Link
-              eventKey="all"
-              onClick={() => { setActiveTab("all"); setPage(1); }}
-            >
-              All
-            </Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link
-              eventKey="new"
-              onClick={() => { setActiveTab("new"); setPage(1); }}
-            >
-              New
-            </Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link
-              eventKey="revised"
-              onClick={() => { setActiveTab("revised"); setPage(1); }}
-            >
-              Revised
-            </Nav.Link>
-          </Nav.Item>
-          <Nav.Item>
-            <Nav.Link
-              eventKey="endorsed"
-              onClick={() => { setActiveTab("endorsed"); setPage(1); }}
-            >
-              Endorsed
-            </Nav.Link>
-          </Nav.Item>
+          {["all", "new", "revised", "endorsed"].map((tab) => (
+            <Nav.Item key={tab}>
+              <Nav.Link
+                eventKey={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setPage(1);
+                }}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Nav.Link>
+            </Nav.Item>
+          ))}
         </Nav>
 
         <div className="table-div">
@@ -133,7 +175,6 @@ function ReviewTable() {
                 const userEndorsement = item.Endorsements?.find(
                   (e) => e.endorsement_rep_id.toString() === userID
                 );
-
                 const userStatusID = userEndorsement?.status_id;
                 const userStatus = userEndorsement?.StatusTable?.status;
 
