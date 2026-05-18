@@ -32,6 +32,7 @@ function ReviewTable() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const userID = localStorage.getItem("id");
+  const roleID = localStorage.getItem("role_id");
 
   // ✅ CHART DATA
   const chartData = {
@@ -150,39 +151,43 @@ function ReviewTable() {
 
   return (
     <div className="research-table">
-      {/* <div className="research-container">
-        <div className="title">CRD Pre-screening </div>
-        <div className="mb-4 p-3" style={{ background: "#f8f9fa", borderRadius: "60px" }}>
-          <h5 className="text-center fw-bold">
-            Endorsed (from the College Dean) New Research Application
-          </h5>
-          <div className="text-center mb-3">SY 2024 - 2025</div>
+      {(roleID === "6" || roleID === "8") && (
+        <div className="research-container">
+          <div className="title">CRD Pre-screening</div>
 
-          <Row>
-            <Col md={9}>
-              <Bar data={chartData} options={chartOptions} />
-            </Col>
+          <div className="mb-4 p-3" style={{ background: "#f8f9fa", borderRadius: "60px" }}>
+            <h5 className="text-center fw-bold">
+              Endorsed (from the College Dean) New Research Application
+            </h5>
 
-            <Col md={3}>
-              {chartData.labels.map((label, i) => (
-                <div key={i} className="d-flex align-items-center mb-1">
-                  <span
-                    style={{
-                      width: 12,
-                      height: 12,
-                      backgroundColor: chartData.datasets[0].backgroundColor[i],
-                      marginRight: 8,
-                    }}
-                  />
-                  <small>
-                    {label} ({chartData.datasets[0].data[i]})
-                  </small>
-                </div>
-              ))}
-            </Col>
-          </Row>
+            <div className="text-center mb-3">SY 2024 - 2025</div>
+
+            <Row>
+              <Col md={9}>
+                <Bar data={chartData} options={chartOptions} />
+              </Col>
+
+              <Col md={3}>
+                {chartData.labels.map((label, i) => (
+                  <div key={i} className="d-flex align-items-center mb-1">
+                    <span
+                      style={{
+                        width: 12,
+                        height: 12,
+                        backgroundColor: chartData.datasets[0].backgroundColor[i],
+                        marginRight: 8,
+                      }}
+                    />
+                    <small>
+                      {label} ({chartData.datasets[0].data[i]})
+                    </small>
+                  </div>
+                ))}
+              </Col>
+            </Row>
+          </div>
         </div>
-      </div> */}
+      )}
 
       {/* 🔒 YOUR ORIGINAL UI BELOW — UNTOUCHED */}
       <div className="research-container">
