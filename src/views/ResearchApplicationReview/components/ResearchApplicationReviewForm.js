@@ -156,6 +156,8 @@ function ResearchApplicationReviewForm() {
   const [checked, setChecked] = useState(false)
   const [confirmationModal, setConfirmationModal] = useState(false)
   const userID = localStorage.getItem("id");
+  const roleID = Number(localStorage.getItem("role_id"));
+  const isRemarksDisabled = roleID === 4 || roleID === 5;
   const history = useHistory()
 
   const documentTypes = [
@@ -224,6 +226,13 @@ function ResearchApplicationReviewForm() {
     getResearchById()
     getAllEndorsementComments()
   }, [id])
+
+  useEffect(() => {
+    if (isRemarksDisabled) {
+      setChecked(false);
+      setRemarks("");
+    }
+  }, [isRemarksDisabled]);
 
   // Map research data to form
   useEffect(() => {
@@ -309,6 +318,11 @@ function ResearchApplicationReviewForm() {
   };
 
   const updateEndorsementStatus = async () => {
+    if (isRemarksDisabled && (checked || remarks.trim() !== "")) {
+      alert("Remarks are disabled for your role.");
+      return;
+    }
+
     const hasUserRemarks = remarksHistory?.some(
       (endorsement) =>
         Number(endorsement.endorsement_rep_id) === Number(userID) &&
@@ -328,7 +342,6 @@ function ResearchApplicationReviewForm() {
 
     const response = await new ResearchApplicationAPI().updateEndorsementStatus(
       id,
-      userID,
       payload
     );
 
@@ -595,6 +608,7 @@ function ResearchApplicationReviewForm() {
                   className="mb-3 mt-5 text-white"
                   checked={checked}
                   onChange={(e) => setChecked(e.target.checked)}
+                  disabled={isRemarksDisabled}
                 />
 
                 {/* Show existing remarks */}
@@ -638,7 +652,7 @@ function ResearchApplicationReviewForm() {
                         rows={8}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
-                        disabled={!checked}
+                        disabled={!checked || isRemarksDisabled}
                       />
                     </FormCard>
                   )}

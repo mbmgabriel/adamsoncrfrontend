@@ -18,7 +18,7 @@ export class UserContextProvider extends Component {
     const id = localStorage.getItem("id")
     let response = await new Auth().profile(id)
     if(response.ok) {
-      console.log('res:', response?.data)
+      localStorage.setItem('role_id', response?.data?.role_id)
       let user = response?.data
 
       user.role = user?.UserAccount?.role_name
