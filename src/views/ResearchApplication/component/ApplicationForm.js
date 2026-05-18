@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Form, Row, Col, Button } from "react-bootstrap";
 import { useForm, useWatch } from "react-hook-form";
 import FormCard from "../../../components/Card/FormCard";
@@ -8,6 +8,8 @@ import TransparentLoader from "../../../components/Loader/TransparentLoader";
 import OutlineButton from "../../../components/Buttons/OutlineButton";
 import ConfirmationButton from "../../../components/Buttons/ConfirmationButton";
 import { useHistory } from "react-router-dom";
+import Auth from "../../../api/Auth";
+import { UserContext } from "../../../context/UserContext";
 
 export function ResearcherSection({
   index,
@@ -151,21 +153,41 @@ export function ResearcherSection({
   );
 }
 
+const getUserAccount = (userData) => {
+  if (!userData) return userData;
+
+  return {
+    ...userData,
+    ...(userData.User || {}),
+    ...(userData.UserAccount || {}),
+    ...(userData.User?.UserAccount || {}),
+  };
+};
+
+const getFirstAvailableValue = (source, keys) =>
+  keys
+    .map((key) => source?.[key])
+    .find((value) => value !== undefined && value !== null && value !== "");
+
 function ApplicationForm() {
   const BASE_URL = "https://adamsoncr.tekteachlms.com";
   const history = useHistory()
+  const userContext = useContext(UserContext);
+  const { user: contextUser } = userContext?.data || {};
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
   const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [budgetBreakdown, setBudgetBreakdown] = useState();
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const name = localStorage.getItem("name")
   const {
     control,
     handleSubmit,
     register,
     setValue,
+    getValues,
     watch,
     reset,
     defaultValues,
@@ -231,6 +253,89 @@ function ApplicationForm() {
   };
 
   console.log({ budgetBreakdown });
+
+  useEffect(() => {
+    const loadLoggedInUser = async () => {
+      const contextAccount = getUserAccount(contextUser);
+      if (contextAccount) {
+        setLoggedInUser(contextAccount);
+        return;
+      }
+
+      const userId = localStorage.getItem("id");
+      if (!userId) return;
+
+      const response = await new Auth().profile(userId);
+      if (response.ok) {
+        setLoggedInUser(getUserAccount(response.data));
+      }
+    };
+
+    loadLoggedInUser();
+  }, [contextUser]);
+
+  useEffect(() => {
+    if (!loggedInUser) return;
+
+    const fullNameParts = (name || "").split(" ").filter(Boolean);
+    const setResearcherValueIfEmpty = (field, value) => {
+      const fieldName = `researchers.0.${field}`;
+      if (value && !getValues(fieldName)) {
+        setValue(fieldName, value);
+      }
+    };
+
+    setResearcherValueIfEmpty(
+      getFirstAvailableValue(loggedInUser, [
+        "school_id",
+        "employee_id",
+        "student_id",
+      ])
+    );
+    setResearcherValueIfEmpty(
+      "first_name",
+      getFirstAvailableValue(loggedInUser, ["first_name", "firstName"]) ||
+      fullNameParts[0]
+    );
+    setResearcherValueIfEmpty(
+      "last_name",
+      getFirstAvailableValue(loggedInUser, ["last_name", "lastName"]) ||
+      fullNameParts.slice(1).join(" ")
+    );
+    setResearcherValueIfEmpty(
+      "mobile_number",
+      getFirstAvailableValue(loggedInUser, [
+        "mobile_number",
+        "mobile_no",
+        "mobile",
+        "contact_number",
+        "phone_number",
+      ])
+    );
+    setResearcherValueIfEmpty(
+      "email",
+      getFirstAvailableValue(loggedInUser, ["email", "email_address"])
+    );
+    setResearcherValueIfEmpty(
+      "college",
+      getFirstAvailableValue(loggedInUser, [
+        "college",
+        "college_id",
+        "college_name",
+      ])
+    );
+    setResearcherValueIfEmpty(
+      "dept",
+      getFirstAvailableValue(loggedInUser, [
+        "dept",
+        "department",
+        "department_id",
+        "department_name",
+      ])
+    );
+  }, [loggedInUser, name, getValues, setValue]);
+
+  console.log({loggedInUser})
 
   useEffect(() => {
     const fetchData = async () => {
@@ -384,9 +489,9 @@ function ApplicationForm() {
   };
 
   useEffect(() => {
-    setValue("submitted_by", name);
+    setValue("submitted_by", name || "");
     setValue("submitted_date", new Date().toISOString().split("T")[0]);
-  })
+  }, [name, setValue]);
 
   console.log({ name });
 

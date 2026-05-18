@@ -150,7 +150,7 @@ function ReviewTable() {
 
   return (
     <div className="research-table">
-      <div className="research-container">
+      {/* <div className="research-container">
         <div className="title">CRD Pre-screening </div>
         <div className="mb-4 p-3" style={{ background: "#f8f9fa", borderRadius: "60px" }}>
           <h5 className="text-center fw-bold">
@@ -182,7 +182,7 @@ function ReviewTable() {
             </Col>
           </Row>
         </div>
-      </div>
+      </div> */}
 
       {/* 🔒 YOUR ORIGINAL UI BELOW — UNTOUCHED */}
       <div className="research-container">
