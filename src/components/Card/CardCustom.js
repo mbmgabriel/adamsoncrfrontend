@@ -1,8 +1,12 @@
 import React from 'react'
 
-function CardCustom({icon, title, footer, path}) {
+function CardCustom({icon, title, footer, path, isVisible}) {
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className='card-custom cursor-pointer' onClick={path}>
+    <div className='card-custom cursor-pointer ' onClick={path}>
       <div className='card-custom-content'>
         <span className='icon'>{icon}</span>
         <span>{title}</span>

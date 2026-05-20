@@ -744,6 +744,199 @@ body {
   }
 }
 
+.urb-review-board {
+  .form-container {
+    max-width: 1160px;
+  }
+
+  .urb-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 30px 0 42px;
+  }
+
+  .urb-section-label {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 16px 10px;
+  }
+
+  .urb-card {
+    border-radius: 18px;
+    margin-bottom: 64px;
+    padding: 28px 42px;
+  }
+
+  .urb-research-card {
+    padding-bottom: 16px;
+  }
+
+  .urb-title-row {
+    align-items: center;
+    display: flex;
+    gap: 22px;
+    margin-bottom: 30px;
+  }
+
+  .urb-title-label,
+  .urb-group-title,
+  .urb-person-title,
+  .urb-reviewer-heading {
+    font-weight: 700;
+  }
+
+  .urb-title-label {
+    flex: 0 0 58px;
+    margin: 0;
+  }
+
+  .urb-title-control {
+    background-color: #f7fbfc;
+    border: 1px solid #aeb9c2;
+    border-radius: 22px !important;
+    min-height: 56px;
+    resize: none;
+  }
+
+  .urb-investigators {
+    padding-left: 40px;
+  }
+
+  .urb-group-title {
+    margin-bottom: 28px;
+  }
+
+  .urb-person-section,
+  .urb-reviewer-section {
+    margin-bottom: 30px;
+  }
+
+  .urb-person-title {
+    margin: 0 0 16px 46px;
+  }
+
+  .urb-fields-row {
+    row-gap: 4px;
+  }
+
+  .custom-input.flex-container {
+    align-items: center;
+    justify-content: flex-start;
+    padding: 7px 0;
+  }
+
+  .custom-input {
+    .custom-label {
+      flex: 0 0 100px;
+      font-size: 14px;
+      margin-bottom: 0;
+      width: 100px;
+    }
+
+    .custom-control {
+      background-color: #f7fbfc;
+      border: 1px solid #aeb9c2;
+      border-radius: 6px !important;
+      flex: 1 1 auto;
+      font-size: 14px;
+      min-height: 34px;
+      min-width: 0;
+    }
+  }
+
+  .urb-reviewer-section {
+    margin-bottom: 24px;
+  }
+
+  .urb-reviewer-heading {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin: 0 0 8px 0;
+  }
+
+  .urb-reviewer-heading .form-check {
+    margin: 0;
+    min-height: auto;
+    padding-left: 0;
+  }
+
+  .urb-reviewer-heading .form-check-input {
+    margin: 0;
+  }
+
+  .urb-assignment-card {
+    margin-bottom: 34px;
+  }
+
+  .urb-assignment-card .custom-input {
+    .custom-label {
+      flex-basis: 122px;
+      width: 122px;
+    }
+  }
+
+  .urb-actions {
+    display: flex;
+    gap: 24px;
+    justify-content: flex-end;
+    padding-bottom: 30px;
+  }
+}
+
+@media (max-width: 991px) {
+  .application-form.urb-review-board {
+    padding: 30px 20px;
+
+    .form-container {
+      padding: 20px;
+    }
+
+    .urb-investigators {
+      padding-left: 0;
+    }
+
+    .urb-person-title {
+      margin-left: 0;
+    }
+
+    .urb-card {
+      padding: 22px;
+    }
+  }
+}
+
+@media (max-width: 575px) {
+  .application-form.urb-review-board {
+    .urb-page-title {
+      font-size: 24px;
+      margin-bottom: 28px;
+    }
+
+    .urb-title-row,
+    .custom-input.flex-container {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .urb-title-label,
+    .custom-input .custom-label,
+    .urb-assignment-card .custom-input .custom-label {
+      flex-basis: auto;
+      width: 100%;
+    }
+
+    .urb-actions {
+      flex-direction: column-reverse;
+    }
+
+    .urb-actions .btn {
+      width: 100%;
+    }
+  }
+}
+
 .research-table {
   padding: 50px 50px;
   .research-container {

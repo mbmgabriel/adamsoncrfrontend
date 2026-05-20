@@ -11,6 +11,7 @@ import NewResearchApplication from "../views/ResearchApplication/NewResearchAppl
 import Research from "../views/Research/Research";
 import ResearchApplicationReviewTable from "../views/ResearchApplicationReview/ResearchApplicationReviewTable"
 import ResearchApplicationReviewForm from "../views/ResearchApplicationReview/components/ResearchApplicationReviewForm"
+import URBReviewBoard from "../views/URB/URBReviewBoard";
 
 export default function Routing() {
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function Routing() {
           <PrivateRoute path='/research' exact component={Research} />
           <PrivateRoute path='/research-application-review' exact component={ResearchApplicationReviewTable} />
           <PrivateRoute path='/review-form/:id' exact component={ResearchApplicationReviewForm} />
+          <PrivateRoute path='/urb-review' exact component={URBReviewBoard} />
         </Switch>
       </Router>
     </div>

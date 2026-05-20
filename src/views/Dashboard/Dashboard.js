@@ -4,16 +4,18 @@ import CardCustom from "../../components/Card/CardCustom";
 import { MdAssignmentAdd } from "react-icons/md";
 import { FaFileCircleCheck } from "react-icons/fa6";
 import { FaChalkboardTeacher } from "react-icons/fa";
-import { HiGiftTop } from "react-icons/hi2";
+import { HiGiftTop, HiUserGroup } from "react-icons/hi2";
 import Notifications from "./component/Notifications";
 import { useHistory } from "react-router-dom";
 import ReviewStatusChart from "../../components/DashboardCharts/ReviewStatusChart";
 import ResearchProposalsChart from "../../components/DashboardCharts/ResearchProposalsChart";
 import PresentedResearchChart from "../../components/DashboardCharts/PresentedResearchChart";
 import PublishedResearchChart from "../../components/DashboardCharts/PublishedResearchChart";
+import { isVisible } from "@testing-library/user-event/dist/cjs/utils/index.js";
 
 function Dashboard() {
   const history = useHistory();
+  const role_id = localStorage.getItem("role_id");
 
   const cardContent = [
     {
@@ -39,6 +41,14 @@ function Dashboard() {
       title: "Receive Research Incentives",
       footer: "New Research Application",
       path: "/new-research-application",
+      isVisible: role_id !== "6" && role_id !== "8",
+    },
+    {
+      icon: <HiUserGroup />,
+      title: "View Research Review Board",
+      footer: "Research Review Board",
+      path: "/urb-review",
+      isVisible: role_id === "6" || role_id === "8",
     },
   ];
 
@@ -95,12 +105,14 @@ function Dashboard() {
     <MainContainer activeHeader={"Home"}>
       <div className="home">
         <div className="card-holder">
-          {cardContent.map((item) => (
+          {cardContent.map((item, index) => (
             <CardCustom
+              key={index}
               icon={item.icon}
               title={item.title}
               footer={item.footer}
               path={() => history.push(item.path)}
+              isVisible={item.isVisible ?? true}
             />
           ))}
         </div>

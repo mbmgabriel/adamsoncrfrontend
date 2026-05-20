@@ -10,7 +10,6 @@ import { useHistory } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-// ✅ CHART ONLY (no UI interference)
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -34,7 +33,6 @@ function ReviewTable() {
   const userID = localStorage.getItem("id");
   const roleID = localStorage.getItem("role_id");
 
-  // ✅ CHART DATA
   const chartData = {
     labels: ["CoA", "CBA", "CCIT", "CELA", "CoE", "CoL", "CoN", "CoP", "CoS", "GS", "SVST"],
     datasets: [
@@ -189,7 +187,6 @@ function ReviewTable() {
         </div>
       )}
 
-      {/* 🔒 YOUR ORIGINAL UI BELOW — UNTOUCHED */}
       <div className="research-container">
         <div className="title">New Research Application Review</div>
 
