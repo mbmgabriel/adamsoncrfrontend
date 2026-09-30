@@ -1,5 +1,5 @@
 const stagingConfig = {
-  API: 'https://dev-api.tekteachlms.com',
+  API: 'https://adamsoncr.tekteachlms.com',
 };
 
 export default stagingConfig;

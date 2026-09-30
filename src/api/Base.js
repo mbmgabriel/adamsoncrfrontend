@@ -1,30 +1,37 @@
-const BASE_URL = "https://adamsoncr.tekteachlms.com"
+import { BASE_URL } from '../constants/url';
+
 export default class Base {
   sendRequest = async ({ path, method = 'GET', data = {}, base, headers }) => {
     let url = base ? base + path : BASE_URL + path;
+    const isFormData = data instanceof FormData;
 
     let config = {
-      // headers: {
-      //   Accept: 'application/json',
-      //   'Content-Type': 'application/json',
-      //   'Access-Control-Allow-Origin': '*',
-      //   Authorization: `${await window.localStorage.getItem("token")}`,
-      // },
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
         Authorization: `Bearer ${await window.localStorage.getItem("token")}`,
       },
       method: method,
     };
 
-    if (headers) config = { ...config, headers };
+    if (!isFormData) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+
+    if (headers) {
+      config = {
+        ...config,
+        headers: {
+          ...config.headers,
+          ...headers,
+        },
+      };
+    }
 
     console.info('%cNew connection has established', 'color: red');
     console.log({ config, url, data });
 
     if (method !== 'GET') {
-      config.body = JSON.stringify(data);
+      config.body = isFormData ? data : JSON.stringify(data);
     }
     let response = await fetch(url, config)
       .then(async function (res) {

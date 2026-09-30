@@ -1,14 +1,20 @@
 import React from 'react'
+import { MdArrowForward } from 'react-icons/md'
 
-function CardCustom({icon, title, footer, path}) {
+function CardCustom({icon, title, footer, path, isVisible}) {
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className='card-custom cursor-pointer' onClick={path}>
-      <div className='card-custom-content'>
-        <span className='icon'>{icon}</span>
-        <span>{title}</span>
-        </div>
-      <div className='card-custom-footer'>{footer}</div>
-    </div>
+    <button type='button' className='card-custom' onClick={path}>
+      <span className='card-custom-icon' aria-hidden='true'>{icon}</span>
+      <span className='card-custom-content'>{title}</span>
+      <span className='card-custom-footer'>
+        <span>{footer}</span>
+        <MdArrowForward aria-hidden='true' />
+      </span>
+    </button>
   )
 }
 

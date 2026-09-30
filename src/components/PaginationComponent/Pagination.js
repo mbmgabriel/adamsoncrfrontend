@@ -1,4 +1,5 @@
 import React from "react";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItems }) => {
   if (totalPages <= 1) return null;
@@ -35,11 +36,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
     <div className="pagination">
       <div className="pages">
         <button
+          className="pagination-button"
           onClick={() => handleClick(currentPage - 1)}
           disabled={currentPage === 1}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
+          aria-label="Previous page"
         >
-          {"<"}
+          <MdChevronLeft aria-hidden="true" />
         </button>
 
         {getPageNumbers().map((p, idx) =>
@@ -48,14 +50,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
           ) : (
             <button
               key={p}
+              className={`pagination-button${p === currentPage ? " pagination-button--active" : ""}`}
               onClick={() => handleClick(p)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: p === currentPage ? "bold" : "normal",
-                textDecoration: p === currentPage ? "underline" : "none"
-              }}
+              aria-current={p === currentPage ? "page" : undefined}
             >
               {p}
             </button>
@@ -63,35 +60,20 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
         )}
 
         <button
+          className="pagination-button"
           onClick={() => handleClick(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
+          aria-label="Next page"
         >
-          {">"}
+          <MdChevronRight aria-hidden="true" />
         </button>
       </div>
 
       <div className="total-pages">
-        Showing {showingCount} of {totalItems}
+        Showing {Math.min((currentPage - 1) * pageSize + 1, totalItems)}-{showingCount} of {totalItems}
       </div>
     </div>
   );
 };
 
 export default Pagination;
-
-
-
-// reuse
-// const [page, setPage] = useState(1);
-// const pageSize = 15;
-// const totalItems = 60;
-// const totalPages = Math.ceil(totalItems / pageSize);
-
-{/* <Pagination
-  currentPage={page}
-  totalPages={totalPages}
-  pageSize={pageSize}
-  totalItems={totalItems}
-  onPageChange={setPage}
-/> */}

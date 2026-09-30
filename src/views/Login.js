@@ -9,6 +9,7 @@ import ConfirmationButton from "../components/Buttons/ConfirmationButton";
 import { useHistory } from "react-router-dom";
 import Auth from "../api/Auth";
 import { UserContext } from "../context/UserContext";
+import { formatDisplayName } from "../utils/formatName";
 
 function Login() {
   const userContext = useContext(UserContext);
@@ -88,7 +89,11 @@ function Login() {
     }
     let response = await new Auth().login(data)
     if (response.ok) {
-      let user = `${response.data.UserAccount.first_name} ${response.data.UserAccount.middle_name} ${response.data.UserAccount.last_name}`.trim()
+      let user = formatDisplayName(
+        response.data.UserAccount.first_name,
+        response.data.UserAccount.middle_name,
+        response.data.UserAccount.last_name
+      )
       window.localStorage.setItem("token", response.data.token)
       window.localStorage.setItem("id", response.data.UserAccount.user_id)
       window.localStorage.setItem("name", user)
