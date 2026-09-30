@@ -1,4 +1,4 @@
 const productionConfig = {
-  API: 'https://tekteachlms-api.com',
+  API: 'https://adamsoncr.tekteachlms.com',
 };
 export default productionConfig;

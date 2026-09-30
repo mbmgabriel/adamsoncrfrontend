@@ -9,6 +9,7 @@ const TextInputCustom = React.forwardRef(({
   required = false,
   readOnly = false,
   disabled = false,
+  error,
   ...rest
 }, ref) => {
   return (
@@ -23,9 +24,14 @@ const TextInputCustom = React.forwardRef(({
         required={required}
         readOnly={readOnly}
         disabled={disabled}
+        isInvalid={Boolean(error)}
+        aria-invalid={Boolean(error)}
         ref={ref}
         {...rest}
       />
+      {error && (
+        <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
+      )}
     </Form.Group>
   );
 });

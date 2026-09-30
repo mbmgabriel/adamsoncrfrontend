@@ -1,7 +1,13 @@
 import React from "react";
 import MainContainer from "../../components/Layout/MainContainer";
 import CardCustom from "../../components/Card/CardCustom";
-import { MdAssignmentAdd } from "react-icons/md";
+import {
+  MdAssignmentAdd,
+  MdCoPresent,
+  MdMenuBook,
+  MdOutlineRateReview,
+  MdOutlineScience,
+} from "react-icons/md";
 import { FaFileCircleCheck } from "react-icons/fa6";
 import { FaChalkboardTeacher } from "react-icons/fa";
 import { HiGiftTop, HiUserGroup } from "react-icons/hi2";
@@ -11,7 +17,6 @@ import ReviewStatusChart from "../../components/DashboardCharts/ReviewStatusChar
 import ResearchProposalsChart from "../../components/DashboardCharts/ResearchProposalsChart";
 import PresentedResearchChart from "../../components/DashboardCharts/PresentedResearchChart";
 import PublishedResearchChart from "../../components/DashboardCharts/PublishedResearchChart";
-import { isVisible } from "@testing-library/user-event/dist/cjs/utils/index.js";
 
 function Dashboard() {
   const history = useHistory();
@@ -38,9 +43,9 @@ function Dashboard() {
     },
     {
       icon: <HiGiftTop />,
-      title: "Receive Research Incentives",
-      footer: "New Research Application",
-      path: "/new-research-application",
+      title: "Request assistance for your research paper presentation.",
+      footer: "Request for Incentive Form",
+      path: "/research-incentive-request",
       isVisible: role_id !== "6" && role_id !== "8",
     },
     {
@@ -101,43 +106,65 @@ function Dashboard() {
     },
   ];
 
+  const analyticsSummary = [
+    { label: "Applications reviewed", value: 35, icon: <MdOutlineRateReview /> },
+    { label: "Research proposals", value: 60, icon: <MdOutlineScience /> },
+    { label: "Presented research", value: 11, icon: <MdCoPresent /> },
+    { label: "Published research", value: 17, icon: <MdMenuBook /> },
+  ];
+
   return (
     <MainContainer activeHeader={"Home"}>
       <div className="home">
-        <div className="card-holder">
-          {cardContent.map((item, index) => (
-            <CardCustom
-              key={index}
-              icon={item.icon}
-              title={item.title}
-              footer={item.footer}
-              path={() => history.push(item.path)}
-              isVisible={item.isVisible ?? true}
-            />
-          ))}
-        </div>
+        <section className="dashboard-actions">
+          <div className="dashboard-section-heading">
+            <span>Workspace</span>
+            <h2>Quick actions</h2>
+          </div>
+          <div className="card-holder">
+            {cardContent.map((item, index) => (
+              <CardCustom
+                key={index}
+                icon={item.icon}
+                title={item.title}
+                footer={item.footer}
+                path={() => history.push(item.path)}
+                isVisible={item.isVisible ?? true}
+              />
+            ))}
+          </div>
+        </section>
         <div className="center notification-holder">
           <Notifications item={notificationsData} />
         </div>
-        <div className="graph-containers container-fluid mt-4">
-          <div className="row g-4">
-            <div className="col-12 col-lg-6">
-              <ReviewStatusChart />
+        <section className="graph-containers dashboard-analytics">
+          <div className="dashboard-analytics-header">
+            <div>
+              <div className="dashboard-analytics-eyebrow">Analytics overview</div>
+              <h2>Research activity</h2>
             </div>
-
-            <div className="col-12 col-lg-6">
-              <ResearchProposalsChart />
-            </div>
-
-            <div className="col-12 col-lg-6">
-              <PresentedResearchChart />
-            </div>
-
-            <div className="col-12 col-lg-6">
-              <PublishedResearchChart />
-            </div>
+            <div className="dashboard-analytics-date">Updated Jan 28, 2024</div>
           </div>
-        </div>
+
+          <div className="dashboard-kpi-grid">
+            {analyticsSummary.map((item) => (
+              <div className="dashboard-kpi" key={item.label}>
+                <span className="dashboard-kpi-icon" aria-hidden="true">{item.icon}</span>
+                <div>
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="dashboard-chart-grid">
+            <ReviewStatusChart />
+            <ResearchProposalsChart />
+            <PresentedResearchChart />
+            <PublishedResearchChart />
+          </div>
+        </section>
       </div>
     </MainContainer>
   );

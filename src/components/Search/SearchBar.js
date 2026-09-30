@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { MdSearch } from "react-icons/md";
-import { FaBackspace } from "react-icons/fa";
+import { MdClose, MdSearch } from "react-icons/md";
 
 const SearchBar = ({ placeholder, onSearch }) => {
   const [query, setQuery] = useState("");
@@ -18,20 +17,28 @@ const SearchBar = ({ placeholder, onSearch }) => {
   };
 
   return (
-    <Form.Group style={{ display: "flex", gap: "8px" }} className="search">
+    <Form.Group className="search">
       <InputGroup>
         <InputGroup.Text className="search-input">
-          <MdSearch size={30} />
+          <MdSearch aria-hidden="true" />
         </InputGroup.Text>
         <Form.Control
           type="text"
           value={query}
           placeholder={placeholder || "Search..."}
           onChange={handleChange}
+          aria-label={placeholder || "Search"}
         />
-        <div className="backspace">
-          <FaBackspace size={40} onClick={clearInput} className="cursor-pointer" />
-        </div>
+        {query && (
+          <button
+            type="button"
+            className="backspace"
+            onClick={clearInput}
+            aria-label="Clear search"
+          >
+            <MdClose aria-hidden="true" />
+          </button>
+        )}
       </InputGroup>
     </Form.Group>
   );

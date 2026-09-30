@@ -3,7 +3,6 @@ import Logo from '../../assets/image/crd-logo.png'
 import { IoIosSearch } from "react-icons/io";
 import { Form, InputGroup } from 'react-bootstrap'
 import { useHistory } from 'react-router-dom'; 
-import { CiLogout } from "react-icons/ci";
 
 function Header({ activeHeader }) {
   const history = useHistory();
@@ -15,12 +14,6 @@ function Header({ activeHeader }) {
     { name: 'FAQs', path: '/' },
     { name: 'About CRD', path: '/' },
   ];
-
-  // 🔥 Logout — clear ALL localStorage
-  const handleLogout = () => {
-    localStorage.clear(); // removes all stored items
-    history.push("/");    // redirect after logout
-  };
 
   return (
     <div className='header'>
@@ -37,35 +30,31 @@ function Header({ activeHeader }) {
         </div>
 
         <div className='search-div'>
-          <InputGroup className="mb-3">
+          <InputGroup>
             <InputGroup.Text><IoIosSearch className='icon' /></InputGroup.Text>
             <Form.Control
               className='header-search'
               placeholder="(Search within AdU-CRD REMAP)"
+              aria-label="Search within AdU-CRD REMAP"
             />
           </InputGroup>
         </div>
-
-        {/* 🔥 Logout Button */}
-        <div className='logout-button' onClick={handleLogout}>
-          <CiLogout className='logout-icon' />
-          <span>Logout</span>
-        </div>
       </div>
 
-      <div className='header_nav'>
+      <nav className='header_nav' aria-label='Primary navigation'>
         <div className='nav_bar'>
           {navData.map((item) => (
-            <div
+            <button
+              type='button'
               key={item.name}
               className={activeHeader === item.name ? "nav-pill-active" : "nav-pill"}
               onClick={() => history.push(item.path)}
             >
               {item.name}
-            </div>
+            </button>
           ))}
         </div>
-      </div>
+      </nav>
 
       <div className='header_title'>
         <div className='title_container'>

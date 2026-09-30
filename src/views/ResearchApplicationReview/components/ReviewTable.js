@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Table, Nav, Badge, Row, Col, Card } from "react-bootstrap";
 import Auth from "../../../api/Auth";
-import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import SearchBar from "../../../components/Search/SearchBar";
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
-import Tooltip from "../../../components/Tooltip/Tooltip";
+import { MdOutlineRateReview } from "react-icons/md";
 import Pagination from "../../../components/PaginationComponent/Pagination";
 import { useHistory } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import { formatDisplayName } from "../../../utils/formatName";
 
 import { Bar } from "react-chartjs-2";
 import {
@@ -27,7 +26,6 @@ function ReviewTable() {
   const [researches, setResearches] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [status, setStatus] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const userID = localStorage.getItem("id");
@@ -49,9 +47,20 @@ function ReviewTable() {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      y: { beginAtZero: true, max: 30 },
+      x: {
+        grid: { display: false },
+        ticks: { color: "#52677d", font: { size: 11, weight: 600 } },
+      },
+      y: {
+        beginAtZero: true,
+        max: 30,
+        border: { display: false },
+        grid: { color: "#e4eaf0" },
+        ticks: { color: "#718096", stepSize: 5 },
+      },
     },
   };
 
@@ -61,34 +70,25 @@ function ReviewTable() {
     else console.error(response.error);
   };
 
-  const fetchStatus = async () => {
-    const response = await new ResearchApplicationAPI().fetchStatus();
-    if (response.ok) setStatus(response.data?.StatusTables);
-    else console.log(response.data);
-  };
-
   useEffect(() => {
     fetchResearches();
-    fetchStatus();
   }, []);
 
-  const filteredResearches = researches.filter((item) => {
-    const userEndorsement = item.Endorsements?.find(
-      (e) => e.endorsement_rep_id.toString() === userID
+  const getUserEndorsement = (item) =>
+    item.Endorsements?.find(
+      (endorsement) => String(endorsement.endorsement_rep_id) === String(userID)
     );
-    const statusID = userEndorsement?.status_id;
 
-    switch (activeTab) {
-      case "new":
-        return statusID === 4 || statusID === undefined || statusID === null;
-      case "revised":
-        return statusID === 5;
-      case "endorsed":
-        return statusID === 6;
-      default:
-        return true;
-    }
-  });
+  const matchesTab = (item, tabKey) => {
+    const statusID = getUserEndorsement(item)?.status_id;
+
+    if (tabKey === "new") return statusID === 4 || statusID == null;
+    if (tabKey === "revised") return statusID === 5;
+    if (tabKey === "endorsed") return statusID === 6;
+    return true;
+  };
+
+  const filteredResearches = researches.filter((item) => matchesTab(item, activeTab));
 
   const sortedResearches = [...filteredResearches].sort(
     (a, b) => new Date(b.submitted_date) - new Date(a.submitted_date)
@@ -97,7 +97,9 @@ function ReviewTable() {
   const searchedResearches = sortedResearches.filter(
     (item) =>
       item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.submitted_by?.toLowerCase().includes(searchTerm.toLowerCase())
+      formatDisplayName(item.submitted_by)
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   const totalItems = searchedResearches.length;
@@ -107,14 +109,43 @@ function ReviewTable() {
     page * pageSize
   );
 
+  const tabDefinitions = [
+    { key: "all", label: "All" },
+    { key: "new", label: "New" },
+    { key: "revised", label: "Revised" },
+    { key: "endorsed", label: "Endorsed" },
+  ];
+
+  const getReviewStatus = (item) => getUserEndorsement(item)?.StatusTable?.status || "Not reviewed";
+
+  const getReviewTone = (item) => {
+    const statusID = getUserEndorsement(item)?.status_id;
+    if (statusID === 6) return "success";
+    if (statusID === 5) return "pending";
+    if (statusID === 4) return "info";
+    return "neutral";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "Not available";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Not available";
+
+    return new Intl.DateTimeFormat("en-PH", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  };
+
   const exportToCSV = () => {
     const headers = ["Research Title", "Lead Researcher Name", "Research Status"];
     const rows = searchedResearches.map((item) => {
-      const userEndorsement = item.Endorsements?.find(
-        (e) => e.endorsement_rep_id.toString() === userID
-      );
-      const userStatus = userEndorsement?.StatusTable?.status || "Not Reviewed";
-      return [item.title, item.submitted_by, userStatus];
+      return [
+        item.title,
+        formatDisplayName(item.submitted_by),
+        getReviewStatus(item),
+      ];
     });
 
     const csvContent =
@@ -131,11 +162,11 @@ function ReviewTable() {
     const doc = new jsPDF();
     const tableColumn = ["Research Title", "Lead Researcher Name", "Research Status"];
     const tableRows = searchedResearches.map((item) => {
-      const userEndorsement = item.Endorsements?.find(
-        (e) => e.endorsement_rep_id.toString() === userID
-      );
-      const userStatus = userEndorsement?.StatusTable?.status || "Not Reviewed";
-      return [item.title, item.submitted_by, userStatus];
+      return [
+        item.title,
+        formatDisplayName(item.submitted_by),
+        getReviewStatus(item),
+      ];
     });
 
     doc.autoTable({
@@ -150,133 +181,146 @@ function ReviewTable() {
   return (
     <div className="research-table">
       {(roleID === "6" || roleID === "8") && (
-        <div className="research-container">
-          <div className="title">CRD Pre-screening</div>
+        <div className="research-analytics-panel">
+          <div className="research-analytics-header">
+            <div>
+              <div className="research-eyebrow">CRD pre-screening</div>
+              <h2>Endorsed new research applications</h2>
+            </div>
+            <span className="research-period">SY 2024-2025</span>
+          </div>
 
-          <div className="mb-4 p-3" style={{ background: "#f8f9fa", borderRadius: "60px" }}>
-            <h5 className="text-center fw-bold">
-              Endorsed (from the College Dean) New Research Application
-            </h5>
+          <div className="research-chart-grid">
+            <div className="research-chart-canvas">
+              <Bar data={chartData} options={chartOptions} />
+            </div>
 
-            <div className="text-center mb-3">SY 2024 - 2025</div>
-
-            <Row>
-              <Col md={9}>
-                <Bar data={chartData} options={chartOptions} />
-              </Col>
-
-              <Col md={3}>
-                {chartData.labels.map((label, i) => (
-                  <div key={i} className="d-flex align-items-center mb-1">
-                    <span
-                      style={{
-                        width: 12,
-                        height: 12,
-                        backgroundColor: chartData.datasets[0].backgroundColor[i],
-                        marginRight: 8,
-                      }}
-                    />
-                    <small>
-                      {label} ({chartData.datasets[0].data[i]})
-                    </small>
-                  </div>
-                ))}
-              </Col>
-            </Row>
+            <div className="research-chart-legend" aria-label="Applications by college">
+              {chartData.labels.map((label, i) => (
+                <div key={label} className="research-chart-legend-item">
+                  <span
+                    style={{
+                      backgroundColor: chartData.datasets[0].backgroundColor[i],
+                    }}
+                  />
+                  <span>{label}</span>
+                  <strong>{chartData.datasets[0].data[i]}</strong>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       <div className="research-container">
-        <div className="title">New Research Application Review</div>
+        <div className="research-page-header">
+          <div>
+            <div className="research-eyebrow">Reviewer queue</div>
+            <h1 className="title">Research Application Review</h1>
+          </div>
+          <div className="research-result-count" aria-live="polite">
+            {totalItems} {totalItems === 1 ? "application" : "applications"}
+          </div>
+        </div>
 
-        <div className="search-div">
+        <div className="research-toolbar">
           <SearchBar
-            placeholder="(Type to search Research Title, Research Name)"
+            placeholder="Search by title or researcher"
             onSearch={(value) => {
               setSearchTerm(value);
               setPage(1);
             }}
           />
-          <Tooltip text="Export to PDF" position="bottom">
-            <FaFilePdf
-              size={30}
-              className="cursor-pointer"
-              color="white"
-              onClick={exportToPDF}
-            />
-          </Tooltip>
-          <Tooltip text="Export to CSV" position="bottom">
-            <FaFileCsv
-              size={30}
-              className="cursor-pointer"
-              color="white"
-              onClick={exportToCSV}
-            />
-          </Tooltip>
+          <div className="research-export-actions" aria-label="Export options">
+            <button type="button" className="research-export-button" onClick={exportToPDF}>
+              <FaFilePdf aria-hidden="true" />
+              <span>PDF</span>
+            </button>
+            <button type="button" className="research-export-button" onClick={exportToCSV}>
+              <FaFileCsv aria-hidden="true" />
+              <span>CSV</span>
+            </button>
+          </div>
         </div>
 
-        <Nav className="mt-4 research-tabs" variant="underline" activeKey={activeTab}>
-          {["all", "new", "revised", "endorsed"].map((tab) => (
-            <Nav.Item key={tab}>
-              <Nav.Link
-                eventKey={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  setPage(1);
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Nav.Link>
-            </Nav.Item>
+        <div className="research-tabs" role="tablist" aria-label="Review status">
+          {tabDefinitions.map((tab) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              className={`nav-link${activeTab === tab.key ? " active" : ""}`}
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setPage(1);
+              }}
+            >
+              {tab.label}
+              <span className="research-tab-count">
+                {researches.filter((item) => matchesTab(item, tab.key)).length}
+              </span>
+            </button>
           ))}
-        </Nav>
+        </div>
 
         <div className="table-div">
-          <Table striped bordered hover variant="light" responsive>
-            <thead>
-              <tr>
-                <th style={{ width: "55%", textAlign: "center" }}>Research Title</th>
-                <th style={{ width: "25%", textAlign: "center" }}>Lead Researcher Name</th>
-                <th style={{ width: "20%", textAlign: "center" }}>Research Status</th>
-              </tr>
-            </thead>
-            <tbody className="cursor-pointer">
-              {displayedResearches.map((item) => {
-                const userEndorsement = item.Endorsements?.find(
-                  (e) => e.endorsement_rep_id.toString() === userID
-                );
-                const userStatusID = userEndorsement?.status_id;
-                const userStatus = userEndorsement?.StatusTable?.status;
-
-                return (
-                  <tr
-                    key={item.id}
-                    onClick={() => history.push(`/review-form/${item.id}`)}
-                  >
-                    <td>{item.title}</td>
-                    <td>{item.submitted_by}</td>
-                    <td style={{ textAlign: "center" }}>
-                      <Badge
-                        pill
-                        bg={
-                          userStatusID === 6
-                            ? "success"
-                            : userStatusID === 4
-                              ? "danger"
-                              : userStatusID === 5
-                                ? "warning"
-                                : "secondary"
+          <div className="research-table-scroll">
+            <table className="research-data-table">
+              <thead>
+                <tr>
+                  <th className="research-title-column">Research title</th>
+                  <th>Lead researcher</th>
+                  <th>Submitted</th>
+                  <th>Review status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedResearches.map((item) => {
+                  return (
+                    <tr
+                      key={item.id}
+                      data-clickable="true"
+                      role="link"
+                      tabIndex="0"
+                      aria-label={`Review ${item.title}`}
+                      onClick={() => history.push(`/review-form/${item.id}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          history.push(`/review-form/${item.id}`);
                         }
-                      >
-                        {userStatus || "Not Reviewed"}
-                      </Badge>
+                      }}
+                    >
+                      <td data-label="Research title">
+                        <span className="research-title-button">{item.title}</span>
+                      </td>
+                      <td data-label="Lead researcher">
+                        {formatDisplayName(item.submitted_by) || "Not available"}
+                      </td>
+                      <td data-label="Submitted" className="research-date">{formatDate(item.submitted_date)}</td>
+                      <td data-label="Status">
+                        <span className={`research-status research-status--${getReviewTone(item)}`}>
+                          {getReviewStatus(item)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {displayedResearches.length === 0 && (
+                  <tr className="research-empty-row">
+                    <td colSpan="4">
+                      <div className="research-empty-state">
+                        <MdOutlineRateReview aria-hidden="true" />
+                        <strong>No applications found</strong>
+                        <span>Try another search or review status.</span>
+                      </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <Pagination
             currentPage={page}

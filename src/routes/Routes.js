@@ -12,6 +12,7 @@ import Research from "../views/Research/Research";
 import ResearchApplicationReviewTable from "../views/ResearchApplicationReview/ResearchApplicationReviewTable"
 import ResearchApplicationReviewForm from "../views/ResearchApplicationReview/components/ResearchApplicationReviewForm"
 import URBReviewBoard from "../views/URB/URBReviewBoard";
+import ResearchIncentiveRequest from "../views/ResearchIncentive/ResearchIncentiveRequest";
 
 export default function Routing() {
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,7 @@ export default function Routing() {
           <AuthRoute path='/' exact component={Login} />
           <PrivateRoute path='/dashboard' exact component={Dashboard} />
           <PrivateRoute path='/new-research-application' exact component={NewResearchApplication} />
+          <PrivateRoute path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
           <PrivateRoute path='/research' exact component={Research} />
           <PrivateRoute path='/research-application-review' exact component={ResearchApplicationReviewTable} />
           <PrivateRoute path='/review-form/:id' exact component={ResearchApplicationReviewForm} />
