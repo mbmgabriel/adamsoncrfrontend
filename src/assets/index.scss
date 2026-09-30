@@ -2080,6 +2080,196 @@ button:focus-visible,
   }
 }
 
+// Match the presentation assistance sheet to the publication incentive form.
+.assistance-request {
+  font-family: Georgia, "Times New Roman", serif;
+
+  &__sheet {
+    max-width: 900px;
+    padding: 42px 52px 54px;
+  }
+
+  &__header {
+    margin-bottom: 64px;
+  }
+
+  h1 {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  &__table {
+    border-color: #8c8c8c;
+  }
+
+  &__table-row {
+    grid-template-columns: 31% 43% 26%;
+    min-height: 40px;
+
+    + .assistance-request__table-row {
+      border-top-color: #8c8c8c;
+    }
+
+    > * {
+      padding: 7px 9px;
+    }
+
+    > * + * {
+      border-left-color: #8c8c8c;
+    }
+
+    label,
+    .assistance-request__proof-label {
+      font-size: 15px;
+      line-height: 1.13;
+    }
+
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="date"] {
+      background: transparent;
+      border: 0;
+      display: block;
+      font: inherit;
+      height: 100%;
+      outline: 0;
+      padding: 0;
+      width: 100%;
+    }
+  }
+
+  &__table-row--header {
+    font-size: 17px;
+    min-height: 100px;
+
+    > div {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+  }
+
+  &__table-row--medium {
+    min-height: 64px;
+  }
+
+  &__table-row--large {
+    min-height: 76px;
+  }
+
+  &__remark input {
+    height: 14px;
+    width: 14px;
+  }
+
+  &__table-row--proof {
+    grid-template-columns: 31% 69%;
+    min-height: 330px;
+  }
+
+  &__proof-items {
+    padding: 0 !important;
+  }
+
+  &__proof-item {
+    display: grid;
+    grid-template-columns: 62.32% 37.68%;
+
+    label {
+      align-items: flex-start;
+      display: grid;
+      font-size: 15px;
+      font-weight: 400;
+      gap: 6px;
+      grid-template-columns: 24px 14px minmax(0, 1fr);
+      line-height: 1.2;
+      margin: 0;
+      padding: 10px 9px;
+    }
+
+    input {
+      appearance: none;
+      background: #fff;
+      border: 1px solid #000;
+      height: 14px;
+      margin: 2px 0 0;
+      width: 14px;
+
+      &:checked::after {
+        content: "✓";
+        display: block;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        line-height: 12px;
+        text-align: center;
+      }
+    }
+  }
+
+  &__proof-letter {
+    text-align: right;
+  }
+
+  &__proof-remark {
+    border-left: 1px solid #8c8c8c;
+    padding: 10px 9px;
+
+    input {
+      appearance: none;
+      background: #fff;
+      border: 1px solid #000;
+      height: 14px;
+      margin: 0;
+      width: 14px;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .assistance-request {
+    &__sheet {
+      padding: 24px 12px 36px;
+    }
+
+    h1 {
+      font-size: 13px;
+    }
+
+    &__table-row {
+      grid-template-columns: 31% 43% 26%;
+
+      label,
+      .assistance-request__proof-label {
+        font-size: 10px;
+      }
+    }
+
+    &__table-row--header {
+      font-size: 11px;
+      min-height: 78px;
+    }
+
+    &__table-row--proof {
+      grid-template-columns: 31% 69%;
+      min-height: 360px;
+    }
+
+    &__proof-item {
+      label {
+        font-size: 10px;
+        gap: 4px;
+        grid-template-columns: 18px 14px minmax(0, 1fr);
+        padding: 8px 5px;
+      }
+
+      .assistance-request__proof-remark {
+        padding: 8px 5px;
+      }
+    }
+  }
+}
+
 .publication-incentive {
   color: #000;
   font-family: Georgia, "Times New Roman", serif;

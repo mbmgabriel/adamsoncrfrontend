@@ -39,7 +39,7 @@ function Dashboard() {
       icon: <FaChalkboardTeacher />,
       title: "Ask Research Presentation Assistance.",
       footer: "Research Paper Presentation Request for Assistance Application",
-      path: "/new-research-application",
+      path: "/research-presentation-assistance",
     },
     {
       icon: <HiGiftTop />,

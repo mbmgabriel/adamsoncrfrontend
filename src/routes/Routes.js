@@ -13,6 +13,7 @@ import ResearchApplicationReviewTable from "../views/ResearchApplicationReview/R
 import ResearchApplicationReviewForm from "../views/ResearchApplicationReview/components/ResearchApplicationReviewForm"
 import URBReviewBoard from "../views/URB/URBReviewBoard";
 import ResearchIncentiveRequest from "../views/ResearchIncentive/ResearchIncentiveRequest";
+import ResearchPresentationAssistance from "../views/ResearchPresentationAssistance/ResearchPresentationAssistance";
 
 export default function Routing() {
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function Routing() {
           <PrivateRoute path='/dashboard' exact component={Dashboard} />
           <PrivateRoute path='/new-research-application' exact component={NewResearchApplication} />
           <PrivateRoute path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
+          <PrivateRoute path='/research-presentation-assistance' exact component={ResearchPresentationAssistance} />
           <PrivateRoute path='/research' exact component={Research} />
           <PrivateRoute path='/research-application-review' exact component={ResearchApplicationReviewTable} />
           <PrivateRoute path='/review-form/:id' exact component={ResearchApplicationReviewForm} />

@@ -3,6 +3,7 @@ import Logo from '../../assets/image/crd-logo.png'
 import { IoIosSearch } from "react-icons/io";
 import { Form, InputGroup } from 'react-bootstrap'
 import { useHistory } from 'react-router-dom'; 
+import { toast } from 'react-toastify';
 
 function Header({ activeHeader }) {
   const history = useHistory();
@@ -10,10 +11,19 @@ function Header({ activeHeader }) {
   const navData = [
     { name: 'Home', path: '/dashboard' },
     { name: 'Research Proposal', path: '/research' },
-    { name: 'Research Presentation and Publication', path: '/review' },
-    { name: 'FAQs', path: '/' },
-    { name: 'About CRD', path: '/' },
+    { name: 'Research Presentation and Publication', underDevelopment: true },
+    { name: 'FAQs', underDevelopment: true },
+    { name: 'About CRD', underDevelopment: true },
   ];
+
+  const handleNavigation = (item) => {
+    if (item.underDevelopment) {
+      toast.info(`${item.name} is under development.`);
+      return;
+    }
+
+    history.push(item.path);
+  };
 
   return (
     <div className='header'>
@@ -48,7 +58,7 @@ function Header({ activeHeader }) {
               type='button'
               key={item.name}
               className={activeHeader === item.name ? "nav-pill-active" : "nav-pill"}
-              onClick={() => history.push(item.path)}
+              onClick={() => handleNavigation(item)}
             >
               {item.name}
             </button>
