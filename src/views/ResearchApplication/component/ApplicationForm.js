@@ -420,12 +420,12 @@ function BudgetBreakdown({
   );
 }
 
-function FormActions({ step, onBack, onNext }) {
+function FormActions({ step, onBack, onCancel, onNext }) {
   return (
     <div className="research-application__actions">
       <div>
         {step === 1 ? (
-          <Button type="button" className="btn-outline-custom">
+          <Button type="button" className="btn-outline-custom" onClick={onCancel}>
             <FiX />
             Cancel
           </Button>
@@ -1177,6 +1177,7 @@ function ApplicationForm() {
           <FormActions
             step={step}
             onBack={() => setStep(1)}
+            onCancel={() => history.push("/dashboard")}
             onNext={handleNext}
           />
         </Form>

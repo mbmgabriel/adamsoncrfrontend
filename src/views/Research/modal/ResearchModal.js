@@ -58,6 +58,25 @@ const getRepresentativeName = (endorsement) => {
 const getEndorsementStatus = (endorsement) =>
   endorsement.status || endorsement.StatusTable?.status || "Pending";
 
+const isEndorsed = (endorsement) =>
+  Number(endorsement.status_id) === 6 ||
+  getEndorsementStatus(endorsement).toLowerCase() === "endorsed";
+
+const getProgressState = (endorsement) => {
+  if (isEndorsed(endorsement)) return "complete";
+
+  const status = getEndorsementStatus(endorsement).toLowerCase();
+  if (
+    Number(endorsement.status_id) === 5 ||
+    status.includes("revis") ||
+    status.includes("return")
+  ) {
+    return "revision";
+  }
+
+  return "pending";
+};
+
 const getDocumentUrl = (filePath) => {
   if (!filePath) return "";
 
@@ -141,40 +160,79 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
 
             <Tab eventKey="endorsements" title="Endorsements">
               {research.endorsements?.length ? (
-                <div className="research-detail-table-wrap">
-                  <Table responsive className="research-detail-table">
-                    <thead>
-                      <tr>
-                        <th>Representative</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {research.endorsements.map((endorsement, index) => {
-                        const representativeName =
-                          getRepresentativeName(endorsement);
-                        const endorsementStatus =
-                          getEndorsementStatus(endorsement);
+                <div className="research-endorsement-progress">
+                  {(() => {
+                    const endorsedCount = research.endorsements.filter(isEndorsed).length;
+                    const progress = Math.round(
+                      (endorsedCount / research.endorsements.length) * 100
+                    );
 
-                        return (
-                          <tr key={`${representativeName}-${index}`}>
-                            <td>{representativeName}</td>
-                            <td>
+                    return (
+                      <div className="research-endorsement-progress__summary">
+                        <div className="research-endorsement-progress__summary-text">
+                          <strong>Endorsement progress</strong>
+                          <span>
+                            {endorsedCount} of {research.endorsements.length} endorsed
+                          </span>
+                        </div>
+                        <div
+                          className="research-endorsement-progress__track"
+                          role="progressbar"
+                          aria-label="Endorsement completion"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={progress}
+                        >
+                          <span style={{ width: `${progress}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div className="research-endorsement-progress__list">
+                    {research.endorsements.map((endorsement, index) => {
+                      const representativeName = getRepresentativeName(endorsement);
+                      const endorsementStatus = getEndorsementStatus(endorsement);
+                      const progressState = getProgressState(endorsement);
+
+                      return (
+                        <div
+                          className={`research-endorsement-progress__item is-${progressState}`}
+                          key={`${representativeName}-${index}`}
+                        >
+                          <span
+                            className="research-endorsement-progress__marker"
+                            aria-hidden="true"
+                          />
+                          <div className="research-endorsement-progress__details">
+                            <div className="research-endorsement-progress__person">
+                              <strong>{representativeName}</strong>
                               <Badge
                                 bg={
-                                  endorsementStatus.toLowerCase() === "endorsed"
+                                  progressState === "complete"
                                     ? "success"
-                                    : "secondary"
+                                    : progressState === "revision"
+                                      ? "warning"
+                                      : "secondary"
                                 }
                               >
                                 {endorsementStatus}
                               </Badge>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
+                            </div>
+                            <div
+                              className="research-endorsement-progress__item-track"
+                              role="progressbar"
+                              aria-label={`${representativeName} endorsement progress`}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={progressState === "complete" ? 100 : 0}
+                            >
+                              <span />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <EmptySection message="No endorsements are available." />

@@ -13,6 +13,7 @@ import { FaChalkboardTeacher } from "react-icons/fa";
 import { HiGiftTop, HiUserGroup } from "react-icons/hi2";
 import Notifications from "./component/Notifications";
 import { useHistory } from "react-router-dom";
+import { toast } from "react-toastify";
 import ReviewStatusChart from "../../components/DashboardCharts/ReviewStatusChart";
 import ResearchProposalsChart from "../../components/DashboardCharts/ResearchProposalsChart";
 import PresentedResearchChart from "../../components/DashboardCharts/PresentedResearchChart";
@@ -21,8 +22,15 @@ import PublishedResearchChart from "../../components/DashboardCharts/PublishedRe
 function Dashboard() {
   const history = useHistory();
   const role_id = localStorage.getItem("role_id");
-
-  const cardContent = [
+  const roleName = (localStorage.getItem("role") || "").toLowerCase();
+  const isResearcherRole = roleName.includes("researcher");
+  const isApprovalRole = ["coordinator", "chairperson", "department chair", "dean"]
+    .some((role) => roleName.includes(role));
+  const isUrbRole = ["university review board", "urb reviewer", "urb member"]
+    .some((role) => roleName.includes(role)) || roleName === "urb";
+  const isCrdRole = role_id === "6" || role_id === "8" ||
+    ["crd staff", "director", "executive director"].some((role) => roleName.includes(role));
+  const defaultCardContent = [
     {
       icon: <MdAssignmentAdd />,
       title: "Write your new research proposals.",
@@ -56,6 +64,83 @@ function Dashboard() {
       isVisible: role_id === "6" || role_id === "8",
     },
   ];
+
+  const approvalCardContent = [
+    {
+      icon: <FaFileCircleCheck />,
+      title: "View new research proposals.",
+      footer: "New Research Applications",
+      path: "/research-application-review?tab=new",
+    },
+    {
+      icon: <MdOutlineRateReview />,
+      title: "Recheck submitted revised proposals.",
+      footer: "Revised Research Proposals",
+      path: "/research-application-review?tab=revised",
+    },
+    {
+      icon: <MdOutlineScience />,
+      title: "View research proposal application status.",
+      footer: "Research Application Status",
+      path: "/research",
+    },
+    {
+      icon: <MdMenuBook />,
+      title: "View presented and/or published researches.",
+      footer: "Presented/Published Researches",
+      onClick: () => toast.info("Research presentation and publication is under development."),
+    },
+  ];
+
+  const crdCardContent = [
+    {
+      icon: <FaFileCircleCheck />,
+      title: "View endorsed research proposals.",
+      footer: "New Research Applications",
+      path: "/research-application-review?tab=endorsed",
+    },
+    {
+      icon: <MdOutlineScience />,
+      title: "View research status.",
+      footer: "Research Status",
+      path: "/research",
+    },
+    {
+      icon: <MdCoPresent />,
+      title: "View presented and/or published researches.",
+      footer: "Presented/Published Researches",
+      onClick: () => toast.info("Research presentation and publication is under development."),
+    },
+    {
+      icon: <HiUserGroup />,
+      title: "View Research Review Board.",
+      footer: "Research Review Board",
+      path: "/urb-review",
+    },
+  ];
+
+  const urbCardContent = [
+    {
+      icon: <FaFileCircleCheck />,
+      title: "View new research proposals for review.",
+      footer: "New Research Applications",
+      path: "/research-application-review?tab=new",
+    },
+    {
+      icon: <MdOutlineRateReview />,
+      title: "View all reviewed proposals.",
+      footer: "Reviewed Research Proposals",
+      path: "/research-application-review?tab=reviewed",
+    },
+  ];
+
+  const cardContent = isUrbRole
+    ? urbCardContent
+    : isCrdRole
+      ? crdCardContent
+      : isApprovalRole
+        ? approvalCardContent
+        : defaultCardContent;
 
   const notificationsData = [
     {
@@ -128,7 +213,7 @@ function Dashboard() {
                 icon={item.icon}
                 title={item.title}
                 footer={item.footer}
-                path={() => history.push(item.path)}
+                path={item.onClick || (() => history.push(item.path))}
                 isVisible={item.isVisible ?? true}
               />
             ))}
@@ -137,34 +222,36 @@ function Dashboard() {
         <div className="center notification-holder">
           <Notifications item={notificationsData} />
         </div>
-        <section className="graph-containers dashboard-analytics">
-          <div className="dashboard-analytics-header">
-            <div>
-              <div className="dashboard-analytics-eyebrow">Analytics overview</div>
-              <h2>Research activity</h2>
-            </div>
-            <div className="dashboard-analytics-date">Updated Jan 28, 2024</div>
-          </div>
-
-          <div className="dashboard-kpi-grid">
-            {analyticsSummary.map((item) => (
-              <div className="dashboard-kpi" key={item.label}>
-                <span className="dashboard-kpi-icon" aria-hidden="true">{item.icon}</span>
-                <div>
-                  <strong>{item.value}</strong>
-                  <span>{item.label}</span>
-                </div>
+        {!isResearcherRole && (
+          <section className="graph-containers dashboard-analytics">
+            <div className="dashboard-analytics-header">
+              <div>
+                <div className="dashboard-analytics-eyebrow">Analytics overview</div>
+                <h2>Research activity</h2>
               </div>
-            ))}
-          </div>
+              <div className="dashboard-analytics-date">Updated Jan 28, 2024</div>
+            </div>
 
-          <div className="dashboard-chart-grid">
-            <ReviewStatusChart />
-            <ResearchProposalsChart />
-            <PresentedResearchChart />
-            <PublishedResearchChart />
-          </div>
-        </section>
+            <div className="dashboard-kpi-grid">
+              {analyticsSummary.map((item) => (
+                <div className="dashboard-kpi" key={item.label}>
+                  <span className="dashboard-kpi-icon" aria-hidden="true">{item.icon}</span>
+                  <div>
+                    <strong>{item.value}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="dashboard-chart-grid">
+              <ReviewStatusChart />
+              <ResearchProposalsChart />
+              <PresentedResearchChart />
+              <PublishedResearchChart />
+            </div>
+          </section>
+        )}
       </div>
     </MainContainer>
   );

@@ -38,7 +38,6 @@ function User() {
     <div className='user-div' ref={dropdownRef}>
       <div className='user-div__inner'>
         <div className='user-summary'>
-          <span className='user-summary__label'>Signed in as</span>
           <strong className='user-summary__name'>{name || 'User'}</strong>
           {role && <span className='user-summary__role'>{role}</span>}
         </div>

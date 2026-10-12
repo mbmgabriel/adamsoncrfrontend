@@ -4,7 +4,7 @@ import SearchBar from "../../../components/Search/SearchBar";
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
 import { MdOutlineRateReview } from "react-icons/md";
 import Pagination from "../../../components/PaginationComponent/Pagination";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { formatDisplayName } from "../../../utils/formatName";
@@ -23,10 +23,16 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTooltip, Legend);
 
 function ReviewTable() {
   const history = useHistory();
+  const location = useLocation();
   const [researches, setResearches] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState(() => {
+    const requestedTab = new URLSearchParams(location.search).get("tab");
+    return ["new", "revised", "endorsed", "reviewed"].includes(requestedTab)
+      ? requestedTab
+      : "all";
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const userID = localStorage.getItem("id");
   const roleID = localStorage.getItem("role_id");
@@ -85,6 +91,7 @@ function ReviewTable() {
     if (tabKey === "new") return statusID === 4 || statusID == null;
     if (tabKey === "revised") return statusID === 5;
     if (tabKey === "endorsed") return statusID === 6;
+    if (tabKey === "reviewed") return statusID === 5 || statusID === 6;
     return true;
   };
 
@@ -114,6 +121,7 @@ function ReviewTable() {
     { key: "new", label: "New" },
     { key: "revised", label: "Revised" },
     { key: "endorsed", label: "Endorsed" },
+    { key: "reviewed", label: "Reviewed" },
   ];
 
   const getReviewStatus = (item) => getUserEndorsement(item)?.StatusTable?.status || "Not reviewed";

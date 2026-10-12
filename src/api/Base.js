@@ -4,11 +4,12 @@ export default class Base {
   sendRequest = async ({ path, method = 'GET', data = {}, base, headers }) => {
     let url = base ? base + path : BASE_URL + path;
     const isFormData = data instanceof FormData;
+    const token = window.localStorage.getItem("token");
 
     let config = {
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${await window.localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
       method: method,
     };
@@ -55,11 +56,10 @@ export default class Base {
       responseData = JSON.parse(responseData);
     }
 
-    // if(response.status == 401){
-    //   await localStorage.removeItem("token")
-    //   window.location.href = '/login?message=You have been logged out! Please login again'
-    //   return
-    // }
+    if (response.status === 401 && token) {
+      window.localStorage.clear();
+      window.location.assign("/");
+    }
 
     let output = {
       res: response,
