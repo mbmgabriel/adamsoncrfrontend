@@ -6,6 +6,7 @@ import FormCard from "../../components/Card/FormCard";
 import TextInputCustom from "../../components/Input/TextInputCustom";
 import OutlineButton from "../../components/Buttons/OutlineButton";
 import ConfirmationButton from "../../components/Buttons/ConfirmationButton";
+import DashboardBackButton from "../../components/Navigation/DashboardBackButton";
 
 const researchers = [
   "Researcher 1 (Main Author)",
@@ -82,6 +83,10 @@ function URBReviewBoard() {
     <MainContainer activeHeader={"Home"}>
       <div className="application-form urb-review-board">
         <div className="form-container">
+          <div className="page-back-navigation page-back-navigation--contained">
+            <DashboardBackButton />
+          </div>
+
           <h1 className="urb-page-title text-white">
             New Research Application URB Review
           </h1>

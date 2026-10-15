@@ -1,16 +1,36 @@
 import React from "react";
-import { FiFileText, FiPlus } from "react-icons/fi";
+import { FiArrowLeft, FiFileText, FiPlus } from "react-icons/fi";
 
 function ApplicationHistory({
   applications = [],
   description,
   emptyMessage,
+  emptyTitle = "No past applications yet",
+  errorMessage,
+  isLoading = false,
   onCreate,
+  onBack,
+  onRetry,
+  onSelect,
+  showCreate = true,
+  tableDescription = "Review the applications you have previously submitted.",
+  tableTitle = "Past applications",
   title,
 }) {
   return (
     <main className="application-history" aria-labelledby="application-history-title">
       <section className="application-history__container">
+        {onBack && (
+          <button
+            className="application-history__back-button"
+            onClick={onBack}
+            type="button"
+          >
+            <FiArrowLeft aria-hidden="true" />
+            Back to dashboard
+          </button>
+        )}
+
         <header className="application-history__header">
           <div>
             <span className="application-history__eyebrow">Application history</span>
@@ -18,21 +38,23 @@ function ApplicationHistory({
             <p>{description}</p>
           </div>
 
-          <button
-            className="application-history__create-button"
-            onClick={onCreate}
-            type="button"
-          >
-            <FiPlus aria-hidden="true" />
-            New Application
-          </button>
+          {showCreate && (
+            <button
+              className="application-history__create-button"
+              onClick={onCreate}
+              type="button"
+            >
+              <FiPlus aria-hidden="true" />
+              New Application
+            </button>
+          )}
         </header>
 
         <div className="application-history__table-card">
           <div className="application-history__table-heading">
             <div>
-              <h2>Past applications</h2>
-              <p>Review the applications you have previously submitted.</p>
+              <h2>{tableTitle}</h2>
+              <p>{tableDescription}</p>
             </div>
             <span aria-live="polite">
               {applications.length} {applications.length === 1 ? "application" : "applications"}
@@ -51,7 +73,19 @@ function ApplicationHistory({
               </thead>
               <tbody>
                 {applications.map((application) => (
-                  <tr key={application.id}>
+                  <tr
+                    aria-label={onSelect ? `View application ${application.id}` : undefined}
+                    className={onSelect ? "application-history__selectable-row" : undefined}
+                    key={application.id}
+                    onClick={onSelect ? () => onSelect(application) : undefined}
+                    onKeyDown={onSelect ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onSelect(application);
+                      }
+                    } : undefined}
+                    tabIndex={onSelect ? 0 : undefined}
+                  >
                     <td data-label="Application ID">{application.id}</td>
                     <td data-label="Research title">{application.title}</td>
                     <td data-label="Date submitted">{application.submittedDate}</td>
@@ -63,17 +97,48 @@ function ApplicationHistory({
                   </tr>
                 ))}
 
-                {applications.length === 0 && (
+                {isLoading && (
+                  <tr className="application-history__empty-row">
+                    <td colSpan="4">
+                      <div className="application-history__empty-state" role="status">
+                        <FiFileText aria-hidden="true" />
+                        <strong>Loading applications…</strong>
+                        <span>Please wait while your requests are retrieved.</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {!isLoading && errorMessage && applications.length === 0 && (
+                  <tr className="application-history__empty-row">
+                    <td colSpan="4">
+                      <div className="application-history__empty-state" role="alert">
+                        <FiFileText aria-hidden="true" />
+                        <strong>Applications could not be loaded</strong>
+                        <span>{errorMessage}</span>
+                        {onRetry && (
+                          <button onClick={onRetry} type="button">
+                            Try again
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {!isLoading && !errorMessage && applications.length === 0 && (
                   <tr className="application-history__empty-row">
                     <td colSpan="4">
                       <div className="application-history__empty-state">
                         <FiFileText aria-hidden="true" />
-                        <strong>No past applications yet</strong>
+                        <strong>{emptyTitle}</strong>
                         <span>{emptyMessage}</span>
-                        <button onClick={onCreate} type="button">
-                          <FiPlus aria-hidden="true" />
-                          Create your first application
-                        </button>
+                        {showCreate && (
+                          <button onClick={onCreate} type="button">
+                            <FiPlus aria-hidden="true" />
+                            Create your first application
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

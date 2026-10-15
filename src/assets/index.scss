@@ -1772,6 +1772,7 @@ button:focus-visible,
       }
     }
   }
+
 }
 
 @media (max-width: 767px) {
@@ -1843,6 +1844,7 @@ button:focus-visible,
 
   &__create-button,
   &__empty-state button,
+  &__back-button,
   &__form-navigation button {
     align-items: center;
     border: 0;
@@ -1853,15 +1855,23 @@ button:focus-visible,
   }
 
   &__create-button {
-    background: #008348;
-    border-radius: 7px;
-    color: #fff;
+    background: transparent;
+    border-radius: 0;
+    color: #a7e4c1;
     flex: 0 0 auto;
-    min-height: 44px;
-    padding: 10px 18px;
+    font-size: 14px;
+    min-height: 0;
+    padding: 4px 0;
+    transition: color 160ms ease, transform 160ms ease;
+
+    svg {
+      font-size: 16px;
+    }
 
     &:hover {
-      background: #006f3c;
+      background: transparent;
+      color: #fff;
+      transform: translateY(-1px);
     }
   }
 
@@ -1939,6 +1949,21 @@ button:focus-visible,
     }
   }
 
+  &__selectable-row {
+    cursor: pointer;
+    transition: background-color 160ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: #f2f7fb;
+      outline: 0;
+    }
+
+    &:focus-visible {
+      box-shadow: inset 3px 0 #00703c;
+    }
+  }
+
   &__status {
     background: #fff3d6;
     border-radius: 999px;
@@ -1985,23 +2010,66 @@ button:focus-visible,
     }
   }
 
+  &__back-button,
+  &__form-navigation button {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: #d6e1f0;
+    font-size: 14px;
+    gap: 6px;
+    padding: 4px 0;
+    transition: color 160ms ease, transform 160ms ease;
+
+    svg {
+      font-size: 16px;
+    }
+
+    &:hover {
+      color: #fff;
+      transform: translateX(-2px);
+    }
+  }
+
+  &__back-button {
+    margin-bottom: 18px;
+  }
+
   &__form-navigation {
     margin: 0 auto 16px;
     max-width: 900px;
+  }
+}
 
-    button {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 7px;
-      color: #fff;
-      padding: 9px 12px;
+.page-back-navigation {
+  margin: 0 auto 16px;
+  max-width: 1200px;
 
-      &:hover {
-        background: #008348;
-        border-color: #008348;
-        color: #fff;
-      }
-    }
+  &--contained {
+    margin: 0 0 18px;
+  }
+}
+
+.page-back-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: #d6e1f0;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 4px 0;
+  transition: color 160ms ease, transform 160ms ease;
+
+  svg {
+    font-size: 16px;
+  }
+
+  &:hover {
+    color: #fff;
+    transform: translateX(-2px);
   }
 }
 
@@ -2421,6 +2489,11 @@ button:focus-visible,
       margin: 2px 0 0;
       width: 14px;
 
+      &:disabled {
+        cursor: default;
+        opacity: 1;
+      }
+
       &:checked::after {
         content: "✓";
         display: block;
@@ -2434,6 +2507,32 @@ button:focus-visible,
 
   &__proof-letter {
     text-align: right;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 24px;
+
+    button {
+      background: #008348;
+      border: 0;
+      border-radius: 7px;
+      color: #fff;
+      font-family: var(--app-font);
+      font-weight: 700;
+      min-height: 44px;
+      padding: 10px 20px;
+
+      &:hover:not(:disabled) {
+        background: #006f3c;
+      }
+
+      &:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+    }
   }
 }
 
@@ -2567,6 +2666,10 @@ button:focus-visible,
       line-height: 1.13;
     }
 
+    input[type="date"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
     input[type="text"],
     textarea {
       background: transparent;
@@ -2578,6 +2681,11 @@ button:focus-visible,
       padding: 0;
       resize: none;
       width: 100%;
+    }
+
+    input:read-only,
+    textarea:read-only {
+      color: #242424;
     }
   }
 
@@ -2641,6 +2749,11 @@ button:focus-visible,
       margin: 2px 5px 0 0;
       width: 14px;
 
+      &:disabled {
+        cursor: default;
+        opacity: 1;
+      }
+
       &:checked::after {
         content: "✓";
         display: block;
@@ -2648,6 +2761,107 @@ button:focus-visible,
         font-size: 13px;
         line-height: 12px;
         text-align: center;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 24px;
+
+    button {
+      background: #008348;
+      border: 0;
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 10px 20px;
+
+      &:hover:not(:disabled) {
+        background: #006f3c;
+      }
+
+      &:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+    }
+  }
+
+  &__review-actions {
+    align-items: center;
+    background: #f7f9fb;
+    border: 1px solid #dce4eb;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(31, 50, 73, 0.08);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding: 16px;
+  }
+
+  &__review-button {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    display: inline-flex;
+    font-family: var(--app-font);
+    font-size: 14px;
+    font-weight: 750;
+    gap: 8px;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 126px;
+    padding: 10px 18px;
+    transition: background-color 160ms ease, border-color 160ms ease,
+      box-shadow 160ms ease, color 160ms ease, transform 160ms ease;
+
+    svg {
+      font-size: 18px;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &--approve {
+      background: #008348;
+      border-color: #008348;
+      box-shadow: 0 3px 8px rgba(0, 131, 72, 0.2);
+      color: #fff;
+
+      &:hover {
+        background: #006f3c;
+        border-color: #006f3c;
+      }
+    }
+
+    &--decline {
+      background: #fff8e8;
+      border-color: #d99b2b;
+      color: #8a5900;
+
+      &:hover {
+        background: #ffefc7;
+        border-color: #b7790b;
+      }
+    }
+
+    &--reject {
+      background: #fff;
+      border-color: #d65c54;
+      color: #a2261e;
+
+      &:hover {
+        background: #fff0ef;
+        border-color: #b42318;
       }
     }
   }
@@ -2710,6 +2924,15 @@ button:focus-visible,
     &__row--peer-review p {
       font-size: 10px;
       margin-top: 12px;
+    }
+
+    &__review-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    &__review-button {
+      width: 100%;
     }
   }
 }

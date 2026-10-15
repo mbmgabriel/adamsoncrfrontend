@@ -1,46 +1,299 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MainContainer from "../../components/Layout/MainContainer";
 import AdamsonSeal from "../../assets/image/adamson_logo.png";
 import ApplicationHistory from "../../components/ApplicationHistory/ApplicationHistory";
-import { FiArrowLeft } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiCheckCircle,
+  FiMinusCircle,
+  FiXCircle,
+} from "react-icons/fi";
+import { useHistory } from "react-router-dom";
+import { toast } from "react-toastify";
+import RequestAssistanceFormsAPI from "../../api/RequestAssistanceFormsAPI";
 
-const proofRequirements = [
-  "Notice of Acceptance to Paper Presentation and Publication",
-  "Copy of abstract of accepted paper",
-  "Copy of Conference Program (if available)",
-  "A brief description of how the faculty member plans to manage the classes to be missed while on official business.",
-  "For conferences outside Metro Manila, an itinerary that includes the program of activities, arrival and departure dates, and the presenter's return date in their work at the university.",
-];
+const createEmptyForm = () => ({
+  name_of_presenter: "",
+  email_address: "",
+  contact_number: "",
+  conference_title: "",
+  research_paper_title: "",
+  conference_link: "",
+  acceptance_date: "",
+  conference_date: "",
+  proof_ids: [],
+});
 
-function AssistanceField({ label, name, type = "text", multiline = false, rowClass = "" }) {
+const getCollection = (response, keys) => {
+  const data = response?.data;
+  if (Array.isArray(data)) return data;
+  return keys.map((key) => data?.[key]).find(Array.isArray) || [];
+};
+
+const getErrorMessage = (response, fallback) => {
+  const data = response?.data;
+  if (typeof data === "string" && data.trim() && data.length < 240) return data;
+  return data?.message || data?.error || fallback;
+};
+
+const normalizeDate = (value) => (value ? String(value).slice(0, 10) : "");
+
+const formatDisplayDate = (value) => {
+  const normalizedDate = normalizeDate(value);
+  const [year, month, day] = normalizedDate.split("-").map(Number);
+  if (!year || !month || !day) return "—";
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+};
+
+const getCreatedDate = (application) =>
+  application.created_at ||
+  application.createdAt ||
+  application.date_created ||
+  application.created_date ||
+  application.submission_date;
+
+const normalizeProofIds = (application, proofOptions = []) =>
+  (application?.CAssistanceFormProofs || application?.c_assistance_form_proofs || [])
+    .filter((proof) => Number(proof.is_active) !== 0)
+    .map((proof) => {
+      const providedId = Number(
+        proof.proof_id ??
+        proof.id ??
+        proof.SAssistanceFormProof?.id ??
+        proof.s_assistance_form_proof?.id
+      );
+      if (Number.isFinite(providedId)) return providedId;
+
+      const proofName =
+        proof.SAssistanceFormProof?.name ??
+        proof.s_assistance_form_proof?.name ??
+        proof.name;
+      return Number(proofOptions.find((option) => option.name === proofName)?.id);
+    })
+    .filter(Number.isFinite);
+
+const applicationToForm = (application, proofOptions) => ({
+  ...createEmptyForm(),
+  ...application,
+  acceptance_date: normalizeDate(application.acceptance_date),
+  conference_date: normalizeDate(application.conference_date),
+  proof_ids: normalizeProofIds(application, proofOptions),
+});
+
+function AssistanceField({
+  form,
+  label,
+  name,
+  onChange,
+  readOnly = false,
+  required = false,
+  singleLine = false,
+  type = "text",
+  multiline = false,
+  rowClass = "",
+}) {
   return (
     <div className={`assistance-request__table-row ${rowClass}`} role="row">
-      <label htmlFor={name}>{label}</label>
+      <label htmlFor={`assistance-${name}`}>{label}</label>
       <div role="cell">
-        {multiline || type === "text" ? (
-          <textarea aria-label={label} id={name} rows={multiline ? 3 : 1} />
+        {multiline || (type === "text" && !singleLine) ? (
+          <textarea
+            id={`assistance-${name}`}
+            name={name}
+            onChange={onChange}
+            readOnly={readOnly}
+            required={required}
+            rows={multiline ? 3 : 1}
+            value={form[name] ?? ""}
+          />
         ) : (
-          <input aria-label={label} id={name} type={type} />
+          <input
+            id={`assistance-${name}`}
+            name={name}
+            onChange={onChange}
+            readOnly={readOnly}
+            required={required}
+            type={type}
+            value={form[name] ?? ""}
+          />
         )}
       </div>
     </div>
   );
 }
 
-function ResearchPresentationAssistance() {
+function ResearchPresentationAssistance({ reviewMode = false }) {
+  const history = useHistory();
   const [showForm, setShowForm] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [form, setForm] = useState(createEmptyForm);
+  const [proofRequirements, setProofRequirements] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const api = useMemo(() => new RequestAssistanceFormsAPI(), []);
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError("");
+
+    try {
+      const [proofResponse, applicationsResponse] = await Promise.all([
+        api.fetchProofs(),
+        reviewMode
+          ? api.fetchApplicationsForReview()
+          : api.fetchUserApplications(),
+      ]);
+
+      setProofRequirements(getCollection(proofResponse, ["SAssistanceFormProofs"]));
+
+      if (!applicationsResponse?.ok) {
+        setLoadError(
+          getErrorMessage(applicationsResponse, "Please try loading your requests again.")
+        );
+        return;
+      }
+
+      setApplications(getCollection(applicationsResponse, [
+        "RequestAssistanceForms",
+        "CRequestAssistanceForms",
+        "request_assistance_forms",
+      ]));
+    } catch (error) {
+      console.error(error);
+      setLoadError("We couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api, reviewMode]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const reviewableApplications = reviewMode
+    ? applications.filter((application) => {
+        const status = String(
+          application.StatusTable?.status || application.status || "submitted"
+        ).toLowerCase();
+        return !["approved", "declined", "rejected"].some((terminalStatus) =>
+          status.includes(terminalStatus)
+        );
+      })
+    : applications;
+
+  const historyApplications = reviewableApplications.map((application, index) => ({
+    ...application,
+    id: application.id ?? application.request_assistance_form_id ?? index + 1,
+    status: application.StatusTable?.status || application.status || "Submitted",
+    submittedDate: formatDisplayDate(getCreatedDate(application)),
+    title: application.research_paper_title || "Untitled research paper",
+  }));
+
+  const openNewApplication = () => {
+    setSelectedApplication(null);
+    setForm(createEmptyForm());
+    setShowForm(true);
+  };
+
+  const openApplication = (application) => {
+    setSelectedApplication(application);
+    setForm(applicationToForm(application, proofRequirements));
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setSelectedApplication(null);
+    setForm(createEmptyForm());
+  };
+
+  const handleStaticStatusAction = (action) => {
+    toast.info(`${action} will be available when the status API is connected.`);
+  };
+
+  const handleFieldChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const toggleProof = (id) => {
+    if (selectedApplication) return;
+    const numericId = Number(id);
+    setForm((current) => ({
+      ...current,
+      proof_ids: current.proof_ids.includes(numericId)
+        ? current.proof_ids.filter((proofId) => proofId !== numericId)
+        : [...current.proof_ids, numericId],
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (selectedApplication || isSubmitting) return;
+
+    if (form.proof_ids.length === 0) {
+      toast.error("Please select at least one proof requirement.");
+      return;
+    }
+
+    const payload = {
+      name_of_presenter: form.name_of_presenter.trim(),
+      email_address: form.email_address.trim(),
+      contact_number: form.contact_number.trim(),
+      conference_title: form.conference_title.trim(),
+      research_paper_title: form.research_paper_title.trim(),
+      conference_link: form.conference_link.trim(),
+      acceptance_date: form.acceptance_date,
+      conference_date: form.conference_date,
+      CAssistanceFormProofs: form.proof_ids.map((proofId) => ({
+        proof_id: proofId,
+        is_active: 1,
+      })),
+    };
+
+    setIsSubmitting(true);
+    try {
+      const response = await api.createApplication(payload);
+      if (!response?.ok) {
+        toast.error(
+          getErrorMessage(response, "The presentation assistance request could not be created.")
+        );
+        return;
+      }
+
+      toast.success("Presentation assistance request created successfully.");
+      closeForm();
+      await loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error("We couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isReadOnly = reviewMode || Boolean(selectedApplication);
 
   return (
     <MainContainer>
       {showForm ? (
         <main className="assistance-request" aria-labelledby="assistance-request-title">
           <div className="application-history__form-navigation">
-            <button type="button" onClick={() => setShowForm(false)}>
+            <button type="button" onClick={closeForm}>
               <FiArrowLeft aria-hidden="true" />
-              Back to past applications
+              {reviewMode ? "Back to requests for approval" : "Back to past applications"}
             </button>
           </div>
-          <form className="assistance-request__sheet">
+          <form className="assistance-request__sheet" onSubmit={handleSubmit}>
             <header className="assistance-request__header">
               <div className="assistance-request__brand">
                 <img src={AdamsonSeal} alt="Adamson University" />
@@ -64,38 +317,101 @@ function ResearchPresentationAssistance() {
                 <div role="columnheader">DETAILS</div>
               </div>
 
-              <AssistanceField label="Name of Presenter:" name="presenterName" rowClass="assistance-request__table-row--medium" />
-              <AssistanceField label="Email Address:" name="email" type="email" />
-              <AssistanceField label="Contact Number:" name="contactNumber" type="tel" rowClass="assistance-request__table-row--medium" />
-              <AssistanceField label="Title of Conference and Contact Information:" name="conferenceInformation" multiline rowClass="assistance-request__table-row--large" />
-              <AssistanceField label="Title of the Research Paper:" name="researchPaperTitle" multiline rowClass="assistance-request__table-row--large" />
-              <AssistanceField label="Website/Internet Link of Conference:" name="conferenceWebsite" type="url" />
-              <AssistanceField label="Date of Acceptance:" name="acceptanceDate" type="date" />
-              <AssistanceField label="Date of Conference:" name="conferenceDate" type="date" />
+              <AssistanceField form={form} label="Name of Presenter:" name="name_of_presenter" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--medium" />
+              <AssistanceField form={form} label="Email Address:" name="email_address" onChange={handleFieldChange} readOnly={isReadOnly} required type="email" />
+              <AssistanceField form={form} label="Contact Number:" name="contact_number" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--medium" type="tel" />
+              <AssistanceField form={form} label="Title of Conference and Contact Information:" multiline name="conference_title" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--large" />
+              <AssistanceField form={form} label="Title of the Research Paper:" multiline name="research_paper_title" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--large" />
+              <AssistanceField form={form} label="Website/Internet Link of Conference:" name="conference_link" onChange={handleFieldChange} readOnly={isReadOnly} required singleLine />
+              <AssistanceField form={form} label="Date of Acceptance:" name="acceptance_date" onChange={handleFieldChange} readOnly={isReadOnly} required type="date" />
+              <AssistanceField form={form} label="Date of Conference:" name="conference_date" onChange={handleFieldChange} readOnly={isReadOnly} required type="date" />
 
               <div className="assistance-request__table-row assistance-request__table-row--proof" role="row">
                 <div className="assistance-request__proof-label" role="cell">Proof of:</div>
                 <div className="assistance-request__proof-items" role="cell">
                   {proofRequirements.map((proof, index) => (
-                    <div className="assistance-request__proof-item" key={proof}>
+                    <div className="assistance-request__proof-item" key={proof.id}>
                       <label>
                         <span className="assistance-request__proof-letter">{String.fromCharCode(97 + index)})</span>
-                        <input aria-label={`${String.fromCharCode(97 + index)}) ${proof}`} type="checkbox" />
-                        <span>{proof}</span>
+                        <input
+                          aria-label={`${String.fromCharCode(97 + index)}) ${proof.name}`}
+                          checked={form.proof_ids.includes(Number(proof.id))}
+                          disabled={isReadOnly}
+                          onChange={() => toggleProof(proof.id)}
+                          type="checkbox"
+                        />
+                        <span>{proof.name}</span>
                       </label>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+
+            {reviewMode && selectedApplication ? (
+              <div className="publication-incentive__review-actions">
+                <button
+                  className="publication-incentive__review-button publication-incentive__review-button--reject"
+                  onClick={() => handleStaticStatusAction("Rejecting a request")}
+                  type="button"
+                >
+                  <FiXCircle aria-hidden="true" />
+                  Reject
+                </button>
+                <button
+                  className="publication-incentive__review-button publication-incentive__review-button--decline"
+                  onClick={() => handleStaticStatusAction("Declining a request")}
+                  type="button"
+                >
+                  <FiMinusCircle aria-hidden="true" />
+                  Decline
+                </button>
+                <button
+                  className="publication-incentive__review-button publication-incentive__review-button--approve"
+                  onClick={() => handleStaticStatusAction("Approving a request")}
+                  type="button"
+                >
+                  <FiCheckCircle aria-hidden="true" />
+                  Approve
+                </button>
+              </div>
+            ) : !isReadOnly ? (
+              <div className="assistance-request__actions">
+                <button disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Creating…" : "Create Request"}
+                </button>
+              </div>
+            ) : null}
           </form>
         </main>
       ) : (
         <ApplicationHistory
-          title="Research Presentation Assistance"
-          description="View your previous requests or begin a new request for research paper presentation assistance."
-          emptyMessage="New requests will appear here after they are submitted."
-          onCreate={() => setShowForm(true)}
+          applications={historyApplications}
+          title={reviewMode
+            ? "Presentation Assistance Requests for Approval"
+            : "Research Presentation Assistance"
+          }
+          description={reviewMode
+            ? "Review submitted research paper presentation assistance requests."
+            : "View your previous requests or begin a new request for research paper presentation assistance."
+          }
+          emptyTitle={reviewMode ? "No requests awaiting review" : undefined}
+          emptyMessage={reviewMode
+            ? "Requests that require a decision will appear here."
+            : "New requests will appear here after they are submitted."
+          }
+          errorMessage={loadError}
+          isLoading={isLoading}
+          onBack={() => history.push("/dashboard")}
+          onCreate={openNewApplication}
+          onRetry={loadData}
+          onSelect={openApplication}
+          showCreate={!reviewMode}
+          tableDescription={reviewMode
+            ? "Select a request to open its form and review the submitted details."
+            : undefined
+          }
+          tableTitle={reviewMode ? "Requests awaiting review" : undefined}
         />
       )}
     </MainContainer>

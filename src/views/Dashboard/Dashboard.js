@@ -30,6 +30,7 @@ function Dashboard() {
     .some((role) => roleName.includes(role)) || roleName === "urb";
   const isCrdRole = role_id === "6" || role_id === "8" ||
     ["crd staff", "director", "executive director"].some((role) => roleName.includes(role));
+  const isCrdDirectorRole = roleName.includes("director");
   const defaultCardContent = [
     {
       icon: <MdAssignmentAdd />,
@@ -116,6 +117,20 @@ function Dashboard() {
       title: "View Research Review Board.",
       footer: "Research Review Board",
       path: "/urb-review",
+    },
+    {
+      icon: <FaChalkboardTeacher />,
+      title: "Review submitted presentation assistance requests.",
+      footer: "Presentation Assistance Requests for Approval",
+      path: "/research-presentation-assistance-review",
+      isVisible: isCrdDirectorRole,
+    },
+    {
+      icon: <HiGiftTop />,
+      title: "Review submitted incentive applications.",
+      footer: "Incentive Applications for Approval",
+      path: "/research-incentive-review",
+      isVisible: isCrdDirectorRole,
     },
   ];
 

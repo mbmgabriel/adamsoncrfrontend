@@ -4,6 +4,7 @@ import SearchBar from "../../../components/Search/SearchBar";
 import { FaFilePdf, FaFileCsv } from "react-icons/fa";
 import { MdOutlineRateReview } from "react-icons/md";
 import Pagination from "../../../components/PaginationComponent/Pagination";
+import DashboardBackButton from "../../../components/Navigation/DashboardBackButton";
 import { useHistory, useLocation } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -188,6 +189,10 @@ function ReviewTable() {
 
   return (
     <div className="research-table">
+      <div className="page-back-navigation">
+        <DashboardBackButton />
+      </div>
+
       {(roleID === "6" || roleID === "8") && (
         <div className="research-analytics-panel">
           <div className="research-analytics-header">
