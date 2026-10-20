@@ -5,12 +5,12 @@ import ApplicationHistory from "../../components/ApplicationHistory/ApplicationH
 import {
   FiArrowLeft,
   FiCheckCircle,
-  FiMinusCircle,
   FiXCircle,
 } from "react-icons/fi";
 import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import IncentiveFormsAPI from "../../api/IncentiveFormsAPI";
+import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
 
 const getToday = () => {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -171,21 +171,25 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
   const [attachments, setAttachments] = useState([]);
   const [peerReviewProofs, setPeerReviewProofs] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [statusTables, setStatusTables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadError, setLoadError] = useState("");
   const api = useMemo(() => new IncentiveFormsAPI(), []);
+  const endorsementApi = useMemo(() => new ResearchApplicationAPI(), []);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setLoadError("");
 
     try {
-      const [typesResponse, attachmentResponse, proofResponse, applicationsResponse] =
+      const [typesResponse, attachmentResponse, proofResponse, statusResponse, applicationsResponse] =
         await Promise.all([
           api.fetchIncentiveTypes(),
           api.fetchAttachmentInfos(),
           api.fetchPeerReviewProofs(),
+          endorsementApi.fetchStatus(),
           reviewMode
             ? api.fetchApplicationsForReview()
             : api.fetchUserApplications(),
@@ -194,6 +198,7 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
       setIncentiveTypes(getCollection(typesResponse, ["SIncentiveTypes"]));
       setAttachments(getCollection(attachmentResponse, ["SAttachmentInfos"]));
       setPeerReviewProofs(getCollection(proofResponse, ["SPeerReviewProof", "SPeerReviewProofs"]));
+      setStatusTables(getCollection(statusResponse, ["StatusTables", "status_tables"]));
 
       if (!applicationsResponse?.ok) {
         setLoadError(getErrorMessage(applicationsResponse, "Please try loading your applications again."));
@@ -211,17 +216,20 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
     } finally {
       setIsLoading(false);
     }
-  }, [api, reviewMode]);
+  }, [api, endorsementApi, reviewMode]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
+  const getStatusName = (application) =>
+    statusTables.find(
+      (status) => Number(status.id) === Number(application.status_id)
+    )?.status || "Unknown";
+
   const reviewableApplications = reviewMode
     ? applications.filter((application) => {
-        const status = String(
-          application.StatusTable?.status || application.status || "submitted"
-        ).toLowerCase();
+        const status = getStatusName(application).toLowerCase();
         return !["approved", "declined", "rejected"].some((terminalStatus) =>
           status.includes(terminalStatus)
         );
@@ -231,7 +239,7 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
   const historyApplications = reviewableApplications.map((application, index) => ({
     ...application,
     id: application.id ?? application.incentive_form_id ?? index + 1,
-    status: application.StatusTable?.status || application.status || "Submitted",
+    status: getStatusName(application),
     submittedDate: formatDisplayDate(
       application.submission_date || application.created_at
     ),
@@ -257,8 +265,49 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
     setForm(createEmptyForm());
   };
 
-  const handleStaticStatusAction = (action) => {
-    toast.info(`${action} will be available when the status API is connected.`);
+  const handleStatusAction = async (statusId) => {
+    if (!selectedApplication || isUpdatingStatus) return;
+
+    const researchId =
+      selectedApplication.research_id ??
+      selectedApplication.Research?.id ??
+      selectedApplication.research?.id ??
+      selectedApplication.id ??
+      selectedApplication.incentive_form_id;
+
+    if (researchId == null) {
+      toast.error("The research ID for this application is unavailable.");
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      const response = await endorsementApi.updateEndorsementStatus(
+        researchId,
+        3,
+        { status_id: statusId }
+      );
+
+      if (!response?.ok) {
+        toast.error(
+          getErrorMessage(response, "The application status could not be updated.")
+        );
+        return;
+      }
+
+      toast.success(
+        statusId === 10
+          ? "Incentive application approved successfully."
+          : "Incentive application rejected successfully."
+      );
+      closeForm();
+      await loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error("We couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   const handleFieldChange = (event) => {
@@ -403,23 +452,17 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
               <div className="publication-incentive__review-actions">
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--reject"
-                  onClick={() => handleStaticStatusAction("Rejecting an application")}
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusAction(11)}
                   type="button"
                 >
                   <FiXCircle aria-hidden="true" />
                   Reject
                 </button>
                 <button
-                  className="publication-incentive__review-button publication-incentive__review-button--decline"
-                  onClick={() => handleStaticStatusAction("Declining an application")}
-                  type="button"
-                >
-                  <FiMinusCircle aria-hidden="true" />
-                  Decline
-                </button>
-                <button
                   className="publication-incentive__review-button publication-incentive__review-button--approve"
-                  onClick={() => handleStaticStatusAction("Approving an application")}
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusAction(10)}
                   type="button"
                 >
                   <FiCheckCircle aria-hidden="true" />

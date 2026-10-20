@@ -5,12 +5,12 @@ import ApplicationHistory from "../../components/ApplicationHistory/ApplicationH
 import {
   FiArrowLeft,
   FiCheckCircle,
-  FiMinusCircle,
   FiXCircle,
 } from "react-icons/fi";
 import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import RequestAssistanceFormsAPI from "../../api/RequestAssistanceFormsAPI";
+import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
 
 const createEmptyForm = () => ({
   name_of_presenter: "",
@@ -135,24 +135,29 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
   const [form, setForm] = useState(createEmptyForm);
   const [proofRequirements, setProofRequirements] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [statusTables, setStatusTables] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadError, setLoadError] = useState("");
   const api = useMemo(() => new RequestAssistanceFormsAPI(), []);
+  const endorsementApi = useMemo(() => new ResearchApplicationAPI(), []);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setLoadError("");
 
     try {
-      const [proofResponse, applicationsResponse] = await Promise.all([
+      const [proofResponse, statusResponse, applicationsResponse] = await Promise.all([
         api.fetchProofs(),
+        endorsementApi.fetchStatus(),
         reviewMode
           ? api.fetchApplicationsForReview()
           : api.fetchUserApplications(),
       ]);
 
       setProofRequirements(getCollection(proofResponse, ["SAssistanceFormProofs"]));
+      setStatusTables(getCollection(statusResponse, ["StatusTables", "status_tables"]));
 
       if (!applicationsResponse?.ok) {
         setLoadError(
@@ -172,17 +177,20 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
     } finally {
       setIsLoading(false);
     }
-  }, [api, reviewMode]);
+  }, [api, endorsementApi, reviewMode]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
+  const getStatusName = (application) =>
+    statusTables.find(
+      (status) => Number(status.id) === Number(application.status_id)
+    )?.status || "Unknown";
+
   const reviewableApplications = reviewMode
     ? applications.filter((application) => {
-        const status = String(
-          application.StatusTable?.status || application.status || "submitted"
-        ).toLowerCase();
+        const status = getStatusName(application).toLowerCase();
         return !["approved", "declined", "rejected"].some((terminalStatus) =>
           status.includes(terminalStatus)
         );
@@ -192,7 +200,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
   const historyApplications = reviewableApplications.map((application, index) => ({
     ...application,
     id: application.id ?? application.request_assistance_form_id ?? index + 1,
-    status: application.StatusTable?.status || application.status || "Submitted",
+    status: getStatusName(application),
     submittedDate: formatDisplayDate(getCreatedDate(application)),
     title: application.research_paper_title || "Untitled research paper",
   }));
@@ -216,8 +224,49 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
     setForm(createEmptyForm());
   };
 
-  const handleStaticStatusAction = (action) => {
-    toast.info(`${action} will be available when the status API is connected.`);
+  const handleStatusAction = async (statusId) => {
+    if (!selectedApplication || isUpdatingStatus) return;
+
+    const researchId =
+      selectedApplication.research_id ??
+      selectedApplication.Research?.id ??
+      selectedApplication.research?.id ??
+      selectedApplication.id ??
+      selectedApplication.request_assistance_form_id;
+
+    if (researchId == null) {
+      toast.error("The research ID for this request is unavailable.");
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      const response = await endorsementApi.updateEndorsementStatus(
+        researchId,
+        2,
+        { status_id: statusId }
+      );
+
+      if (!response?.ok) {
+        toast.error(
+          getErrorMessage(response, "The request status could not be updated.")
+        );
+        return;
+      }
+
+      toast.success(
+        statusId === 10
+          ? "Presentation assistance request approved successfully."
+          : "Presentation assistance request rejected successfully."
+      );
+      closeForm();
+      await loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error("We couldn't reach the server. Check your connection and try again.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   const handleFieldChange = (event) => {
@@ -352,23 +401,17 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
               <div className="publication-incentive__review-actions">
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--reject"
-                  onClick={() => handleStaticStatusAction("Rejecting a request")}
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusAction(11)}
                   type="button"
                 >
                   <FiXCircle aria-hidden="true" />
                   Reject
                 </button>
                 <button
-                  className="publication-incentive__review-button publication-incentive__review-button--decline"
-                  onClick={() => handleStaticStatusAction("Declining a request")}
-                  type="button"
-                >
-                  <FiMinusCircle aria-hidden="true" />
-                  Decline
-                </button>
-                <button
                   className="publication-incentive__review-button publication-incentive__review-button--approve"
-                  onClick={() => handleStaticStatusAction("Approving a request")}
+                  disabled={isUpdatingStatus}
+                  onClick={() => handleStatusAction(10)}
                   type="button"
                 >
                   <FiCheckCircle aria-hidden="true" />

@@ -118,8 +118,8 @@ const getEndorsementContext = (roleName, researchTitle) => {
   if (roleName.includes("dean")) {
     return {
       actor: "College Dean",
-      confirmation: `Are you sure you want to give final endorsement to “${title}”?`,
-      success: `“${title}” has received final college endorsement.`,
+      confirmation: `Are you sure you want to endorse “${title}” to the CRD Staff?`,
+      success: `“${title}” has been endorsed to the CRD Staff.`,
     };
   }
 
@@ -613,7 +613,7 @@ function ResearchApplicationReviewForm() {
 
     try {
       const response =
-        await new ResearchApplicationAPI().updateEndorsementStatus(id, payload);
+        await new ResearchApplicationAPI().updateEndorsementStatus(id, 1, payload);
 
       if (response.ok) {
         setEndorsementDialog("success");
