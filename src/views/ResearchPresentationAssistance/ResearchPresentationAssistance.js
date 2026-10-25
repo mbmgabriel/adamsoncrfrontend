@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MainContainer from "../../components/Layout/MainContainer";
 import AdamsonSeal from "../../assets/image/adamson_logo.png";
 import ApplicationHistory from "../../components/ApplicationHistory/ApplicationHistory";
@@ -7,7 +7,7 @@ import {
   FiCheckCircle,
   FiXCircle,
 } from "react-icons/fi";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import RequestAssistanceFormsAPI from "../../api/RequestAssistanceFormsAPI";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
@@ -61,6 +61,7 @@ const getCreatedDate = (application) =>
   application.submitted_date;
 
 const getApplicationStatusId = (application, formTypeId) => {
+  if ([10, 11].includes(Number(application.status_id))) return application.status_id;
   const endorsements = application.Endorsements || application.endorsements || [];
   const endorsement = endorsements.find(
     (item) => Number(item.form_type_id) === Number(formTypeId)
@@ -142,6 +143,9 @@ function AssistanceField({
 
 function ResearchPresentationAssistance({ reviewMode = false }) {
   const history = useHistory();
+  const location = useLocation();
+  const linkedApplication = new URLSearchParams(location.search).get('application_id');
+  const openedLink = useRef(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [form, setForm] = useState(createEmptyForm);
@@ -156,6 +160,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
   const endorsementApi = useMemo(() => new ResearchApplicationAPI(), []);
 
   const loadData = useCallback(async () => {
+    openedLink.current = null;
     setIsLoading(true);
     setLoadError("");
 
@@ -223,7 +228,26 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  useEffect(() => {
+    if (!linkedApplication) { openedLink.current = null; return; }
+    if (isLoading || loadError || openedLink.current === linkedApplication) return;
+    openedLink.current = linkedApplication;
+    const application = applications.find(item => String(item.id) === linkedApplication);
+    if (!application) {
+      setLoadError('This application is unavailable or you no longer have access to it.');
+      return;
+    }
+    setSelectedApplication(application);
+    setForm(applicationToForm(application, proofRequirements));
+    setShowForm(true);
+  }, [linkedApplication, applications, proofRequirements, isLoading, loadError]);
+
   const closeForm = () => {
+    if (linkedApplication) {
+      const query = new URLSearchParams(location.search);
+      query.delete('application_id');
+      history.replace({ pathname: location.pathname, search: query.toString() });
+    }
     setShowForm(false);
     setSelectedApplication(null);
     setForm(createEmptyForm());

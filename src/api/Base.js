@@ -48,9 +48,13 @@ export default class Base {
       responseData = JSON.parse(responseData);
     }
 
-    if (response.status === 401 && token) {
+    if (response.status === 401 && token && token === window.localStorage.getItem('token')) {
       window.localStorage.clear();
       window.location.assign("/");
+    }
+
+    if (response.ok && !['GET', 'HEAD'].includes(method) && !path.startsWith('/api/v1/notifications')) {
+      window.dispatchEvent(new Event('notifications:refresh'));
     }
 
     let output = {

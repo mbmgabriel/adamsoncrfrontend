@@ -9,7 +9,11 @@ jest.mock("../api/Base", () => class {
   sendRequest(options) { return mockSendRequest(options); }
 });
 jest.mock("../components/Layout/MainContainer", () => ({ children }) => <div>{children}</div>);
-jest.mock("react-router-dom", () => ({ useHistory: () => ({ push: jest.fn() }) }));
+let mockSearch = '';
+jest.mock("react-router-dom", () => ({
+  useHistory: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useLocation: () => ({ pathname: '/review', search: mockSearch }),
+}));
 
 let root;
 let container;
@@ -21,6 +25,7 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
+  mockSearch = '';
   mockSendRequest.mockReset();
   mockSendRequest.mockImplementation(async ({ path }) => {
     if (path === "/api/v1/status_tables/all") {
@@ -61,6 +66,21 @@ describe.each([
       act(() => button.click());
     });
     expect(mockSendRequest.mock.calls.some(([request]) => request.method === "PUT")).toBe(false);
+  });
+
+  test("opens the application linked from a notification", async () => {
+    mockSearch = '?application_id=42';
+    mockApplication = { id: 42, status_id: 3 };
+    await act(async () => root.render(<Component reviewMode />));
+    expect(container.querySelectorAll('.publication-incentive__review-actions button')).toHaveLength(2);
+  });
+
+  test("rejects an unavailable notification target", async () => {
+    mockSearch = '?application_id=999';
+    mockApplication = { id: 42, status_id: 3 };
+    await act(async () => root.render(<Component reviewMode />));
+    expect(container.textContent).toContain('This application is unavailable');
+    expect(container.querySelectorAll('.publication-incentive__review-actions button')).toHaveLength(0);
   });
 
   test("keeps pending actions enabled and sends approval status 10", async () => {

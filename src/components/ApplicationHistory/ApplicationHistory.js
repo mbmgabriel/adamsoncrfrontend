@@ -64,6 +64,12 @@ function ApplicationHistory({
         </header>
 
         <div className="application-history__table-card">
+          {!isLoading && errorMessage && applications.length > 0 && (
+            <div className="application-history__empty-state" role="alert">
+              <span>{errorMessage}</span>
+              {onRetry && <button onClick={onRetry} type="button">Try again</button>}
+            </div>
+          )}
           <div className="application-history__table-heading">
             <div>
               <h2>{tableTitle}</h2>
