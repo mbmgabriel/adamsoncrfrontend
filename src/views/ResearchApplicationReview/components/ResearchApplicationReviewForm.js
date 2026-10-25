@@ -330,6 +330,7 @@ function ResearchApplicationReviewForm() {
   const [research, setResearch] = useState();
   const [workflow, setWorkflow] = useState(null);
   const [workflowError, setWorkflowError] = useState("");
+  const [reviewLoadAttempt, setReviewLoadAttempt] = useState(0);
   const [reviewAction, setReviewAction] = useState("endorse");
   const [remarks, setRemarks] = useState("");
   const [remarksHistory, setRemarksHistory] = useState([]);
@@ -454,6 +455,9 @@ function ResearchApplicationReviewForm() {
 
     const loadReview = async () => {
       setLoading(true);
+      setWorkflow(null);
+      setWorkflowError("");
+      setVersionRemarks([]);
       const api = new ResearchApplicationAPI();
       const [researchResponse, commentsResponse, workflowResponse] = await Promise.all([
         api.getResearchById(id),
@@ -466,7 +470,12 @@ function ResearchApplicationReviewForm() {
       if (workflowResponse.ok) {
         setWorkflow(workflowResponse.data.workflow);
         setVersionRemarks(workflowResponse.data.review_history || []);
-      } else setWorkflowError(workflowResponse.data?.message || "The review workflow could not be loaded.");
+      } else {
+        const message = workflowResponse.data?.message || "";
+        setWorkflowError(/Invalid object name ['"](?:dbo\.)?research_versions['"]/i.test(message)
+          ? "Review status is unavailable because the server database update for research version history has not been applied. Please contact the system administrator."
+          : "The review status could not be loaded. Please try again.");
+      }
 
       if (researchResponse.ok) {
         setResearch(researchResponse.data?.Research);
@@ -490,7 +499,7 @@ function ResearchApplicationReviewForm() {
     return () => {
       isActive = false;
     };
-  }, [id]);
+  }, [id, reviewLoadAttempt]);
 
   useEffect(() => {
     if (!canLeaveRemarks) {
@@ -644,19 +653,20 @@ function ResearchApplicationReviewForm() {
           <span className="research-application__step-count">Step {step} of 2</span>
         </header>
 
-        <section className={`review-workflow review-workflow--${workflow?.stage || "loading"}`} aria-label="Research review progress">
+        <section className={`review-workflow review-workflow--${workflow?.stage || (workflowError ? "error" : "loading")}`} aria-label="Research review progress">
           <div className="review-workflow__header">
             <div className="review-workflow__summary">
               <span className="review-workflow__icon" aria-hidden="true">{workflow?.stage === "completed" ? <FiCheck /> : <FiFileText />}</span>
               <div>
                 <span className="review-workflow__eyebrow">Current review stage</span>
-                <h2 className="review-workflow__stage">{workflow ? ({ coordinator_review: "Research coordinator review", chair_review: "Department chairperson endorsement", dean_review: "College dean endorsement", staff_review: "CRD staff endorsement", revision_required: "Revision required", urb_assignment: "URB reviewer assignment", urb_review: "URB review in progress", director_completion: "Ready for completion", completed: "Research completed" })[workflow.stage] : "Loading review status…"}</h2>
+                <h2 className="review-workflow__stage">{workflow ? ({ coordinator_review: "Research coordinator review", chair_review: "Department chairperson endorsement", dean_review: "College dean endorsement", staff_review: "CRD staff endorsement", revision_required: "Revision required", urb_assignment: "URB reviewer assignment", urb_review: "URB review in progress", director_completion: "Ready for completion", completed: "Research completed" })[workflow.stage] : workflowError ? "Review status unavailable" : "Loading review status…"}</h2>
                 <p className="review-workflow__description">{workflow && ({ coordinator_review: "Waiting for the coordinator’s decision.", chair_review: "Waiting for the chairperson’s endorsement.", dean_review: "Waiting for the dean’s endorsement.", staff_review: "Waiting for CRD staff endorsement.", revision_required: workflow?.revision_type === "urb_minor" ? "Minor edits requested by URB. Resubmission returns directly to the assigned URB reviewers with the same version number." : "The researcher needs to update and resubmit this application.", urb_assignment: "CRD staff can now select the URB reviewers.", urb_review: "Every assigned URB member must approve before completion.", director_completion: "All URB approvals are in. The director can complete this research.", completed: "This application has finished the research review process." })[workflow.stage]}</p>
               </div>
             </div>
             {workflow && <span className="review-workflow__version">Version <strong>{workflow.version_number || "1"}</strong></span>}
           </div>
           {workflowError && <p className="review-workflow__error" role="alert">{workflowError}</p>}
+          {workflowError && <div className="review-workflow__actions"><Button type="button" className="btn-outline-custom" disabled={loading} onClick={() => setReviewLoadAttempt(attempt => attempt + 1)}>Retry review status</Button></div>}
           {workflow?.revision_remarks && <div className="review-workflow__revision"><FiMessageSquare aria-hidden="true" /><div><strong>Required revisions</strong><p>{workflow.revision_remarks}</p></div></div>}
           {workflow?.can_resubmit && <div className="review-workflow__actions">
             {workflow.can_resubmit && <Button className="btn-confirmation-custom" onClick={() => history.push(`/new-research-application?revise=${id}`)}>Edit and resubmit revision</Button>}

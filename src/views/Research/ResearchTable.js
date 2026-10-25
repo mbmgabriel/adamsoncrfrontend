@@ -66,13 +66,20 @@ function ResearchTable() {
         r.title?.toLowerCase().includes(term) ||
         formatDisplayName(r.submitted_by).toLowerCase().includes(term)
       );
+    })
+    .sort((a, b) => {
+      const submittedAt = (research) => {
+        const timestamp = Date.parse(research.submitted_date);
+        return Number.isNaN(timestamp) ? -Infinity : timestamp;
+      };
+      const aDate = submittedAt(a);
+      const bDate = submittedAt(b);
+      return aDate === bDate ? Number(b.id) - Number(a.id) : bDate - aDate;
     });
 
   const totalItems = filteredResearches.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const displayedResearches = [...filteredResearches]
-    .reverse()
-    .slice((page - 1) * pageSize, page * pageSize);
+  const displayedResearches = filteredResearches.slice((page - 1) * pageSize, page * pageSize);
 
   const getStatusName = (item) =>
     status?.find((statusItem) => statusItem.id === item.status_id)?.status || "Unknown";
