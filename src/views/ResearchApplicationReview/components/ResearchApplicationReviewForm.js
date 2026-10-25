@@ -9,7 +9,6 @@ import {
   FiFileText,
   FiHelpCircle,
   FiMessageSquare,
-  FiSave,
   FiSend,
   FiUser,
   FiX,
@@ -1082,11 +1081,6 @@ function ResearchApplicationReviewForm() {
                   </Button>
                   {!isResearcher && (
                     <>
-                      {canLeaveRemarks && (
-                        <Button type="button" className="btn-outline-custom">
-                          <FiSave /> Save
-                        </Button>
-                      )}
                       <Button
                         type="submit"
                         className="btn-confirmation-custom"

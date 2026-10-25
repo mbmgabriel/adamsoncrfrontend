@@ -1,6 +1,13 @@
 import React from "react";
 import { FiArrowLeft, FiFileText, FiPlus } from "react-icons/fi";
 
+const getStatusTone = (status) => {
+  const normalizedStatus = String(status || "").trim().toLowerCase();
+  if (/rejected|declined|disapproved/.test(normalizedStatus)) return "rejected";
+  if (normalizedStatus.includes("approved")) return "approved";
+  return "ongoing";
+};
+
 function ApplicationHistory({
   applications = [],
   description,
@@ -8,15 +15,21 @@ function ApplicationHistory({
   emptyTitle = "No past applications yet",
   errorMessage,
   isLoading = false,
+  nameColumnLabel,
+  nameColumnField,
   onCreate,
   onBack,
   onRetry,
   onSelect,
+  showApplicationId = true,
   showCreate = true,
   tableDescription = "Review the applications you have previously submitted.",
   tableTitle = "Past applications",
   title,
 }) {
+  const showNameColumn = Boolean(nameColumnLabel && nameColumnField);
+  const columnCount = 3 + Number(showApplicationId) + Number(showNameColumn);
+
   return (
     <main className="application-history" aria-labelledby="application-history-title">
       <section className="application-history__container">
@@ -65,8 +78,9 @@ function ApplicationHistory({
             <table>
               <thead>
                 <tr>
-                  <th>Application ID</th>
+                  {showApplicationId && <th>Application ID</th>}
                   <th>Research title</th>
+                  {showNameColumn && <th>{nameColumnLabel}</th>}
                   <th>Date submitted</th>
                   <th>Status</th>
                 </tr>
@@ -86,11 +100,16 @@ function ApplicationHistory({
                     } : undefined}
                     tabIndex={onSelect ? 0 : undefined}
                   >
-                    <td data-label="Application ID">{application.id}</td>
+                    {showApplicationId && <td data-label="Application ID">{application.id}</td>}
                     <td data-label="Research title">{application.title}</td>
+                    {showNameColumn && (
+                      <td data-label={nameColumnLabel}>
+                        {application[nameColumnField]?.trim() || "—"}
+                      </td>
+                    )}
                     <td data-label="Date submitted">{application.submittedDate}</td>
                     <td data-label="Status">
-                      <span className="application-history__status">
+                      <span className={`application-history__status application-history__status--${getStatusTone(application.status)}`}>
                         {application.status}
                       </span>
                     </td>
@@ -99,7 +118,7 @@ function ApplicationHistory({
 
                 {isLoading && (
                   <tr className="application-history__empty-row">
-                    <td colSpan="4">
+                    <td colSpan={columnCount}>
                       <div className="application-history__empty-state" role="status">
                         <FiFileText aria-hidden="true" />
                         <strong>Loading applications…</strong>
@@ -111,7 +130,7 @@ function ApplicationHistory({
 
                 {!isLoading && errorMessage && applications.length === 0 && (
                   <tr className="application-history__empty-row">
-                    <td colSpan="4">
+                    <td colSpan={columnCount}>
                       <div className="application-history__empty-state" role="alert">
                         <FiFileText aria-hidden="true" />
                         <strong>Applications could not be loaded</strong>
@@ -128,7 +147,7 @@ function ApplicationHistory({
 
                 {!isLoading && !errorMessage && applications.length === 0 && (
                   <tr className="application-history__empty-row">
-                    <td colSpan="4">
+                    <td colSpan={columnCount}>
                       <div className="application-history__empty-state">
                         <FiFileText aria-hidden="true" />
                         <strong>{emptyTitle}</strong>

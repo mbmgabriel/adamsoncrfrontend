@@ -88,6 +88,8 @@ export function ResearcherSection({
   errors,
   register,
   setValue,
+  departments = [],
+  departmentsLoading = false,
 }) {
   const researcherLabel = isMain
     ? "Researcher 1 (Main Author)"
@@ -101,20 +103,31 @@ export function ResearcherSection({
   const sameDepartment = useWatch({ control, name: "sameDept" });
   const mainCollege = useWatch({ control, name: "researchers.0.college" });
   const mainDepartment = useWatch({ control, name: "researchers.0.dept" });
+  const college = useWatch({ control, name: `researchers.${index}.college` });
+  const department = useWatch({ control, name: `researchers.${index}.dept` });
+  const colleges = [...new Set(departments.map((item) => item.dept_desc).filter(Boolean))];
+  const departmentOptions = [...new Set(departments
+    .filter((item) => item.dept_desc === college)
+    .map((item) => item.dept_name)
+    .filter(Boolean))];
   const enabled = isMain || Boolean(researcherEnabled);
   const fieldErrors = errors?.[index] || {};
 
   useEffect(() => {
-    if (!isMain && sameCollege && mainCollege) {
-      setValue(`researchers.${index}.college`, mainCollege);
+    if (!isMain && (sameCollege || sameDepartment)) {
+      setValue(`researchers.${index}.college`, mainCollege || "");
     }
-  }, [index, isMain, sameCollege, mainCollege, setValue]);
+  }, [index, isMain, sameCollege, sameDepartment, mainCollege, setValue]);
 
   useEffect(() => {
-    if (!isMain && sameDepartment && mainDepartment) {
-      setValue(`researchers.${index}.dept`, mainDepartment);
+    if (!isMain && sameDepartment) {
+      setValue(`researchers.${index}.dept`, mainDepartment || "");
+    } else if (department && departments.length && !departments.some(
+      (item) => item.dept_desc === college && item.dept_name === department
+    )) {
+      setValue(`researchers.${index}.dept`, "");
     }
-  }, [index, isMain, sameDepartment, mainDepartment, setValue]);
+  }, [index, isMain, sameDepartment, mainDepartment, college, department, departments, setValue]);
 
   return (
     <section
@@ -209,16 +222,18 @@ export function ResearcherSection({
               </Form.Label>
               <Form.Select
                 className="custom-control"
-                disabled={sameCollege && !isMain}
+                disabled={departmentsLoading || (!isMain && (sameCollege || sameDepartment))}
                 isInvalid={Boolean(fieldErrors.college)}
                 aria-invalid={Boolean(fieldErrors.college)}
                 {...register(`researchers.${index}.college`, {
                   required: enabled ? "Select the researcher's college." : false,
+                  validate: (value) => !enabled || colleges.includes(value) || "Select a college from the list.",
                 })}
               >
-                <option value="">Select College</option>
-                <option value="college-1">College 1</option>
-                <option value="college-2">College 2</option>
+                <option value="">{departmentsLoading ? "Loading colleges…" : "Select College"}</option>
+                {colleges.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
               </Form.Select>
               {fieldErrors.college && (
                 <Form.Control.Feedback type="invalid">
@@ -241,18 +256,20 @@ export function ResearcherSection({
               </Form.Label>
               <Form.Select
                 className="custom-control"
-                disabled={sameDepartment && !isMain}
+                disabled={departmentsLoading || !college || (sameDepartment && !isMain)}
                 isInvalid={Boolean(fieldErrors.dept)}
                 aria-invalid={Boolean(fieldErrors.dept)}
                 {...register(`researchers.${index}.dept`, {
                   required: enabled
                     ? "Select the researcher's department."
                     : false,
+                  validate: (value) => !enabled || departmentOptions.includes(value) || "Select a department from the selected college.",
                 })}
               >
-                <option value="">Select Department</option>
-                <option value="dept-1">Department 1</option>
-                <option value="dept-2">Department 2</option>
+                <option value="">{college ? "Select Department" : "Select College first"}</option>
+                {departmentOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
               </Form.Select>
               {fieldErrors.dept && (
                 <Form.Control.Feedback type="invalid">
@@ -474,6 +491,9 @@ function ApplicationForm() {
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
   const [documentTypes, setDocumentTypes] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
+  const [departmentsError, setDepartmentsError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showValidationSummary, setShowValidationSummary] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
@@ -512,6 +532,24 @@ function ApplicationForm() {
     const amount = parseFloat(String(curr?.amount || "").replace(/,/g, "")) || 0;
     return isChecked ? acc + amount : acc;
   }, 0);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await new ResearchApplicationAPI().fetchDepartments();
+        if (!response.ok || !Array.isArray(response.data?.Departments)) {
+          throw new Error("Departments could not be loaded.");
+        }
+        setDepartments(response.data.Departments);
+      } catch (error) {
+        setDepartmentsError("Colleges and departments could not be loaded. Please reload the page to try again.");
+      } finally {
+        setDepartmentsLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   useEffect(() => {
     const loadLoggedInUser = async () => {
@@ -961,6 +999,7 @@ function ApplicationForm() {
                   description="The main author is required. Add co-authors only when they are part of the research team."
                 />
                 <div className="research-application__researchers">
+                  {departmentsError && <p role="alert" className="text-danger">{departmentsError}</p>}
                   {Array.from({ length: MAX_RESEARCHERS }, (_, index) => (
                     <ResearcherSection
                       key={index}
@@ -970,6 +1009,8 @@ function ApplicationForm() {
                       errors={errors.researchers}
                       register={register}
                       setValue={setValue}
+                      departments={departments}
+                      departmentsLoading={departmentsLoading}
                     />
                   ))}
                 </div>

@@ -1972,6 +1972,21 @@ button:focus-visible,
     font-size: 12px;
     font-weight: 750;
     padding: 5px 9px;
+
+    &--approved {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    &--ongoing {
+      background: #fff3d6;
+      color: #8a5900;
+    }
+
+    &--rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
   }
 
   &__empty-row td {
@@ -2863,6 +2878,13 @@ button:focus-visible,
         background: #fff0ef;
         border-color: #b42318;
       }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      box-shadow: none;
+      transform: none;
     }
   }
 }

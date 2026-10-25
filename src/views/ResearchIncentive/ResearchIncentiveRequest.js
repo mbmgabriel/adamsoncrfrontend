@@ -11,6 +11,7 @@ import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import IncentiveFormsAPI from "../../api/IncentiveFormsAPI";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
+import { sortApplicationsNewestFirst } from "../../utils/sortApplications";
 
 const getToday = () => {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -75,6 +76,23 @@ const normalizeAttachmentIds = (application, attachmentOptions = []) =>
     .filter(Number.isFinite);
 
 const normalizeDate = (value) => (value ? String(value).slice(0, 10) : "");
+
+const getCreatedDate = (application) =>
+  application.created_at ||
+  application.createdAt ||
+  application.date_created ||
+  application.created_date ||
+  application.submission_date ||
+  application.submitted_date;
+
+const getApplicationStatusId = (application, formTypeId) => {
+  const endorsements = application.Endorsements || application.endorsements || [];
+  const endorsement = endorsements.find(
+    (item) => Number(item.form_type_id) === Number(formTypeId)
+  );
+
+  return endorsement?.status_id ?? application.status_id;
+};
 
 const formatDisplayDate = (value) => {
   const normalizedDate = normalizeDate(value);
@@ -224,27 +242,18 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
 
   const getStatusName = (application) =>
     statusTables.find(
-      (status) => Number(status.id) === Number(application.status_id)
+      (status) =>
+        Number(status.id) === Number(getApplicationStatusId(application, 3))
     )?.status || "Unknown";
 
-  const reviewableApplications = reviewMode
-    ? applications.filter((application) => {
-        const status = getStatusName(application).toLowerCase();
-        return !["approved", "declined", "rejected"].some((terminalStatus) =>
-          status.includes(terminalStatus)
-        );
-      })
-    : applications;
-
-  const historyApplications = reviewableApplications.map((application, index) => ({
+  const historyApplications = applications.map((application, index) => ({
     ...application,
     id: application.id ?? application.incentive_form_id ?? index + 1,
     status: getStatusName(application),
-    submittedDate: formatDisplayDate(
-      application.submission_date || application.created_at
-    ),
+    submittedDate: formatDisplayDate(getCreatedDate(application)),
     title: application.title_of_work || "Untitled research",
   }));
+  const displayedApplications = sortApplicationsNewestFirst(historyApplications, getCreatedDate);
 
   const openNewApplication = () => {
     setSelectedApplication(null);
@@ -265,8 +274,11 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
     setForm(createEmptyForm());
   };
 
+  const isDecisionFinal = Boolean(selectedApplication) &&
+    [10, 11].includes(Number(getApplicationStatusId(selectedApplication, 3)));
+
   const handleStatusAction = async (statusId) => {
-    if (!selectedApplication || isUpdatingStatus) return;
+    if (!reviewMode || !selectedApplication || isUpdatingStatus || isDecisionFinal) return;
 
     const researchId =
       selectedApplication.research_id ??
@@ -452,7 +464,7 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
               <div className="publication-incentive__review-actions">
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--reject"
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || isDecisionFinal}
                   onClick={() => handleStatusAction(11)}
                   type="button"
                 >
@@ -461,7 +473,7 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
                 </button>
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--approve"
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || isDecisionFinal}
                   onClick={() => handleStatusAction(10)}
                   type="button"
                 >
@@ -480,17 +492,19 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
         </main>
       ) : (
         <ApplicationHistory
-          title={reviewMode ? "Incentive Applications for Approval" : "Research Incentive Requests"}
+          title={reviewMode ? "Incentive Applications" : "Research Incentive Requests"}
           description={reviewMode
             ? "Review submitted publication, citation, and H-index incentive applications."
             : "View your previous incentive requests or submit a new publication, citation, or H-index application."
           }
-          emptyTitle={reviewMode ? "No applications awaiting review" : undefined}
+          emptyTitle={reviewMode ? "No incentive applications yet" : undefined}
           emptyMessage={reviewMode
-            ? "Applications that require a decision will appear here."
+            ? "Submitted applications will appear here, including approved and rejected applications."
             : "New incentive requests will appear here after they are submitted."
           }
-          applications={historyApplications}
+          applications={displayedApplications}
+          nameColumnLabel="Name of Researcher"
+          nameColumnField="name_of_authors"
           errorMessage={loadError}
           isLoading={isLoading}
           onBack={() => history.push("/dashboard")}
@@ -498,11 +512,12 @@ function ResearchIncentiveRequest({ reviewMode = false }) {
           onRetry={loadData}
           onSelect={openApplication}
           showCreate={!reviewMode}
+          showApplicationId={false}
           tableDescription={reviewMode
             ? "Select an application to open its form and review the submitted details."
             : undefined
           }
-          tableTitle={reviewMode ? "Applications awaiting review" : undefined}
+          tableTitle={reviewMode ? "All applications" : undefined}
         />
       )}
     </MainContainer>

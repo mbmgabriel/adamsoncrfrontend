@@ -11,6 +11,7 @@ import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import RequestAssistanceFormsAPI from "../../api/RequestAssistanceFormsAPI";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
+import { sortApplicationsNewestFirst } from "../../utils/sortApplications";
 
 const createEmptyForm = () => ({
   name_of_presenter: "",
@@ -56,7 +57,17 @@ const getCreatedDate = (application) =>
   application.createdAt ||
   application.date_created ||
   application.created_date ||
-  application.submission_date;
+  application.submission_date ||
+  application.submitted_date;
+
+const getApplicationStatusId = (application, formTypeId) => {
+  const endorsements = application.Endorsements || application.endorsements || [];
+  const endorsement = endorsements.find(
+    (item) => Number(item.form_type_id) === Number(formTypeId)
+  );
+
+  return endorsement?.status_id ?? application.status_id;
+};
 
 const normalizeProofIds = (application, proofOptions = []) =>
   (application?.CAssistanceFormProofs || application?.c_assistance_form_proofs || [])
@@ -81,6 +92,7 @@ const normalizeProofIds = (application, proofOptions = []) =>
 const applicationToForm = (application, proofOptions) => ({
   ...createEmptyForm(),
   ...application,
+  date_submitted: formatDisplayDate(getCreatedDate(application)),
   acceptance_date: normalizeDate(application.acceptance_date),
   conference_date: normalizeDate(application.conference_date),
   proof_ids: normalizeProofIds(application, proofOptions),
@@ -185,25 +197,18 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
 
   const getStatusName = (application) =>
     statusTables.find(
-      (status) => Number(status.id) === Number(application.status_id)
+      (status) =>
+        Number(status.id) === Number(getApplicationStatusId(application, 2))
     )?.status || "Unknown";
 
-  const reviewableApplications = reviewMode
-    ? applications.filter((application) => {
-        const status = getStatusName(application).toLowerCase();
-        return !["approved", "declined", "rejected"].some((terminalStatus) =>
-          status.includes(terminalStatus)
-        );
-      })
-    : applications;
-
-  const historyApplications = reviewableApplications.map((application, index) => ({
+  const historyApplications = applications.map((application, index) => ({
     ...application,
     id: application.id ?? application.request_assistance_form_id ?? index + 1,
     status: getStatusName(application),
     submittedDate: formatDisplayDate(getCreatedDate(application)),
     title: application.research_paper_title || "Untitled research paper",
   }));
+  const displayedApplications = sortApplicationsNewestFirst(historyApplications, getCreatedDate);
 
   const openNewApplication = () => {
     setSelectedApplication(null);
@@ -224,8 +229,11 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
     setForm(createEmptyForm());
   };
 
+  const isDecisionFinal = Boolean(selectedApplication) &&
+    [10, 11].includes(Number(getApplicationStatusId(selectedApplication, 2)));
+
   const handleStatusAction = async (statusId) => {
-    if (!selectedApplication || isUpdatingStatus) return;
+    if (!reviewMode || !selectedApplication || isUpdatingStatus || isDecisionFinal) return;
 
     const researchId =
       selectedApplication.research_id ??
@@ -366,6 +374,9 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
                 <div role="columnheader">DETAILS</div>
               </div>
 
+              {reviewMode && (
+                <AssistanceField form={form} label="Date Submitted:" name="date_submitted" readOnly singleLine />
+              )}
               <AssistanceField form={form} label="Name of Presenter:" name="name_of_presenter" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--medium" />
               <AssistanceField form={form} label="Email Address:" name="email_address" onChange={handleFieldChange} readOnly={isReadOnly} required type="email" />
               <AssistanceField form={form} label="Contact Number:" name="contact_number" onChange={handleFieldChange} readOnly={isReadOnly} required rowClass="assistance-request__table-row--medium" type="tel" />
@@ -401,7 +412,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
               <div className="publication-incentive__review-actions">
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--reject"
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || isDecisionFinal}
                   onClick={() => handleStatusAction(11)}
                   type="button"
                 >
@@ -410,7 +421,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
                 </button>
                 <button
                   className="publication-incentive__review-button publication-incentive__review-button--approve"
-                  disabled={isUpdatingStatus}
+                  disabled={isUpdatingStatus || isDecisionFinal}
                   onClick={() => handleStatusAction(10)}
                   type="button"
                 >
@@ -429,18 +440,20 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
         </main>
       ) : (
         <ApplicationHistory
-          applications={historyApplications}
+          applications={displayedApplications}
+          nameColumnLabel="Name of Presenter"
+          nameColumnField="name_of_presenter"
           title={reviewMode
-            ? "Presentation Assistance Requests for Approval"
+            ? "Presentation Assistance Requests"
             : "Research Presentation Assistance"
           }
           description={reviewMode
             ? "Review submitted research paper presentation assistance requests."
             : "View your previous requests or begin a new request for research paper presentation assistance."
           }
-          emptyTitle={reviewMode ? "No requests awaiting review" : undefined}
+          emptyTitle={reviewMode ? "No presentation assistance requests yet" : undefined}
           emptyMessage={reviewMode
-            ? "Requests that require a decision will appear here."
+            ? "Submitted requests will appear here, including approved and rejected requests."
             : "New requests will appear here after they are submitted."
           }
           errorMessage={loadError}
@@ -450,11 +463,12 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
           onRetry={loadData}
           onSelect={openApplication}
           showCreate={!reviewMode}
+          showApplicationId={false}
           tableDescription={reviewMode
             ? "Select a request to open its form and review the submitted details."
             : undefined
           }
-          tableTitle={reviewMode ? "Requests awaiting review" : undefined}
+          tableTitle={reviewMode ? "All requests" : undefined}
         />
       )}
     </MainContainer>
