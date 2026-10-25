@@ -328,6 +328,7 @@ function ResearchApplicationReviewForm() {
   const { id } = useParams();
   const name = formatDisplayName(localStorage.getItem("name")) || "John Doe";
   const [research, setResearch] = useState();
+  const [loadedResearchId, setLoadedResearchId] = useState(null);
   const [workflow, setWorkflow] = useState(null);
   const [workflowError, setWorkflowError] = useState("");
   const [reviewLoadAttempt, setReviewLoadAttempt] = useState(0);
@@ -455,6 +456,8 @@ function ResearchApplicationReviewForm() {
 
     const loadReview = async () => {
       setLoading(true);
+      setResearch(undefined);
+      setRemarksHistory([]);
       setWorkflow(null);
       setWorkflowError("");
       setVersionRemarks([]);
@@ -477,21 +480,26 @@ function ResearchApplicationReviewForm() {
           : "The review status could not be loaded. Please try again.");
       }
 
-      if (researchResponse.ok) {
+      const unavailable = [researchResponse.status, workflowResponse.status].some(status => [403, 404].includes(status));
+      if (unavailable) {
+        setWorkflow(null);
+        setWorkflowError("This application is unavailable or you no longer have access to it.");
+      } else if (researchResponse.ok) {
         setResearch(researchResponse.data?.Research);
       } else {
-        console.error(researchResponse.data);
+        setWorkflowError("The application could not be loaded. Please try again.");
       }
 
-      if (commentsResponse.ok) {
+      if (!unavailable && commentsResponse.ok) {
         setRemarksHistory(commentsResponse.data?.Endorsements || []);
-      } else {
+      } else if (!unavailable) {
         console.error(
           "Failed to fetch endorsement comments:",
           commentsResponse.data
         );
       }
 
+      setLoadedResearchId(id);
       setLoading(false);
     };
 
@@ -636,6 +644,20 @@ function ResearchApplicationReviewForm() {
     setEndorsementDialog(null);
     history.push("/research-application-review");
   };
+
+  if (!research || loadedResearchId !== id) {
+    const pending = loading || loadedResearchId !== id;
+    return <main className="application-form research-application review-application">
+      <div className="form-container">
+        <section className="review-workflow" aria-label="Research application">
+          <h1>Review Research Application</h1>
+          <p role={pending ? "status" : "alert"}>{pending ? "Loading application…" : workflowError || "This application is unavailable."}</p>
+          {!pending && <Button type="button" className="btn-outline-custom" onClick={() => setReviewLoadAttempt(attempt => attempt + 1)}>Retry application</Button>}
+          <Button type="button" className="btn-outline-custom" onClick={() => history.push("/dashboard")}>Back to dashboard</Button>
+        </section>
+      </div>
+    </main>;
+  }
 
   return (
     <main className="application-form research-application review-application">

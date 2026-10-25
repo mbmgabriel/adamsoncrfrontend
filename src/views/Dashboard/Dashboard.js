@@ -11,7 +11,7 @@ import {
 import { FaFileCircleCheck } from "react-icons/fa6";
 import { FaChalkboardTeacher } from "react-icons/fa";
 import { HiGiftTop, HiUserGroup } from "react-icons/hi2";
-import Notifications from "./component/Notifications";
+import Notifications from "../../components/Notifications/NotificationFeed";
 import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
 import ReviewStatusChart from "../../components/DashboardCharts/ReviewStatusChart";
@@ -158,55 +158,6 @@ function Dashboard() {
         ? approvalCardContent
         : defaultCardContent;
 
-  const notificationsData = [
-    {
-      date: "April 3, 2025",
-      time: "10:30 PM",
-      description:
-        "A new remark on your applied new research proposal entitled “Research Title”.",
-    },
-    {
-      date: "March 24, 2025",
-      time: "1:56 PM",
-      description: "The college dean has endorsed your new research proposal.",
-    },
-    {
-      date: "March 23, 2025",
-      time: "11:30 AM",
-      description:
-        "The department chairperson has endorsed your new research proposal.",
-    },
-    {
-      date: "March 15, 2025",
-      time: "9:00 AM",
-      description:
-        "The research coordinator has endorsed your new research proposal.",
-    },
-    {
-      date: "April 3, 2025",
-      time: "10:30 PM",
-      description:
-        "A new remark on your applied new research proposal entitled “Research Title”.",
-    },
-    {
-      date: "March 24, 2025",
-      time: "1:56 PM",
-      description: "The college dean has endorsed your new research proposal.",
-    },
-    {
-      date: "March 23, 2025",
-      time: "11:30 AM",
-      description:
-        "The department chairperson has endorsed your new research proposal.",
-    },
-    {
-      date: "March 15, 2025",
-      time: "9:00 AM",
-      description:
-        "The research coordinator has endorsed your new research proposal.",
-    },
-  ];
-
   const analyticsSummary = [
     { label: "Applications reviewed", value: 35, icon: <MdOutlineRateReview /> },
     { label: "Research proposals", value: 60, icon: <MdOutlineScience /> },
@@ -236,7 +187,7 @@ function Dashboard() {
           </div>
         </section>
         <div className="center notification-holder">
-          <Notifications item={notificationsData} />
+          <Notifications />
         </div>
         {!isResearcherRole && (
           <section className="graph-containers dashboard-analytics">

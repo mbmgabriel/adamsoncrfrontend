@@ -3,6 +3,8 @@ import {
   BrowserRouter as Router,
   Switch
 } from "react-router-dom";
+import { NotificationProvider } from '../context/NotificationContext';
+import Notifications from '../views/Notifications/Notifications';
 import Dashboard from '../views/Dashboard/Dashboard'
 import Login from "../views/Login";
 import { AuthRoute } from "./components/AuthRoute";
@@ -33,8 +35,10 @@ export default function Routing() {
   return (
     <div className="content">
       <Router>
+        <NotificationProvider>
         <Switch>
           <AuthRoute path='/' exact component={Login} />
+          <PrivateRoute path='/notifications' exact component={Notifications} />
           <PrivateRoute path='/dashboard' exact component={Dashboard} />
           <PrivateRoute path='/new-research-application' exact component={NewResearchApplication} />
           <PrivateRoute path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
@@ -46,6 +50,7 @@ export default function Routing() {
           <PrivateRoute path='/review-form/:id' exact component={ResearchApplicationReviewForm} />
           <PrivateRoute path='/urb-review' exact component={URBReviewBoard} />
         </Switch>
+        </NotificationProvider>
       </Router>
     </div>
   );
