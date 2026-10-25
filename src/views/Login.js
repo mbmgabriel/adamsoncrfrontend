@@ -101,8 +101,7 @@ function Login() {
       history.push("/dashboard")
       refreshUser()
     } else {
-      alert("Login Failed: " + response.data.message)
-      console.error(response)
+      alert(response.network_error ? response.data.message : "Login Failed: " + response.data.message)
     }
   }
 

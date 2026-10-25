@@ -80,3 +80,30 @@ test("copying a department keeps co-author college and department consistent", (
   change(department, "CIVIL ENGINEERING DEPARTMENT");
   expect(coauthorDepartment.value).toBe("CIVIL ENGINEERING DEPARTMENT");
 });
+
+function SavedResearcher({ options, loading = false, loadRevision = false }) {
+  const { control, register, setValue, reset } = useForm({
+    defaultValues: { researchers: [{ college: "COLLEGE OF SCIENCE", dept: "BIOLOGY DEPARTMENT" }] },
+  });
+  return <>
+    {loadRevision && <button onClick={() => reset({ researchers: [{ college: "COLLEGE OF SCIENCE", dept: "CHEMISTRY DEPARTMENT" }] })}>Load revised application</button>}
+    <ResearcherSection index={0} isMain control={control} register={register} setValue={setValue} departments={options} departmentsLoading={loading} />
+  </>;
+}
+
+test("restores a saved department after department options finish loading", () => {
+  act(() => root.render(<SavedResearcher options={[]} loading />));
+  act(() => root.render(<SavedResearcher options={departments} />));
+  const [college, department] = container.querySelectorAll("select");
+  expect(college.value).toBe("COLLEGE OF SCIENCE");
+  expect(department.value).toBe("BIOLOGY DEPARTMENT");
+});
+
+test("preserves the original department when a revision is loaded before its options", () => {
+  act(() => root.render(<SavedResearcher options={[]} loading loadRevision />));
+  act(() => container.querySelector("button").click());
+  act(() => root.render(<SavedResearcher options={departments} loadRevision />));
+  const [college, department] = container.querySelectorAll("select");
+  expect(college.value).toBe("COLLEGE OF SCIENCE");
+  expect(department.value).toBe("CHEMISTRY DEPARTMENT");
+});

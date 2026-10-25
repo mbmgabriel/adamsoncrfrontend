@@ -22,6 +22,8 @@ import Auth from "../../../api/Auth";
 import { UserContext } from "../../../context/UserContext";
 import { toast } from "react-toastify";
 import { formatDisplayName } from "../../../utils/formatName";
+import { BASE_URL } from "../../../constants/url";
+import { getLatestDocument, getDocumentUrl, getDocumentName } from "../../../utils/researchRevision";
 import "./research-application.scss";
 
 const MAX_RESEARCHERS = 5;
@@ -55,7 +57,7 @@ const createDefaultValues = () => ({
   title: "",
   category: [],
   purpose_id: 1,
-  version_number: "",
+  version_number: "1",
   research_duration: "",
   ethical_considerations: false,
   submitted_by: "",
@@ -116,18 +118,15 @@ export function ResearcherSection({
   useEffect(() => {
     if (!isMain && (sameCollege || sameDepartment)) {
       setValue(`researchers.${index}.college`, mainCollege || "");
+      if (!sameDepartment && college !== mainCollege) setValue(`researchers.${index}.dept`, "");
     }
-  }, [index, isMain, sameCollege, sameDepartment, mainCollege, setValue]);
+  }, [index, isMain, sameCollege, sameDepartment, mainCollege, college, setValue]);
 
   useEffect(() => {
     if (!isMain && sameDepartment) {
       setValue(`researchers.${index}.dept`, mainDepartment || "");
-    } else if (department && departments.length && !departments.some(
-      (item) => item.dept_desc === college && item.dept_name === department
-    )) {
-      setValue(`researchers.${index}.dept`, "");
     }
-  }, [index, isMain, sameDepartment, mainDepartment, college, department, departments, setValue]);
+  }, [index, isMain, sameDepartment, mainDepartment, setValue]);
 
   return (
     <section
@@ -225,7 +224,9 @@ export function ResearcherSection({
                 disabled={departmentsLoading || (!isMain && (sameCollege || sameDepartment))}
                 isInvalid={Boolean(fieldErrors.college)}
                 aria-invalid={Boolean(fieldErrors.college)}
+                value={college || ""}
                 {...register(`researchers.${index}.college`, {
+                  onChange: () => setValue(`researchers.${index}.dept`, "", { shouldDirty: true }),
                   required: enabled ? "Select the researcher's college." : false,
                   validate: (value) => !enabled || colleges.includes(value) || "Select a college from the list.",
                 })}
@@ -259,6 +260,7 @@ export function ResearcherSection({
                 disabled={departmentsLoading || !college || (sameDepartment && !isMain)}
                 isInvalid={Boolean(fieldErrors.dept)}
                 aria-invalid={Boolean(fieldErrors.dept)}
+                value={department || ""}
                 {...register(`researchers.${index}.dept`, {
                   required: enabled
                     ? "Select the researcher's department."
@@ -437,7 +439,7 @@ function BudgetBreakdown({
   );
 }
 
-function FormActions({ step, onBack, onCancel, onNext }) {
+function FormActions({ step, onBack, onCancel, onNext, isRevision = false, disabled = false }) {
   return (
     <div className="research-application__actions">
       <div>
@@ -473,9 +475,9 @@ function FormActions({ step, onBack, onCancel, onNext }) {
             <FiArrowRight />
           </Button>
         ) : (
-          <Button className="btn-confirmation-custom" type="submit">
+          <Button className="btn-confirmation-custom" type="submit" disabled={disabled}>
             <FiSend />
-            Submit Application
+            {isRevision ? "Resubmit Application" : "Submit Application"}
           </Button>
         )}
       </div>
@@ -485,9 +487,18 @@ function FormActions({ step, onBack, onCancel, onNext }) {
 
 function ApplicationForm() {
   const history = useHistory();
+  const revisionId = new URLSearchParams(window.location.search).get("revise");
+  const [revisionDocuments, setRevisionDocuments] = useState([]);
+  const [isMinorRevision, setIsMinorRevision] = useState(false);
+  const [revisionReady, setRevisionReady] = useState(!revisionId);
   const userContext = useContext(UserContext);
   const { user: contextUser } = userContext?.data || {};
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [step]);
+
   const [categories, setCategories] = useState([]);
   const [representative, setRepresentative] = useState([]);
   const [documentTypes, setDocumentTypes] = useState([]);
@@ -680,14 +691,53 @@ function ApplicationForm() {
     }
   }, [budgetBreakdown, reset]);
 
+  useEffect(() => {
+    if (!revisionId || !budgetBreakdown) return;
+    setRevisionReady(false);
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await new ResearchApplicationAPI().fetchWorkflow(revisionId);
+        if (!response.ok || !response.data.workflow.can_resubmit) throw new Error(response.data?.message || "This research is not available for revision.");
+        if (!active) return;
+        const research = response.data.research;
+        const minorRevision = response.data.workflow.revision_type === "urb_minor";
+        setIsMinorRevision(minorRevision);
+        setRevisionDocuments(research.ResearchDocuments || []);
+        const investigators = research.ResearchInvestigators || [];
+        reset({
+          ...createDefaultValues(),
+          title: research.title,
+          category: String(research.category || "").split(",").map(value => value.trim()).filter(Boolean),
+          purpose_id: 2,
+          version_number: minorRevision ? String(research.version_number || "1") : String((Number(String(research.version_number || "1").replace(/^v/i, "")) || 1) + 1),
+          research_duration: research.research_duration,
+          ethical_considerations: Boolean(research.ethical_considerations),
+          submitted_by: research.submitted_by,
+          submitted_date: new Date().toISOString().split("T")[0],
+          researchers: Array.from({ length: MAX_RESEARCHERS }, (_, index) => investigators[index] ? { ...investigators[index], enabled: true } : { enabled: false }),
+          breakdown: budgetBreakdown.map((fund) => {
+            const entry = research.BudgetBreakdowns?.find((item) => Number(item.fund_id) === Number(fund.id));
+            return { checked: Boolean(entry), fund_id: fund.id, amount: entry ? String(entry.amount) : "" };
+          }),
+        });
+        setRevisionReady(true);
+      } catch (error) { if (active) setSubmissionError(error.message); }
+    };
+    load();
+    return () => { active = false; };
+  }, [revisionId, budgetBreakdown, reset]);
+
   const onSubmit = async (data) => {
+    if (!revisionReady) return;
     setShowValidationSummary(false);
     setSubmissionError("");
     setLoading(true);
 
     try {
-      const researchResponse =
-        await new ResearchApplicationAPI().createFullResearch({
+      const api = new ResearchApplicationAPI();
+      const saveResearch = revisionId ? (data) => api.resubmitResearch(revisionId, data) : (data) => api.createFullResearch(data);
+      const researchResponse = await saveResearch({
           title: data.title,
           category: data.category.filter(Boolean).join(","),
           purpose_id: data.purpose_id,
@@ -759,7 +809,7 @@ function ApplicationForm() {
         return;
       }
 
-      toast.success("Research application submitted successfully.");
+      toast.success(revisionId ? "Revised research resubmitted successfully." : "Research application submitted successfully.");
       history.push("/dashboard");
     } catch (error) {
       console.error(error);
@@ -837,10 +887,11 @@ function ApplicationForm() {
       <div className="form-container">
         <header className="research-application__page-header">
           <div>
+            {revisionId && <p className="text-white">{isMinorRevision ? "Minor URB revision: edit your application and resubmit directly to the assigned URB reviewers. The version stays the same." : "Revision: edit your returned application. Its version increases when you resubmit."}</p>}
             <span className="research-application__eyebrow">
               Research proposal
             </span>
-            <h1>New Research Application</h1>
+            <h1>{revisionId ? "Revise Research Application" : "New Research Application"}</h1>
             <p>
               Complete the research details and supporting requirements before
               submitting the application for review.
@@ -953,7 +1004,8 @@ function ApplicationForm() {
                       label="Initial submission"
                       type="radio"
                       value={1}
-                      defaultChecked
+                      checked={String(purposeId) === "1"}
+                      disabled={Boolean(revisionId)}
                       {...register("purpose_id")}
                     />
                     <Form.Check
@@ -961,6 +1013,8 @@ function ApplicationForm() {
                       label="Resubmission"
                       type="radio"
                       value={2}
+                      checked={String(purposeId) === "2"}
+                      disabled={Boolean(revisionId)}
                       {...register("purpose_id")}
                     />
                   </fieldset>
@@ -973,7 +1027,8 @@ function ApplicationForm() {
                     </Form.Label>
                     <Form.Control
                       type="text"
-                      placeholder="e.g. 2.0"
+                      readOnly
+                      placeholder="Assigned automatically"
                       isInvalid={Boolean(errors.version_number)}
                       aria-invalid={Boolean(errors.version_number)}
                       {...register("version_number", {
@@ -1126,6 +1181,7 @@ function ApplicationForm() {
                 <div className="research-application__documents">
                   {documentTypes.map((doc, index) => {
                     const selectedFile = documentValues[index]?.file?.[0];
+                    const existingDocument = getLatestDocument(revisionDocuments, doc.id);
                     const documentError = errors.documents?.[index]?.file;
                     const isUploadable = UPLOADABLE_DOCUMENTS.has(
                       doc.document_name
@@ -1141,6 +1197,14 @@ function ApplicationForm() {
                             )}
                           </h3>
                           <p>{DOCUMENT_DESCRIPTIONS[doc.document_name]}</p>
+                          {existingDocument && <div className="revision-document">
+                            <FiFileText aria-hidden="true" />
+                            <div className="revision-document__details">
+                              <strong>{getDocumentName(existingDocument.document_filepath)}</strong>
+                              <span>{selectedFile ? "Will be replaced by your selected file." : "Current file is retained unless you replace it."}</span>
+                            </div>
+                            <a href={getDocumentUrl(existingDocument.document_filepath, BASE_URL)} target="_blank" rel="noopener noreferrer">View current file</a>
+                          </div>}
                         </div>
 
                         {isUploadable && (
@@ -1154,7 +1218,7 @@ function ApplicationForm() {
                             <label htmlFor={`document-${doc.id}`}>
                               {selectedFile ? <FiCheck /> : <FiUploadCloud />}
                               <span>
-                                {selectedFile ? "Replace file" : "Choose file"}
+                                {selectedFile ? "Change selected file" : existingDocument ? "Replace file (optional)" : "Choose file"}
                               </span>
                             </label>
                             <Form.Control
@@ -1166,6 +1230,7 @@ function ApplicationForm() {
                               {...register(`documents.${index}.file`, {
                                 validate: (files) =>
                                   files?.length > 0 ||
+                                  Boolean(getLatestDocument(revisionDocuments, doc.id)) ||
                                   `Upload the ${doc.document_name}.`,
                               })}
                             />
@@ -1216,6 +1281,8 @@ function ApplicationForm() {
           )}
 
           <FormActions
+            isRevision={Boolean(revisionId)}
+            disabled={loading || !revisionReady}
             step={step}
             onBack={() => setStep(1)}
             onCancel={() => history.push("/dashboard")}

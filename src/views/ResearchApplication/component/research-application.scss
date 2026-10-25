@@ -818,3 +818,32 @@
     }
   }
 }
+
+
+.research-application .revision-document {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #f0f7f3;
+  border: 1px solid #d4e8db;
+  border-radius: 9px;
+  color: #2c6445;
+  font-size: 13px;
+
+  > svg { flex: 0 0 auto; margin-top: 3px; font-size: 17px; }
+  &__details { flex: 1 1 160px; min-width: 0; }
+  &__details strong { display: block; overflow-wrap: anywhere; font-size: 13px; }
+  &__details span { display: block; margin-top: 3px; font-size: 12px; line-height: 1.5; }
+  a { color: #214f9a; font-weight: 600; white-space: nowrap; }
+}
+.review-application .review-remark__version {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #eaf0f7;
+  color: #425d7b;
+}

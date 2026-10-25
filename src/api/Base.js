@@ -28,29 +28,21 @@ export default class Base {
       };
     }
 
-    console.info('%cNew connection has established', 'color: red');
-    console.log({ config, url, data });
-
     if (method !== 'GET') {
       config.body = isFormData ? data : JSON.stringify(data);
     }
-    let response = await fetch(url, config)
-      .then(async function (res) {
-        return res;
-      })
-      .catch(function (error) {
-        if (error.message.match(/Network request failed/)) {
-          console.log({ err: 'Failed to establish connection' });
-          // alert("Please check your internet connection");
-          return { network_error: true, ok: false };
-        }
-        return error;
-      })
-    if (response.network_error) {
-      return response;
+    let response;
+    let responseData;
+    try {
+      response = await fetch(url, config);
+      responseData = await response.text();
+    } catch (error) {
+      return {
+        ok: false,
+        network_error: true,
+        data: { message: "Cannot connect to the server. Please try again." },
+      };
     }
-
-    let responseData = await response.text();
 
     if (this.isJSON(responseData)) {
       responseData = JSON.parse(responseData);
@@ -68,7 +60,6 @@ export default class Base {
       data: responseData,
       statusMessage: this.getStatusMessage(response.status),
     };
-    console.log({ output });
     return output;
   };
 

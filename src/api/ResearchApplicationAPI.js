@@ -115,6 +115,13 @@ export default class Auth extends Base {
     })
   }
 
+  fetchWorkflow = (id) => this.sendRequest({ path: `/api/v1/research/${id}/workflow`, method: 'GET' });
+  fetchUrbMembers = () => this.sendRequest({ path: '/api/v1/research/urb-members', method: 'GET' });
+  assignUrbMembers = (id, member_ids) => this.sendRequest({ path: `/api/v1/research/${id}/urb-members`, method: 'PUT', data: { member_ids } });
+  reviewResearch = (id, action, remarks = '') => this.sendRequest({ path: `/api/v1/research/${id}/review`, method: 'PUT', data: { action, remarks } });
+  completeResearch = (id) => this.sendRequest({ path: `/api/v1/research/${id}/complete`, method: 'PUT' });
+  resubmitResearch = (id, data) => this.sendRequest({ path: `/api/v1/research/${id}/resubmit`, method: 'PUT', data });
+
   updateResearchStatus = async (id, status_id) => {
     return this.sendRequest ({
       path: `/api/v1/research/status/${id}/${status_id}`,
@@ -132,7 +139,7 @@ export default class Auth extends Base {
 
   getAllEndorsementComments = async (research_id) => {
     return this.sendRequest ({
-      path: `/api/v1/endorsements/research/${research_id}`,
+      path: `/api/v1/endorsements/formtype/1/research/${research_id}`,
       method: 'GET'
     })
   }

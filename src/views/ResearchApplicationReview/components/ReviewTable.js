@@ -37,6 +37,7 @@ function ReviewTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const userID = localStorage.getItem("id");
   const roleID = localStorage.getItem("role_id");
+  const isUrbMember = Number(roleID) === 8 || (localStorage.getItem("role") || "").toLowerCase().includes("university review board");
 
   const chartData = {
     labels: ["CoA", "CBA", "CCIT", "CELA", "CoE", "CoL", "CoN", "CoP", "CoS", "GS", "SVST"],
@@ -86,13 +87,19 @@ function ReviewTable() {
       (endorsement) => String(endorsement.endorsement_rep_id) === String(userID)
     );
 
-  const matchesTab = (item, tabKey) => {
-    const statusID = getUserEndorsement(item)?.status_id;
+  const getReviewStatusID = (item) => {
+    if (Number(item.status_id) === 2) return 2;
+    const statusID = getUserEndorsement(item)?.status_id ?? item.status_id;
+    return statusID == null ? null : Number(statusID);
+  };
 
-    if (tabKey === "new") return statusID === 4 || statusID == null;
+  const matchesTab = (item, tabKey) => {
+    const statusID = getReviewStatusID(item);
+
+    if (tabKey === "new") return statusID === 1 || statusID === 4 || statusID == null;
     if (tabKey === "revised") return statusID === 5;
     if (tabKey === "endorsed") return statusID === 6;
-    if (tabKey === "reviewed") return statusID === 5 || statusID === 6;
+    if (tabKey === "reviewed") return statusID === 2 || statusID === 5 || statusID === 6;
     return true;
   };
 
@@ -121,15 +128,34 @@ function ReviewTable() {
     { key: "all", label: "All" },
     { key: "new", label: "New" },
     { key: "revised", label: "Revised" },
-    { key: "endorsed", label: "Endorsed" },
+    { key: "endorsed", label: isUrbMember ? "Approved" : "Endorsed" },
     { key: "reviewed", label: "Reviewed" },
   ];
 
-  const getReviewStatus = (item) => getUserEndorsement(item)?.StatusTable?.status || "Not reviewed";
+  const getReviewStatus = (item) => {
+    const statusID = getReviewStatusID(item);
+    if (statusID === 2) return "Completed";
+    if (isUrbMember && statusID === 6) return "Approved";
+    return (
+      getUserEndorsement(item)?.StatusTable?.status ||
+      ({
+        1: "On-going",
+        3: "For Approval",
+        4: "Not yet Reviewed",
+        5: "Reevaluate",
+        6: "Endorsed",
+        7: "Presented",
+        8: "Published",
+        9: "Presented and Published",
+      })[statusID] ||
+      item.StatusTable?.status ||
+      "Not reviewed"
+    );
+  };
 
   const getReviewTone = (item) => {
-    const statusID = getUserEndorsement(item)?.status_id;
-    if (statusID === 6) return "success";
+    const statusID = getReviewStatusID(item);
+    if (statusID === 2 || statusID === 6) return "success";
     if (statusID === 5) return "pending";
     if (statusID === 4) return "info";
     return "neutral";
@@ -193,7 +219,7 @@ function ReviewTable() {
         <DashboardBackButton />
       </div>
 
-      {(roleID === "6" || roleID === "8") && (
+      {!isUrbMember && (roleID === "6" || roleID === "7") && (
         <div className="research-analytics-panel">
           <div className="research-analytics-header">
             <div>
@@ -229,7 +255,7 @@ function ReviewTable() {
         <div className="research-page-header">
           <div>
             <div className="research-eyebrow">Reviewer queue</div>
-            <h1 className="title">Research Application Review</h1>
+            <h1 className="title">{isUrbMember ? "Researches for URB Approval" : "Research Application Review"}</h1>
           </div>
           <div className="research-result-count" aria-live="polite">
             {totalItems} {totalItems === 1 ? "application" : "applications"}

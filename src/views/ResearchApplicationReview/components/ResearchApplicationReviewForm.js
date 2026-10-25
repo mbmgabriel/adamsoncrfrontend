@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { useForm, useWatch } from "react-hook-form";
 import {
@@ -18,9 +18,12 @@ import TextInputCustom from "../../../components/Input/TextInputCustom";
 import TransparentLoader from "../../../components/Loader/TransparentLoader";
 import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import { useHistory, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { documentDescriptions } from "../../../components/Helper/DocumentDescription";
 import { BASE_URL } from "../../../constants/url";
 import { formatDisplayName } from "../../../utils/formatName";
+import { remarkDate, sortReviewRemarks, formatRemarkDate } from "../../../utils/reviewRemarks";
+import { buildReviewProgress, getReviewStepLabel } from "../../../utils/researchProgress";
 import "../../ResearchApplication/component/research-application.scss";
 import "./research-application-review.scss";
 
@@ -39,7 +42,7 @@ const BUDGET_BREAKDOWN = [
   { id: 4, fund_name: "Analysis and Laboratory Test" },
 ];
 
-const REMARKS_READ_ONLY_ROLE_IDS = new Set([4, 5]);
+const REMARKS_READ_ONLY_ROLE_IDS = new Set([4, 5, 6, 7]);
 
 const getResearchDocuments = (research) => {
   const documents =
@@ -151,7 +154,7 @@ function EndorsementDialog({
     >
       <Modal.Header closeButton={!isSubmitting}>
         <div>
-          <span>{isSuccess ? "Endorsement recorded" : "Confirm endorsement"}</span>
+          <span>{isSuccess ? "Review recorded" : "Confirm review"}</span>
           <Modal.Title>{context.actor}</Modal.Title>
         </div>
       </Modal.Header>
@@ -165,7 +168,7 @@ function EndorsementDialog({
           {isSuccess ? <FiCheck /> : <FiHelpCircle />}
         </span>
         <div className="endorsement-dialog__message">
-          <h3>{isSuccess ? "Endorsement successful" : "Continue with endorsement?"}</h3>
+          <h3>{isSuccess ? "Review saved" : "Continue with this review?"}</h3>
           <p>{isSuccess ? context.success : context.confirmation}</p>
           {error && <p className="endorsement-dialog__error">{error}</p>}
         </div>
@@ -191,7 +194,7 @@ function EndorsementDialog({
               onClick={onConfirm}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Endorsing..." : "Yes, endorse"}
+              {isSubmitting ? "Saving..." : (context.actionLabel || "Yes, endorse")}
             </Button>
           </>
         )}
@@ -296,31 +299,18 @@ export function ResearcherSection({ index, isMain, register }) {
             {...register(`researchers.${index}.email`)}
           />
 
-          <Form.Group className="custom-input">
-            <Form.Label className="custom-label">College</Form.Label>
-            <Form.Select
-              className="custom-control"
-              disabled
-              {...register(`researchers.${index}.college`)}
-            >
-              <option value="">Select College</option>
-              <option value="college-1">College 1</option>
-              <option value="college-2">College 2</option>
-            </Form.Select>
-          </Form.Group>
-
-          <Form.Group className="custom-input">
-            <Form.Label className="custom-label">Department</Form.Label>
-            <Form.Select
-              className="custom-control"
-              disabled
-              {...register(`researchers.${index}.dept`)}
-            >
-              <option value="">Select Department</option>
-              <option value="dept-1">Department 1</option>
-              <option value="dept-2">Department 2</option>
-            </Form.Select>
-          </Form.Group>
+          <TextInputCustom
+            label="College"
+            type="text"
+            readOnly
+            {...register(`researchers.${index}.college`)}
+          />
+          <TextInputCustom
+            label="Department"
+            type="text"
+            readOnly
+            {...register(`researchers.${index}.dept`)}
+          />
         </div>
       </div>
     </section>
@@ -329,12 +319,21 @@ export function ResearcherSection({ index, isMain, register }) {
 
 function ResearchApplicationReviewForm() {
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [step]);
+
   const [loading, setLoading] = useState(false);
   const { id } = useParams();
   const name = formatDisplayName(localStorage.getItem("name")) || "John Doe";
   const [research, setResearch] = useState();
+  const [workflow, setWorkflow] = useState(null);
+  const [workflowError, setWorkflowError] = useState("");
+  const [reviewAction, setReviewAction] = useState("endorse");
   const [remarks, setRemarks] = useState("");
   const [remarksHistory, setRemarksHistory] = useState([]);
+  const [versionRemarks, setVersionRemarks] = useState([]);
   const [checked, setChecked] = useState(false);
   const [endorsementDialog, setEndorsementDialog] = useState(null);
   const [endorsementError, setEndorsementError] = useState("");
@@ -362,7 +361,9 @@ function ResearchApplicationReviewForm() {
     REMARKS_READ_ONLY_ROLE_IDS.has(roleID) ||
     roleName.includes("chairperson") ||
     roleName.includes("department chair") ||
-    roleName.includes("college dean");
+    roleName.includes("college dean") ||
+    roleName.includes("crd staff") ||
+    roleName.includes("crd director");
   const canLeaveRemarks = !isResearcher && !isRemarksReadOnlyRole;
   const hasAlreadyEndorsed = [
     ...(research?.endorsements || []),
@@ -372,10 +373,14 @@ function ResearchApplicationReviewForm() {
       isCurrentUserEndorsement(endorsement, userID) &&
       isCompletedEndorsement(endorsement)
   );
+  const displayedRemarks = sortReviewRemarks([
+    ...remarksHistory.map((entry) => ({ ...entry, version_number: workflow?.version_number || research?.version_number || "1" })),
+    ...versionRemarks,
+  ].filter((entry) => String(entry.remarks || "").trim()));
   const endorsementSources = research?.endorsements?.length
     ? research.endorsements
     : remarksHistory;
-  const approvalProgress = endorsementSources
+  const approvalProgress = useMemo(() => buildReviewProgress(endorsementSources
     .map((endorsement, index) => {
       const relatedEndorsement = remarksHistory.find(
         (item) => Number(getEndorserID(item)) === Number(getEndorserID(endorsement))
@@ -406,24 +411,16 @@ function ResearchApplicationReviewForm() {
         role,
         approverName,
         endorsed,
+        isUrb: workflow?.assigned_urb.some((member) => Number(member.user_id) === Number(getEndorserID(endorsement))),
+        revisionRequired: Number(endorsement.status_id) === 5,
       };
     })
-    .sort((a, b) => {
-      const getOrder = (role) => {
-        const normalizedRole = role.toLowerCase();
-        if (normalizedRole.includes("coordinator")) return 1;
-        if (
-          normalizedRole.includes("chairperson") ||
-          normalizedRole.includes("department chair")
-        )
-          return 2;
-        if (normalizedRole.includes("dean")) return 3;
-        return 4;
-      };
-
-      return getOrder(a.role) - getOrder(b.role);
-    });
-  const endorsementContext = getEndorsementContext(roleName, research?.title);
+    , workflow?.assigned_urb || [], workflow?.stage === "completed"), [endorsementSources, remarksHistory, workflow?.assigned_urb, workflow?.stage]);
+  const endorsementContext = reviewAction === "request_revision"
+    ? { actor: workflow?.can_approve_urb ? "URB Member" : "Research Coordinator", actionLabel: "Return for revision", confirmation: workflow?.can_approve_urb ? "Return this research for minor edits? Resubmission returns directly to the assigned URB reviewers with the same version number." : "Return this research to its researcher for revision?", success: "Research returned for revision." }
+    : reviewAction === "approve_urb"
+      ? { actor: "URB Member", actionLabel: "Yes, approve", confirmation: "Approve this assigned research?", success: "Your URB approval has been recorded. The director can complete the research after all assigned members approve." }
+      : getEndorsementContext(roleName, research?.title);
   const history = useHistory();
 
   const {
@@ -458,12 +455,18 @@ function ResearchApplicationReviewForm() {
     const loadReview = async () => {
       setLoading(true);
       const api = new ResearchApplicationAPI();
-      const [researchResponse, commentsResponse] = await Promise.all([
+      const [researchResponse, commentsResponse, workflowResponse] = await Promise.all([
         api.getResearchById(id),
         api.getAllEndorsementComments(id),
+        api.fetchWorkflow(id),
       ]);
 
       if (!isActive) return;
+
+      if (workflowResponse.ok) {
+        setWorkflow(workflowResponse.data.workflow);
+        setVersionRemarks(workflowResponse.data.review_history || []);
+      } else setWorkflowError(workflowResponse.data?.message || "The review workflow could not be loaded.");
 
       if (researchResponse.ok) {
         setResearch(researchResponse.data?.Research);
@@ -537,10 +540,10 @@ function ResearchApplicationReviewForm() {
         };
       });
 
-      const endorsements = research.endorsements.map((e) => ({
-        endorsement_rep_name: e.endorsement_rep_name,
-        status: e.status,
-        endorsement_rep_id: e.user_account_id,
+      const endorsements = approvalProgress.map((entry) => ({
+        endorsement_rep_name: entry.approverName,
+        status: getReviewStepLabel(entry),
+        endorsement_rep_id: entry.id,
       }));
 
       reset({
@@ -558,7 +561,7 @@ function ResearchApplicationReviewForm() {
         purpose_id: research.purpose_id,
       });
     }
-  }, [research, reset]);
+  }, [research, approvalProgress, reset]);
 
   const breakdownValues = useWatch({ control, name: "breakdown" }) || [];
   const checkedValues = watch("breakdown");
@@ -586,56 +589,32 @@ function ResearchApplicationReviewForm() {
   };
 
   const updateEndorsementStatus = async () => {
-    if (isResearcher || hasAlreadyEndorsed) {
-      return;
-    }
-
-    const hasUserRemarks = remarksHistory?.some(
-      (endorsement) =>
-        Number(endorsement.endorsement_rep_id) === Number(userID) &&
-        endorsement.remarks &&
-        endorsement.remarks.trim() !== ""
-    );
-
-    if (canLeaveRemarks && hasUserRemarks) {
-      setEndorsementError("You have already submitted a remark for this application.");
-      return;
-    }
-
-    const payload = {
-      status_id: 6,
-      remarks: canLeaveRemarks ? remarks : "",
-    };
-
     setIsEndorsing(true);
     setEndorsementError("");
-
     try {
-      const response =
-        await new ResearchApplicationAPI().updateEndorsementStatus(id, 1, payload);
-
-      if (response.ok) {
-        setEndorsementDialog("success");
-      } else {
-        setEndorsementError(
-          response.data?.message ||
-            "The endorsement could not be completed. Please try again."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-      setEndorsementError(
-        "The endorsement could not reach the server. Please try again."
-      );
-    } finally {
-      setIsEndorsing(false);
-    }
+      const response = await new ResearchApplicationAPI().reviewResearch(id, reviewAction, remarks);
+      if (!response.ok) throw new Error(response.data?.message || "The review could not be saved.");
+      setEndorsementDialog("success");
+    } catch (error) { setEndorsementError(error.message); }
+    finally { setIsEndorsing(false); }
   };
 
   const onSubmit = () => {
-    if (isResearcher || hasAlreadyEndorsed) return;
+    if (!workflow?.can_endorse && !workflow?.can_approve_urb) return;
+    setReviewAction(workflow.can_approve_urb ? "approve_urb" : "endorse");
     setEndorsementError("");
     setEndorsementDialog("confirm");
+  };
+
+  const completeResearch = async () => {
+    setIsEndorsing(true);
+    setWorkflowError("");
+    try {
+      const response = await new ResearchApplicationAPI().completeResearch(id);
+      if (!response.ok) throw new Error(response.data?.message || "Research could not be completed.");
+      history.push("/research-application-review?tab=reviewed");
+    } catch (error) { setWorkflowError(error.message); }
+    finally { setIsEndorsing(false); }
   };
 
   const closeEndorsementDialog = () => {
@@ -664,6 +643,25 @@ function ResearchApplicationReviewForm() {
           </div>
           <span className="research-application__step-count">Step {step} of 2</span>
         </header>
+
+        <section className={`review-workflow review-workflow--${workflow?.stage || "loading"}`} aria-label="Research review progress">
+          <div className="review-workflow__header">
+            <div className="review-workflow__summary">
+              <span className="review-workflow__icon" aria-hidden="true">{workflow?.stage === "completed" ? <FiCheck /> : <FiFileText />}</span>
+              <div>
+                <span className="review-workflow__eyebrow">Current review stage</span>
+                <h2 className="review-workflow__stage">{workflow ? ({ coordinator_review: "Research coordinator review", chair_review: "Department chairperson endorsement", dean_review: "College dean endorsement", staff_review: "CRD staff endorsement", revision_required: "Revision required", urb_assignment: "URB reviewer assignment", urb_review: "URB review in progress", director_completion: "Ready for completion", completed: "Research completed" })[workflow.stage] : "Loading review status…"}</h2>
+                <p className="review-workflow__description">{workflow && ({ coordinator_review: "Waiting for the coordinator’s decision.", chair_review: "Waiting for the chairperson’s endorsement.", dean_review: "Waiting for the dean’s endorsement.", staff_review: "Waiting for CRD staff endorsement.", revision_required: workflow?.revision_type === "urb_minor" ? "Minor edits requested by URB. Resubmission returns directly to the assigned URB reviewers with the same version number." : "The researcher needs to update and resubmit this application.", urb_assignment: "CRD staff can now select the URB reviewers.", urb_review: "Every assigned URB member must approve before completion.", director_completion: "All URB approvals are in. The director can complete this research.", completed: "This application has finished the research review process." })[workflow.stage]}</p>
+              </div>
+            </div>
+            {workflow && <span className="review-workflow__version">Version <strong>{workflow.version_number || "1"}</strong></span>}
+          </div>
+          {workflowError && <p className="review-workflow__error" role="alert">{workflowError}</p>}
+          {workflow?.revision_remarks && <div className="review-workflow__revision"><FiMessageSquare aria-hidden="true" /><div><strong>Required revisions</strong><p>{workflow.revision_remarks}</p></div></div>}
+          {workflow?.can_resubmit && <div className="review-workflow__actions">
+            {workflow.can_resubmit && <Button className="btn-confirmation-custom" onClick={() => history.push(`/new-research-application?revise=${id}`)}>Edit and resubmit revision</Button>}
+          </div>}
+        </section>
 
         <ReviewProgress currentStep={step} />
 
@@ -823,26 +821,26 @@ function ResearchApplicationReviewForm() {
               <FormCard className="research-application__card">
                 <SectionHeader
                   number="VII"
-                  title="Endorsement"
-                  description="Current endorsement status for each representative."
+                  title="Review decisions"
+                  description="Departmental endorsements, URB approvals, and final CRD completion."
                 />
                 <div className="research-application__endorsements">
-                  {research?.endorsements?.map((item, index) => (
+                  {approvalProgress.map((item, index) => (
                     <div
                       className="research-application__endorsement-row"
-                      key={item.endorsement_rep_id}
+                      key={item.id}
                     >
                       <TextInputCustom
                         disabled
-                        label={`Representative ${index + 1}`}
+                        label={item.role || `Representative ${index + 1}`}
                         type="text"
-                        value={item.endorsement_rep_name || ""}
+                        value={item.approverName || ""}
                       />
                       <TextInputCustom
                         label="Status"
                         type="text"
                         disabled
-                        value={item.status || ""}
+                        value={getReviewStepLabel(item)}
                       />
                     </div>
                   ))}
@@ -954,7 +952,7 @@ function ResearchApplicationReviewForm() {
                   >
                     <div className="review-application__approval-heading">
                       <strong>Endorsement progress</strong>
-                      <span>Coordinator to Chairperson to Dean</span>
+                      <span>Coordinator → Chairperson → Dean → CRD staff → URB → Director</span>
                     </div>
                     <ol>
                       {approvalProgress.map((approver, index) => (
@@ -973,7 +971,7 @@ function ResearchApplicationReviewForm() {
                             <span>{approver.approverName}</span>
                           </div>
                           <span className="review-application__approval-status">
-                            {approver.endorsed ? "Endorsed" : "Pending"}
+                            {getReviewStepLabel(approver)}
                           </span>
                         </li>
                       ))}
@@ -982,20 +980,12 @@ function ResearchApplicationReviewForm() {
                 )}
 
                 <div className="review-application__remarks-history">
-                  {remarksHistory?.filter(
-                    (endorsement) =>
-                      endorsement.remarks && endorsement.remarks.trim() !== ""
-                  ).length ? (
-                    remarksHistory
-                      .filter(
-                        (endorsement) =>
-                          endorsement.remarks &&
-                          endorsement.remarks.trim() !== ""
-                      )
+                  {displayedRemarks.length ? (
+                    displayedRemarks
                       .map((endorsement) => (
                         <article
                           className="review-remark"
-                          key={endorsement.endorsement_rep_id}
+                          key={`${endorsement.version_number}-${endorsement.endorsement_rep_id}-${endorsement.id || "current"}`}
                         >
                           <div className="review-remark__author">
                             <strong>
@@ -1004,15 +994,18 @@ function ResearchApplicationReviewForm() {
                               {endorsement.User?.last_name}
                             </strong>
                             <span>
-                              {
-                                endorsement.User?.UserAccount?.UserRole
-                                  ?.role_desc
-                              }
+                              <strong className="review-remark__version">Version {endorsement.version_number}</strong>{" · "}
+                              {endorsement.role_name || endorsement.User?.UserAccount?.UserRole?.role_desc}
                               {endorsement.StatusTable?.status
                                 ? ` · ${endorsement.StatusTable.status}`
                                 : ""}
                             </span>
                           </div>
+                          {remarkDate(endorsement) ? (
+                            <time className="review-remark__date" dateTime={remarkDate(endorsement).toISOString()}>
+                              {formatRemarkDate(remarkDate(endorsement))}
+                            </time>
+                          ) : <span className="review-remark__date">Date unavailable</span>}
                           <p>{endorsement.remarks}</p>
                         </article>
                       ))
@@ -1062,6 +1055,7 @@ function ResearchApplicationReviewForm() {
             </Button>
 
             <div className="research-application__actions-primary">
+              {workflow?.can_assign_urb && <Button type="button" className="btn-outline-custom" disabled={isEndorsing} onClick={() => history.push(`/urb-review?research_id=${id}`)}>{workflow.assigned_urb.length ? "Manage URB reviewers" : "Assign URB reviewers"}</Button>}
               {step === 1 ? (
                 <Button
                   type="button"
@@ -1079,12 +1073,17 @@ function ResearchApplicationReviewForm() {
                   >
                     <FiArrowLeft /> Back
                   </Button>
-                  {!isResearcher && (
+                  {workflow?.can_complete && <Button type="button" className="btn-confirmation-custom" disabled={isEndorsing} onClick={completeResearch}>Complete research</Button>}
+                  {workflow?.can_request_revision && <Button type="button" className="btn-outline-custom" onClick={() => {
+                    if (!remarks.trim()) { toast.warning("Add remarks before requesting revision."); return; }
+                    setReviewAction("request_revision"); setEndorsementError(""); setEndorsementDialog("confirm");
+                  }}>{workflow?.can_approve_urb ? "Request minor revision" : "Require revision"}</Button>}
+                  {(workflow?.can_endorse || workflow?.can_approve_urb) && (
                     <>
                       <Button
                         type="submit"
                         className="btn-confirmation-custom"
-                        disabled={hasAlreadyEndorsed}
+                        disabled={isEndorsing}
                         title={
                           hasAlreadyEndorsed
                             ? "You have already endorsed this application."
@@ -1097,7 +1096,7 @@ function ResearchApplicationReviewForm() {
                           </>
                         ) : (
                           <>
-                            <FiSend /> Endorse
+                            <FiSend /> {workflow?.can_approve_urb ? "Approve research" : "Endorse"}
                           </>
                         )}
                       </Button>

@@ -98,7 +98,7 @@ function Dashboard() {
       icon: <FaFileCircleCheck />,
       title: "View endorsed research proposals.",
       footer: "New Research Applications",
-      path: "/research-application-review?tab=endorsed",
+      path: isCrdDirectorRole ? "/research-application-review" : "/research-application-review?tab=endorsed",
     },
     {
       icon: <MdOutlineScience />,
@@ -117,6 +117,7 @@ function Dashboard() {
       title: "View Research Review Board.",
       footer: "Research Review Board",
       path: "/urb-review",
+      isVisible: role_id === "6" || roleName.includes("crd staff"),
     },
     {
       icon: <FaChalkboardTeacher />,
