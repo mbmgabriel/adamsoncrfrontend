@@ -4092,3 +4092,9 @@ button:focus-visible,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.application-history__pagination { padding: 0 24px 22px; }
+@media (max-width: 600px) {
+  .pagination { flex-wrap: wrap; gap: 12px; }
+  .application-history__pagination { padding: 0 16px 16px; }
+}

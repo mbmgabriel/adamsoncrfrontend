@@ -1,3 +1,4 @@
+import { TABLE_PAGE_SIZE } from "../../constants/pagination";
 import React, { useEffect, useState } from "react";
 import Auth from "../../api/Auth";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
@@ -20,7 +21,7 @@ function ResearchTable() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const pageSize = 10;
+  const pageSize = TABLE_PAGE_SIZE;
 
   const fetchResearches = async () => {
     const response = await new Auth().fetchResearches();

@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowRight, FiBell, FiCheck } from 'react-icons/fi';
+import { FiArrowRight, FiBell, FiCheck, FiChevronRight } from 'react-icons/fi';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationState from './NotificationState';
 import './notifications.scss';
 
-export function NotificationItems({ items, onOpen, onRead }) {
-  return <ul className="notification-items">{items.map(item => <li key={item.id} className={item.read_status === 1 ? '' : 'is-unread'}>
-    <FiBell aria-hidden="true" />
-    <div className="notification-item-content">
-      {item.target_path ? <button type="button" className="notification-message" onClick={() => onOpen(item)}>{item.notification}</button> : <p className="notification-message">{item.notification}</p>}
+function NotificationRowContent({ item }) {
+  return <>
+    <FiBell className="notification-row-icon" aria-hidden="true" />
+    <span className="notification-item-content">
+      <span className="notification-message">{item.notification}</span>
       <time dateTime={item.created_at}>{new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.created_at))}</time>
       {item.read_status !== 1 && <span className="notification-unread-label">Unread</span>}
-    </div>
+    </span>
+    {item.target_path && <FiChevronRight className="notification-row-chevron" aria-hidden="true" />}
+  </>;
+}
+
+export function NotificationItems({ items, onOpen, onRead }) {
+  return <ul className="notification-items">{items.map(item => <li key={item.id} className={[item.read_status !== 1 && 'is-unread', item.target_path && 'is-clickable'].filter(Boolean).join(' ')}>
+    {item.target_path
+      ? <button type="button" className="notification-row-action" aria-label={item.notification} onClick={() => onOpen(item)}><NotificationRowContent item={item} /></button>
+      : <div className="notification-row-action"><NotificationRowContent item={item} /></div>}
     {item.read_status !== 1 && <button type="button" className="notification-read" aria-label={`Mark as read: ${item.notification}`} onClick={() => onRead(item.id)}><FiCheck aria-hidden="true" /><span>Mark read</span></button>}
   </li>)}</ul>;
 }

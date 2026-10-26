@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import NotificationBell from '../Notifications/NotificationBell';
 import { CiLogout } from "react-icons/ci";
 import { FiChevronDown } from "react-icons/fi";
 import { useHistory } from 'react-router-dom';
@@ -42,7 +41,6 @@ function User() {
           <strong className='user-summary__name'>{name || 'User'}</strong>
           {role && <span className='user-summary__role'>{role}</span>}
         </div>
-        <NotificationBell />
         <button
           type="button"
           className={`user-menu-button${dropdownOpen ? ' is-open' : ''}`}

@@ -48,13 +48,15 @@ test('shows real notifications and synchronizes the bell after reading', async (
   mockList.mockResolvedValue(result([{ ...sample, read_status: 1 }]));
   await act(async () => button(`Mark as read: ${sample.notification}`).click());
   expect(mockRead).toHaveBeenCalledWith(1);
+  expect(container.querySelector('#current-path').textContent).toBe('/dashboard');
   expect(button('Notifications, 0 unread')).toBeDefined();
   expect(container.querySelector('.notification-unread-label')).toBeNull();
 });
 
 test('opening a notification marks it read and follows its application link', async () => {
   await renderInbox();
-  await act(async () => button(sample.notification).click());
+  expect(button(sample.notification).classList.contains('notification-row-action')).toBe(true);
+  await act(async () => container.querySelector('.notification-items time').click());
   expect(container.querySelector('#current-path').textContent).toBe('/review-form/92');
   expect(mockRead).toHaveBeenCalledWith(1);
 });
@@ -125,15 +127,22 @@ test('polls while visible and stops polling after logout', async () => {
 
 test('inbox uses its cursor to load older notification history', async () => {
   mockList.mockImplementation(async options => {
-    if (options.limit === 10) return result();
+    if (!Object.hasOwn(options, 'cursor')) return result();
     if (options.cursor) return { ok: true, data: { notifications: [{ ...sample, id: 2, notification: 'Older application update' }], unread_count: 2, next_cursor: null } };
     return { ok: true, data: { ...result().data, next_cursor: 'older-page' } };
   });
   await act(async () => root.render(<MemoryRouter><NotificationProvider><RouteProbe /><NotificationInbox /></NotificationProvider></MemoryRouter>));
   await act(async () => button('Older').click());
-  expect(mockList).toHaveBeenCalledWith({ cursor: 'older-page', unread: false });
+  expect(mockList).toHaveBeenCalledWith({ cursor: 'older-page', unread: false, limit: 10 });
   expect(container.textContent).toContain('Older application update');
   expect(container.textContent).toContain('Page 2');
+  expect(button('All notifications').getAttribute('aria-pressed')).toBe('true');
+  await act(async () => button('Unread notifications').click());
+  expect(mockList).toHaveBeenCalledWith({ cursor: null, unread: true, limit: 10 });
+  expect(button('Unread notifications').getAttribute('aria-pressed')).toBe('true');
+  expect(button('All notifications').getAttribute('aria-pressed')).toBe('false');
+  expect(container.textContent).toContain('Page 1');
+  expect(button('Newer').disabled).toBe(true);
 });
 
 test('inbox clears loaded history when another account signs in', async () => {

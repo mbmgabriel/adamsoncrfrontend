@@ -7,6 +7,8 @@ import { FiArrowLeft, FiArrowRight, FiCheck, FiFileText, FiPlus, FiSearch, FiTra
 import "./urb-review.scss";
 import DashboardBackButton from "../../components/Navigation/DashboardBackButton";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
+import usePagination from "../../hooks/usePagination";
+import Pagination from "../../components/PaginationComponent/Pagination";
 import Auth from "../../api/Auth";
 
 const displayName = (person) => [person?.first_name, person?.middle_name, person?.last_name].filter(Boolean).join(" ");
@@ -79,6 +81,7 @@ export default function URBReviewBoard() {
   };
 
   const filtered = researches.filter(item => `${item.title || ""} ${item.submitted_by || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
+  const { displayedItems, ...pagination } = usePagination(filtered, `${id || "list"}:${search}`);
   const selectedCount = selected.filter(Boolean).length;
 
   return (
@@ -103,12 +106,13 @@ export default function URBReviewBoard() {
               <div className="urb-search"><FiSearch aria-hidden="true" /><Form.Control aria-label="Search research applications" placeholder="Search by title or researcher" value={search} onChange={event => setSearch(event.target.value)} /></div>
               <div className="urb-list-caption"><span>Research title / Researcher</span><span>{filtered.length} results</span></div>
               {!busy && !filtered.length && <div className="urb-empty"><FiFileText /><h3>{search ? "No matching applications" : "No research applications yet"}</h3><p>{search ? "Try another title or researcher name." : "Applications will appear here when they are ready for review."}</p></div>}
-              <div className="urb-research-list">{filtered.map(item => (
+              <div className="urb-research-list">{displayedItems.map(item => (
                 <article className="urb-research-item" key={item.id}>
                   <div className="urb-list-icon"><FiFileText /></div><div className="urb-research-item-copy"><h3>{item.title}</h3><p>{item.submitted_by || "Research application"}{item.version_number ? ` · Version ${item.version_number}` : ""}</p></div>
                   <Button type="button" className="btn-outline-custom" onClick={() => history.push(isStaff ? `/urb-review?research_id=${item.id}` : `/review-form/${item.id}`)}>{isStaff ? "Manage reviewers" : "Review research"} <FiArrowRight /></Button>
                 </article>
               ))}</div>
+              <Pagination currentPage={pagination.page} onPageChange={pagination.setPage} {...pagination} />
             </FormCard>
           ) : research && (
             <>
