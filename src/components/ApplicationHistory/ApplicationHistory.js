@@ -1,3 +1,5 @@
+import usePagination from "../../hooks/usePagination";
+import Pagination from "../PaginationComponent/Pagination";
 import React from "react";
 import { FiArrowLeft, FiFileText, FiPlus } from "react-icons/fi";
 
@@ -27,6 +29,7 @@ function ApplicationHistory({
   tableTitle = "Past applications",
   title,
 }) {
+  const { displayedItems, ...pagination } = usePagination(applications);
   const showNameColumn = Boolean(nameColumnLabel && nameColumnField);
   const columnCount = 3 + Number(showApplicationId) + Number(showNameColumn);
 
@@ -92,7 +95,7 @@ function ApplicationHistory({
                 </tr>
               </thead>
               <tbody>
-                {applications.map((application) => (
+                {displayedItems.map((application) => (
                   <tr
                     aria-label={onSelect ? `View application ${application.id}` : undefined}
                     className={onSelect ? "application-history__selectable-row" : undefined}
@@ -171,6 +174,7 @@ function ApplicationHistory({
               </tbody>
             </table>
           </div>
+          <div className="application-history__pagination"><Pagination currentPage={pagination.page} onPageChange={pagination.setPage} {...pagination} /></div>
         </div>
       </section>
     </main>

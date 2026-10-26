@@ -2,10 +2,10 @@ import React from "react";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 
 const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItems }) => {
-  if (totalPages <= 1) return null;
+  const pageCount = Math.max(1, totalPages);
 
   const handleClick = (page) => {
-    if (page > 0 && page <= totalPages && page !== currentPage) {
+    if (page > 0 && page <= pageCount && page !== currentPage) {
       onPageChange(page);
     }
   };
@@ -13,17 +13,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
   const getPageNumbers = () => {
     let pages = [];
 
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
+    if (pageCount <= 5) {
+      for (let i = 1; i <= pageCount; i++) {
         pages.push(i);
       }
     } else {
       if (currentPage <= 3) {
-        pages = [1, 2, 3, "...", totalPages];
-      } else if (currentPage >= totalPages - 2) {
-        pages = [1, "...", totalPages - 2, totalPages - 1, totalPages];
+        pages = [1, 2, 3, "...", pageCount];
+      } else if (currentPage >= pageCount - 2) {
+        pages = [1, "...", pageCount - 2, pageCount - 1, pageCount];
       } else {
-        pages = [1, "...", currentPage, "...", totalPages];
+        pages = [1, "...", currentPage, "...", pageCount];
       }
     }
 
@@ -33,9 +33,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
   const showingCount = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="pagination">
+    <div className="pagination" role="navigation" aria-label="Table pagination">
       <div className="pages">
         <button
+          type="button"
           className="pagination-button"
           onClick={() => handleClick(currentPage - 1)}
           disabled={currentPage === 1}
@@ -49,6 +50,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
             <span key={idx}>...</span>
           ) : (
             <button
+              type="button"
               key={p}
               className={`pagination-button${p === currentPage ? " pagination-button--active" : ""}`}
               onClick={() => handleClick(p)}
@@ -60,9 +62,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
         )}
 
         <button
+          type="button"
           className="pagination-button"
           onClick={() => handleClick(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          disabled={currentPage >= pageCount}
           aria-label="Next page"
         >
           <MdChevronRight aria-hidden="true" />
@@ -70,7 +73,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, pageSize, totalItem
       </div>
 
       <div className="total-pages">
-        Showing {Math.min((currentPage - 1) * pageSize + 1, totalItems)}-{showingCount} of {totalItems}
+        Showing {Math.min((currentPage - 1) * pageSize + 1, totalItems)}-{showingCount} of {totalItems} · {pageSize} per page
       </div>
     </div>
   );

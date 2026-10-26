@@ -629,7 +629,7 @@ function ResearchApplicationReviewForm() {
     try {
       const response = await new ResearchApplicationAPI().completeResearch(id);
       if (!response.ok) throw new Error(response.data?.message || "Research could not be completed.");
-      history.push("/research-application-review?tab=reviewed");
+      history.push("/research-application-review");
     } catch (error) { setWorkflowError(error.message); }
     finally { setIsEndorsing(false); }
   };

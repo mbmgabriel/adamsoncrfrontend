@@ -71,13 +71,13 @@ function Dashboard() {
       icon: <FaFileCircleCheck />,
       title: "View new research proposals.",
       footer: "New Research Applications",
-      path: "/research-application-review?tab=new",
+      path: "/research-application-review",
     },
     {
       icon: <MdOutlineRateReview />,
       title: "Recheck submitted revised proposals.",
       footer: "Revised Research Proposals",
-      path: "/research-application-review?tab=revised",
+      path: "/research-application-review",
     },
     {
       icon: <MdOutlineScience />,
@@ -98,7 +98,7 @@ function Dashboard() {
       icon: <FaFileCircleCheck />,
       title: "View endorsed research proposals.",
       footer: "New Research Applications",
-      path: isCrdDirectorRole ? "/research-application-review" : "/research-application-review?tab=endorsed",
+      path: "/research-application-review",
     },
     {
       icon: <MdOutlineScience />,
@@ -140,13 +140,13 @@ function Dashboard() {
       icon: <FaFileCircleCheck />,
       title: "View new research proposals for review.",
       footer: "New Research Applications",
-      path: "/research-application-review?tab=new",
+      path: "/research-application-review",
     },
     {
       icon: <MdOutlineRateReview />,
       title: "View all reviewed proposals.",
       footer: "Reviewed Research Proposals",
-      path: "/research-application-review?tab=reviewed",
+      path: "/research-application-review",
     },
   ];
 

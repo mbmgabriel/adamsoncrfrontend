@@ -1,3 +1,5 @@
+import usePagination from "../../../hooks/usePagination";
+import Pagination from "../../../components/PaginationComponent/Pagination";
 import React from "react";
 import { Modal, Button, Tab, Tabs, Table, Badge, Spinner } from "react-bootstrap";
 import { FaExternalLinkAlt } from "react-icons/fa";
@@ -91,6 +93,7 @@ const EmptySection = ({ message }) => (
 );
 
 const ResearchModal = ({ showModal, handleClose, research }) => {
+  const { displayedItems: investigators, ...pagination } = usePagination(research?.research_investigators || [], `${showModal}:${research?.id}`);
   return (
     <Modal
       show={showModal}
@@ -254,7 +257,7 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {research.research_investigators.map((investigator, index) => (
+                      {investigators.map((investigator, index) => (
                         <tr key={`${investigator.id_number}-${index}`}>
                           <td>{investigator.id_number || "Not available"}</td>
                           <td>{investigator.name || "Not available"}</td>
@@ -266,6 +269,7 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
                       ))}
                     </tbody>
                   </Table>
+                  <Pagination currentPage={pagination.page} onPageChange={pagination.setPage} {...pagination} />
                 </div>
               ) : (
                 <EmptySection message="No investigators are listed." />
