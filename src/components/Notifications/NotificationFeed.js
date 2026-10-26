@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FaBell } from 'react-icons/fa';
 import { FiArrowRight, FiBell, FiCheck, FiChevronRight } from 'react-icons/fi';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationState from './NotificationState';
 import './notifications.scss';
 
 function NotificationRowContent({ item }) {
+  const createdAt = new Date(item.created_at);
   return <>
-    <FiBell className="notification-row-icon" aria-hidden="true" />
+    <span className="notification-row-icon" aria-hidden="true"><FaBell /></span>
     <span className="notification-item-content">
+      <time className="notification-timestamp" dateTime={item.created_at}>
+        <span className="notification-date">{new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(createdAt)}</span>
+        <span className="notification-time">{new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(createdAt)}</span>
+      </time>
       <span className="notification-message">{item.notification}</span>
-      <time dateTime={item.created_at}>{new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.created_at))}</time>
       {item.read_status !== 1 && <span className="notification-unread-label">Unread</span>}
     </span>
     {item.target_path && <FiChevronRight className="notification-row-chevron" aria-hidden="true" />}
