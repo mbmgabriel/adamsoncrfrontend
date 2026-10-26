@@ -5,6 +5,8 @@ import ResearchIncentiveRequest from "./ResearchIncentive/ResearchIncentiveReque
 import ResearchPresentationAssistance from "./ResearchPresentationAssistance/ResearchPresentationAssistance";
 
 const mockSendRequest = jest.fn();
+const mockPrintForm = jest.fn().mockResolvedValue();
+jest.mock("../utils/printApprovedForm", () => ({ printApprovedForm: (...args) => mockPrintForm(...args) }));
 jest.mock("../api/Base", () => class {
   sendRequest(options) { return mockSendRequest(options); }
 });
@@ -18,6 +20,7 @@ jest.mock("react-router-dom", () => ({
 let root;
 let container;
 let mockApplication;
+let mockSupportsAmount;
 
 beforeEach(() => {
   global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -26,6 +29,9 @@ beforeEach(() => {
   document.body.appendChild(container);
   root = createRoot(container);
   mockSearch = '';
+  mockSupportsAmount = true;
+  mockPrintForm.mockClear();
+  mockPrintForm.mockResolvedValue();
   mockSendRequest.mockReset();
   mockSendRequest.mockImplementation(async ({ path }) => {
     if (path === "/api/v1/status_tables/all") {
@@ -36,7 +42,7 @@ beforeEach(() => {
       ] } };
     }
     if (/\/(incentive-forms|request-assistance-forms)\/(all|user)$/.test(path)) {
-      return { ok: true, data: [mockApplication] };
+      return { ok: true, data: [mockSupportsAmount ? { approved_amount: null, ...mockApplication } : mockApplication] };
     }
     return { ok: true, data: [] };
   });
@@ -83,7 +89,7 @@ describe.each([
     expect(container.querySelectorAll('.publication-incentive__review-actions button')).toHaveLength(0);
   });
 
-  test("keeps pending actions enabled and sends approval status 10", async () => {
+  test("requires an amount and sends it with approval status 10", async () => {
     mockApplication = { id: 1, status_id: 3 };
     await act(async () => root.render(<Component reviewMode />));
     act(() => container.querySelector("tbody tr").click());
@@ -91,10 +97,65 @@ describe.each([
     expect(actions[0].disabled).toBe(false);
     expect(actions[1].disabled).toBe(false);
     await act(async () => actions[1].click());
+    expect(mockSendRequest.mock.calls.some(([request]) => request.method === "PUT")).toBe(false);
+    const input = container.querySelector('#approved-amount');
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '2,500.50');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(input.value).toBe('2,500.50');
+    await act(async () => actions[1].click());
     expect(mockSendRequest).toHaveBeenCalledWith({
       path: `/api/v1/endorsements/status/1/${formTypeId}`,
       method: "PUT",
-      data: { status_id: 10 },
+      data: { status_id: 10, approved_amount: 2500.5 },
     });
   });
+  test("rejects without requiring an amount", async () => {
+    mockApplication = { id: 1, status_id: 3 };
+    await act(async () => root.render(<Component reviewMode />));
+    act(() => container.querySelector("tbody tr").click());
+    await act(async () => container.querySelector(".publication-incentive__review-button--reject").click());
+    expect(mockSendRequest).toHaveBeenCalledWith({
+      path: `/api/v1/endorsements/status/1/${formTypeId}`, method: "PUT", data: { status_id: 11 },
+    });
+  });
+
+  test.each([1, 10, 11])("enables print only for an approved researcher request (status %s)", async (statusId) => {
+    mockApplication = { id: 1, status_id: statusId, approved_amount: '2500.50' };
+    await act(async () => root.render(<Component />));
+    const button = container.querySelector('.application-history__print-button');
+    expect(button).not.toBeNull();
+    expect(button.disabled).toBe(statusId !== 10);
+    await act(async () => button.click());
+    if (statusId === 10) {
+      expect(mockPrintForm).toHaveBeenCalledTimes(1);
+      expect(mockPrintForm.mock.calls[0][0].textContent).toContain('2,500.50');
+      expect(container.querySelector('#approved-amount').tagName).toBe('SPAN');
+    } else {
+      expect(mockPrintForm).not.toHaveBeenCalled();
+      expect(container.querySelector('tbody')).not.toBeNull();
+    }
+  });
+
+  test("allows approval testing when the server omits the amount field", async () => {
+    mockSupportsAmount = false;
+    mockApplication = { id: 1, status_id: 3 };
+    await act(async () => root.render(<Component reviewMode />));
+    act(() => container.querySelector("tbody tr").click());
+    expect(container.querySelector('.approval-amount-error')).toBeNull();
+    const input = container.querySelector('#approved-amount');
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '10,000');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    const approve = container.querySelector('.publication-incentive__review-button--approve');
+    expect(approve.disabled).toBe(false);
+    await act(async () => approve.click());
+    expect(mockSendRequest).toHaveBeenCalledWith({
+      path: `/api/v1/endorsements/status/1/${formTypeId}`,
+      method: 'PUT', data: { status_id: 10, approved_amount: 10000 },
+    });
+  });
+
 });

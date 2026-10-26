@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ApprovalAmount, { isValidApprovalAmount } from "../../components/ApprovalAmount/ApprovalAmount";
+import { printApprovedForm } from "../../utils/printApprovedForm";
 import MainContainer from "../../components/Layout/MainContainer";
 import AdamsonSeal from "../../assets/image/adamson_logo.png";
 import ApplicationHistory from "../../components/ApplicationHistory/ApplicationHistory";
@@ -146,6 +148,8 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
   const location = useLocation();
   const linkedApplication = new URLSearchParams(location.search).get('application_id');
   const openedLink = useRef(null);
+  const sheetRef = useRef(null);
+  const [printRequested, setPrintRequested] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [form, setForm] = useState(createEmptyForm);
@@ -256,8 +260,25 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
   const isDecisionFinal = Boolean(selectedApplication) &&
     [10, 11].includes(Number(getApplicationStatusId(selectedApplication, 2)));
 
+  const printApplication = (application) => {
+    if (Number(getApplicationStatusId(application, 2)) !== 10) return;
+    openApplication(application);
+    setPrintRequested(true);
+  };
+
+  useEffect(() => {
+    if (!printRequested || !showForm) return;
+    setPrintRequested(false);
+    printApprovedForm(sheetRef.current).catch(() => toast.error("The form could not be printed. Please try again."));
+  }, [printRequested, showForm]);
+
   const handleStatusAction = async (statusId) => {
     if (!reviewMode || !selectedApplication || isUpdatingStatus || isDecisionFinal) return;
+
+    if (statusId === 10 && !isValidApprovalAmount(form.approved_amount)) {
+      toast.error("Enter a valid approved amount greater than zero (up to two decimal places).");
+      return;
+    }
 
     const researchId =
       selectedApplication.research_id ??
@@ -276,7 +297,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
       const response = await endorsementApi.updateEndorsementStatus(
         researchId,
         2,
-        { status_id: statusId }
+        { status_id: statusId, ...(statusId === 10 ? { approved_amount: Number(form.approved_amount) } : {}) }
       );
 
       if (!response?.ok) {
@@ -374,7 +395,7 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
               {reviewMode ? "Back to requests for approval" : "Back to past applications"}
             </button>
           </div>
-          <form className="assistance-request__sheet" onSubmit={handleSubmit}>
+          <form ref={sheetRef} className="assistance-request__sheet" onSubmit={handleSubmit}>
             <header className="assistance-request__header">
               <div className="assistance-request__brand">
                 <img src={AdamsonSeal} alt="Adamson University" />
@@ -432,6 +453,13 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
               </div>
             </div>
 
+            {selectedApplication && (
+              <ApprovalAmount value={form.approved_amount}
+                onChange={handleFieldChange} editable={reviewMode && !isDecisionFinal}
+                disabled={isUpdatingStatus}
+                approved={Number(getApplicationStatusId(selectedApplication, 2)) === 10} />
+            )}
+
             {reviewMode && selectedApplication ? (
               <div className="publication-incentive__review-actions">
                 <button
@@ -486,8 +514,9 @@ function ResearchPresentationAssistance({ reviewMode = false }) {
           onCreate={openNewApplication}
           onRetry={loadData}
           onSelect={openApplication}
+          onPrint={!reviewMode ? printApplication : undefined}
+          canPrint={(application) => Number(getApplicationStatusId(application, 2)) === 10}
           showCreate={!reviewMode}
-          showApplicationId={false}
           tableDescription={reviewMode
             ? "Select a request to open its form and review the submitted details."
             : undefined

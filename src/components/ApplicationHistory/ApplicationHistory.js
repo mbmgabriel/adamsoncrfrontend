@@ -1,7 +1,7 @@
 import usePagination from "../../hooks/usePagination";
 import Pagination from "../PaginationComponent/Pagination";
 import React from "react";
-import { FiArrowLeft, FiFileText, FiPlus } from "react-icons/fi";
+import { FiArrowLeft, FiFileText, FiPlus, FiPrinter } from "react-icons/fi";
 
 const getStatusTone = (status) => {
   const normalizedStatus = String(status || "").trim().toLowerCase();
@@ -23,6 +23,8 @@ function ApplicationHistory({
   onBack,
   onRetry,
   onSelect,
+  onPrint,
+  canPrint = () => false,
   showApplicationId = true,
   showCreate = true,
   tableDescription = "Review the applications you have previously submitted.",
@@ -31,7 +33,7 @@ function ApplicationHistory({
 }) {
   const { displayedItems, ...pagination } = usePagination(applications);
   const showNameColumn = Boolean(nameColumnLabel && nameColumnField);
-  const columnCount = 3 + Number(showApplicationId) + Number(showNameColumn);
+  const columnCount = 3 + Number(showApplicationId) + Number(showNameColumn) + Number(Boolean(onPrint));
 
   return (
     <main className="application-history" aria-labelledby="application-history-title">
@@ -87,11 +89,12 @@ function ApplicationHistory({
             <table>
               <thead>
                 <tr>
-                  {showApplicationId && <th>Application ID</th>}
-                  <th>Research title</th>
-                  {showNameColumn && <th>{nameColumnLabel}</th>}
+                  {showApplicationId && <th className="application-history__id-column">ID</th>}
+                  <th className="application-history__title-column">Research title</th>
+                  {showNameColumn && <th className="application-history__name-column">{nameColumnLabel}</th>}
                   <th>Date submitted</th>
                   <th>Status</th>
+                  {onPrint && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -103,17 +106,24 @@ function ApplicationHistory({
                     onClick={onSelect ? () => onSelect(application) : undefined}
                     onKeyDown={onSelect ? (event) => {
                       if (event.key === "Enter" || event.key === " ") {
+                        if (event.target !== event.currentTarget) return;
                         event.preventDefault();
                         onSelect(application);
                       }
                     } : undefined}
                     tabIndex={onSelect ? 0 : undefined}
                   >
-                    {showApplicationId && <td data-label="Application ID">{application.id}</td>}
-                    <td data-label="Research title">{application.title}</td>
+                    {showApplicationId && <td className="application-history__id-column" data-label="ID">{application.id}</td>}
+                    <td data-label="Research title">
+                      <span className="application-history__cell-text application-history__cell-text--title" title={application.title}>
+                        {application.title}
+                      </span>
+                    </td>
                     {showNameColumn && (
                       <td data-label={nameColumnLabel}>
-                        {application[nameColumnField]?.trim() || "—"}
+                        <span className="application-history__cell-text application-history__cell-text--name" title={application[nameColumnField]?.trim()}>
+                          {application[nameColumnField]?.trim() || "—"}
+                        </span>
                       </td>
                     )}
                     <td data-label="Date submitted">{application.submittedDate}</td>
@@ -122,6 +132,17 @@ function ApplicationHistory({
                         {application.status}
                       </span>
                     </td>
+                    {onPrint && (
+                      <td data-label="Actions">
+                          <button className="application-history__print-button" type="button"
+                            disabled={!canPrint(application)}
+                            title={canPrint(application) ? "Print approved form" : "Printing is available after approval"}
+                            aria-label={`Print form for ${application.title}`}
+                            onClick={(event) => { event.stopPropagation(); onPrint(application); }}>
+                            <FiPrinter aria-hidden="true" /> Print
+                          </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
 
