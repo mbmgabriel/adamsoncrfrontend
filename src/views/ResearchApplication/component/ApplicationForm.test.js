@@ -107,3 +107,17 @@ test("preserves the original department when a revision is loaded before its opt
   expect(college.value).toBe("COLLEGE OF SCIENCE");
   expect(department.value).toBe("CHEMISTRY DEPARTMENT");
 });
+
+test("retains a historical inactive affiliation without offering it to a new researcher", () => {
+  function HistoricalResearcher() {
+    const {control,register,setValue} = useForm({defaultValues:{researchers:[{college:'OLD COLLEGE',dept:'OLD DEPARTMENT'}]}});
+    return <ResearcherSection index={0} isMain control={control} register={register} setValue={setValue} departments={departments} savedAffiliation={{college:'OLD COLLEGE',dept:'OLD DEPARTMENT'}}/>;
+  }
+  act(() => root.render(<HistoricalResearcher/>));
+  const [college,department] = container.querySelectorAll('select');
+  expect(college.value).toBe('OLD COLLEGE');
+  expect(department.value).toBe('OLD DEPARTMENT');
+  change(college,'COLLEGE OF SCIENCE');
+  expect(department.value).toBe('');
+  expect(department.textContent).not.toContain('OLD DEPARTMENT');
+});
