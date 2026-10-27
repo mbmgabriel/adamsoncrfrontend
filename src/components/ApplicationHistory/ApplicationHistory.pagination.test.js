@@ -18,6 +18,15 @@ const next = () => container.querySelector('[aria-label="Next page"]');
 const previous = () => container.querySelector('[aria-label="Previous page"]');
 const renderHistory = (rows, onSelect) => act(() => root.render(<ApplicationHistory applications={rows} title="Applications" showCreate={false} onSelect={onSelect} />));
 
+test('shows the shared loader until applications finish loading', () => {
+  act(() => root.render(<ApplicationHistory applications={[]} isLoading title="Applications" showCreate={false} />));
+  expect(container.querySelector('[role="status"]').textContent).toContain('Loading applications…');
+  expect(container.querySelector('.portal-loader__spinner')).not.toBeNull();
+  renderHistory(applications);
+  expect(container.querySelector('.portal-loader')).toBeNull();
+  expect(container.textContent).toContain('Research 1');
+});
+
 test('paginates ten records at a time and opens the correct record on later pages', () => {
   const onSelect = jest.fn();
   renderHistory(applications, onSelect);

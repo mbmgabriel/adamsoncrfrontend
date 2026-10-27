@@ -338,130 +338,90 @@ button:focus-visible,
 // GLOBAL CSS END //
 
 .login_container {
-  display: flex;
-  flex-direction: row;
-  background-color: #fff;
-  min-height: 100vh !important;
-  min-width: 100vw !important;
-  @media (max-width: 767px) {
-    flex-direction: column;
-  }
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr);
+  background: #fff;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  color: #19344f;
+
   .login_logo {
-    border-right: 1px solid #d3d3d3;
-    width: calc(100% - 400px);
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    padding: 0px 20px;
-    @media (max-width: 769px) {
-      width: 100%;
-      padding: 50px 0px;
-    }
+    gap: 28px;
+    padding: 48px 32px;
+    border-right: 1px solid #e3e9f1;
+    text-align: center;
 
-    .logo {
-      width: 20rem;
-      aspect-ratio: 1 / 0.8;
-    }
-
-    .login_title {
-      font-weight: 700;
-    }
+    .logo { width: min(280px, 80%); height: auto; }
+    .login_title { max-width: 420px; margin: 0; color: #0d206c; font-size: clamp(26px, 2.5vw, 38px); line-height: 1.25; font-weight: 750; }
   }
 
   .login_form_container {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 48px clamp(24px, 5vw, 88px);
+    background: linear-gradient(135deg, rgba(0, 21, 77, .22), rgba(0, 21, 77, .4)), url("../assets/image/login_bg.png") center / cover no-repeat;
+  }
+
+  .login_form {
     width: 100%;
-    padding: 0px 120px;
-    background: url("../assets/image/login_bg.png") no-repeat;
-    background-size: cover;
-    @media (max-width: 768px) {
-      padding: 20px 20px;
-    }
+    max-width: 480px;
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, .8);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 20px 60px rgba(0, 21, 77, .18);
+    display: flex;
+    flex-direction: column;
 
-    .login_form {
-      background-color: #ffffffd9;
-      border-radius: 30px;
-      padding: 50px 80px;
-      display: flex;
-      flex-direction: column;
-      @media (max-width: 430px) {
-        padding: 20px 20px;
-      }
-      @media (max-width: 768px) {
-        padding: 20px 20px;
-      }
+    .login_form_heading { margin-bottom: 28px; }
+    h2 { margin: 10px 0 8px; font-size: 30px; font-weight: 750; color: #19344f; }
+    .login_form_heading p { margin: 0; font-size: 14px; line-height: 1.6; color: #62758a; }
+    .login_field { position: relative; margin-bottom: 20px; }
+    .form-label { display: block; margin: 0 0 8px; font-size: 14px; font-weight: 650; }
+    .password_input { padding: 10px 44px !important; background: #fff; border: 1px solid #cbd6e2; color: #19344f; font-size: 14px; }
+    .password_input::placeholder { color: #8290a1; }
+    .password_input:focus { border-color: #5578b4; box-shadow: 0 0 0 3px rgba(85, 120, 180, .14); }
+    .input_icon { position: absolute; left: 15px; bottom: 14px; display: flex; color: #708297; font-size: 18px; pointer-events: none; }
+    .show_password_icon { position: absolute; right: 5px; bottom: 5px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: #62758a; font-size: 19px; }
+    .show_password_icon:hover { background: #edf2f8; color: #0d206c; }
+    .forgot_password { display: block; margin: -8px 0 24px auto; padding: 4px 0; border: 0; background: transparent; color: #0d206c; font-size: 13px; font-weight: 650; }
+    .forgot_password:hover { text-decoration: underline; text-underline-offset: 3px; }
+    > .btn { min-height: 48px; border-radius: 9px; font-size: 14px; font-weight: 650; }
+    > .primary { background: #0d206c; border-color: #0d206c; }
+    > .primary:hover { background: #09174e; border-color: #09174e; }
+    > .secondary { margin-top: 12px; background: #fff; color: #0d206c; border-color: #c7d2e3; }
+    > .secondary:hover { background: #edf2f8; border-color: #879cbe; }
+    .login_help { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid #e0e6ee; margin-top: 28px; padding-top: 20px; }
+    .login_help button { flex: 1; padding: 0; border: 0; background: transparent; color: #62758a; font-size: 12px; line-height: 1.6; text-align: left; text-decoration: underline; text-underline-offset: 3px; }
+    .login_help button:last-child { text-align: right; }
+  }
 
-      .form-label {
-        margin-bottom: 0px !important;
-        margin-top: 10px;
-        font-weight: 600;
-      }
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    .login_logo { padding: 32px 24px; }
+    .login_form_container { padding: 32px 24px; }
+    .login_form { padding: 28px; }
+  }
 
-      .password_input {
-        padding: 5px 40px !important;
-      }
-
-      .input_icon {
-        position: absolute;
-        top: -9px;
-        left: 10px;
-        font-size: 24px;
-      }
-
-      .show_password_icon {
-        position: absolute;
-        top: -9px;
-        right: 12px;
-        font-size: 24px;
-      }
-    }
-
-    .login_form h3 {
-      margin-bottom: 50px;
-      margin-top: 20px;
-      font-weight: 600;
-    }
-
-    .login-form input {
-      background-color: yellow !important;
-    }
-
-    .login_form p {
-      text-decoration: none !important;
-      font-size: 14px;
-      color: $primary;
-      font-weight: 600;
-      text-align: end;
-      margin-bottom: 20px;
-      cursor: pointer;
-    }
-
-    .login_form p:hover {
-      text-decoration: underline !important;
-      color: $primary !important;
-    }
-
-    .login_form button {
-      border-width: 1px !important;
-      margin-top: 20px;
-      padding: 0.625rem 1rem !important;
-    }
-
-    .login_form span {
-      font-size: 14px;
-      text-decoration: underline;
-      font-weight: 400;
-      cursor: pointer;
-      margin-top: 50px;
-      margin-bottom: 20px;
-    }
+  @media (max-width: 700px) {
+    grid-template-columns: minmax(0, 1fr);
+    .login_logo { padding: 28px 20px; gap: 14px; border-right: 0; }
+    .login_logo .logo { width: 130px; }
+    .login_logo .login_title { max-width: 300px; font-size: 24px; }
+    .login_form_container { padding: 28px 16px; }
+    .login_form { padding: 28px 24px; border-radius: 18px; }
+    .login_form h2 { font-size: 27px; }
   }
 }
 
 .custom_modal {
+  .modal_close { display: grid; place-items: center; border: 0; background: transparent; color: inherit; padding: 6px; border-radius: 8px; flex-shrink: 0; }
   .modal_header {
     background-color: $primary;
     color: #fff;
@@ -562,6 +522,40 @@ button:focus-visible,
   }
 }
 
+.login-modal {
+  .modal-dialog { max-width: 600px; margin-left: auto; margin-right: auto; padding: 16px; }
+  &.login-modal--privacy .modal-dialog { max-width: 800px; }
+  .modal-content { border: 1px solid #dce4ef; box-shadow: 0 24px 80px #00154d33; overflow: hidden; }
+  .modal_header { background: $primary; color: #fff; border-bottom: 1px solid rgba(255, 255, 255, .15); padding: 22px 28px; gap: 16px; border-radius: 0 !important; }
+  .modal-title { color: #fff; font-size: 21px; font-weight: 750; line-height: 1.35; }
+  .modal_close { width: 36px; height: 36px; color: #fff; }
+  .modal_close:hover { background: rgba(255, 255, 255, .15); color: #fff; }
+  .modal_body { padding: 28px; max-height: none; overflow-y: auto; color: #52677e; font-size: 14px; line-height: 1.75; }
+  .modal_body p { margin-bottom: 24px; }
+  .modal_body h5 { color: #19344f; font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+  .modal_body em { font-style: normal; font-weight: 650; color: #19344f; }
+  .forgot_password_form { row-gap: 18px; }
+  .form-label { color: #19344f; font-size: 13px; margin-bottom: 7px !important; }
+  .form-control { min-height: 46px; border: 1px solid #cbd6e2; border-radius: 9px; font-size: 14px; color: #19344f; }
+  .form-control:focus { border-color: #5578b4; box-shadow: 0 0 0 3px #5578b424; }
+  .between.mt-5 { margin-top: 28px !important; padding-top: 22px; border-top: 1px solid #e1e7ef; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+  .btn { min-height: 44px; min-width: 100px; border-radius: 9px; font-size: 14px; font-weight: 650; }
+  .account_reset { align-items: flex-start; gap: 16px; padding: 20px; border: 1px solid #dce6f3; border-radius: 12px; background: #f3f7fc; margin-bottom: 24px; }
+  .account_reset .info_icon { font-size: 28px; flex-shrink: 0; color: #315a91; margin-top: 2px; }
+  .account_reset b { color: #19344f; overflow-wrap: anywhere; }
+  .login-otp { display: flex; justify-content: center; gap: 8px; width: 100%; margin: 4px 0 24px; }
+  .otp_input { width: clamp(30px, 8vw, 56px) !important; height: 58px; margin: 0; font-size: 24px; border: 1px solid #cbd6e2; border-radius: 9px; color: #19344f; }
+  .otp_input:focus { border-color: #5578b4; box-shadow: 0 0 0 3px #5578b424; }
+  @media (max-width: 575px) {
+    .modal-dialog { padding: 12px; }
+    .modal_header { padding: 18px 20px; }
+    .modal-title { font-size: 19px; }
+    .modal_body { padding: 20px; }
+    .account_reset { padding: 16px; gap: 12px; }
+    .login-otp { gap: 6px; }
+  }
+}
+
 .custom-input {
   padding: 10px 0px;
   .custom-label {
@@ -630,319 +624,197 @@ button:focus-visible,
 }
 
 .header {
-  background: url("../assets/image/login_bg.png") no-repeat;
-  background-position: center;
-  background-size: cover;
-  box-shadow: inset 0 0 0 1000px rgba(255, 255, 255, 0.16);
-  display: flex;
-  flex-direction: column;
+  background: linear-gradient(90deg, rgba(247, 250, 255, .95) 0%, rgba(247, 250, 255, .83) 29%, rgba(247, 250, 255, .24) 64%, rgba(0, 21, 77, .12) 100%), url("../assets/image/login_bg.png") center / cover no-repeat;
+  display: grid;
+  grid-template-columns: minmax(340px, .85fr) minmax(0, 1.5fr);
+  grid-template-rows: auto 1fr;
+  gap: 32px;
   min-height: 430px;
-  padding: 0;
+  padding: 28px clamp(24px, 3vw, 48px) 38px;
   position: relative;
 
-  .top-header {
-    align-items: center;
+  .top-header { display: flex; align-items: center; min-width: 0; }
+  .school_logo {
     display: flex;
-    gap: 24px;
-    justify-content: space-between;
-    margin: 0 auto;
-    padding: 28px 32px 0;
-    width: 100%;
-
-    .school_logo {
-      align-items: center;
-      display: flex;
-      gap: 14px;
-
-      .logo {
-        height: auto;
-        width: 92px;
-      }
-
-      .text-container {
-        display: flex;
-        flex-direction: column;
-
-        .school_name {
-          color: #172b3f;
-          font-size: 15px;
-          font-weight: 650;
-          line-height: 1.4;
-        }
-
-        .site_name {
-          color: #102a43;
-          font-size: 22px;
-          font-weight: 750;
-          line-height: 1.2;
-          margin: 4px 0 0;
-        }
-      }
-    }
-
+    align-items: center;
+    gap: 16px;
+    .logo { width: 88px; height: auto; flex-shrink: 0; }
+    .text-container { min-width: 0; }
+    .school_name { display: block; color: #34516d; font-size: 13px; font-weight: 600; line-height: 1.5; }
+    .site_name { color: #102a43; font-size: 21px; font-weight: 750; line-height: 1.3; margin: 6px 0 0; }
   }
 
   .header_nav {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-    margin: 16px auto 0;
-    padding: 0 32px;
-    width: 100%;
-
-    .nav_bar {
-      background-color: rgba(255, 255, 255, 0.86);
-      border: 1px solid rgba(16, 42, 67, 0.12);
-      border-radius: 8px;
-      display: flex;
-      gap: 3px;
-      padding: 5px;
-
-      .nav-pill,
-      .nav-pill-active {
-        background-color: transparent;
-        border: 0;
-        border-radius: 5px;
-        color: #243b53;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.25;
-        padding: 10px 12px;
-        text-align: left;
-        transition: background-color 160ms ease, color 160ms ease;
-      }
-
-      .nav-pill:hover {
-        background-color: #edf3f7;
-        color: #12357d;
-      }
-
-      .nav-pill-active {
-        background-color: #031f73;
-        color: #fff;
-      }
-    }
+    min-width: 0;
+    .nav-toggle { display: none; }
+    .nav_bar { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; background: rgba(255, 255, 255, .94); border: 1px solid #ffffffb3; border-radius: 12px; box-shadow: 0 4px 20px #00154d0d; }
+    .nav-pill, .nav-pill-active { background: transparent; border: 0; border-radius: 8px; color: #243b53; cursor: pointer; font-size: 13px; font-weight: 650; line-height: 1.4; padding: 12px; text-align: center; transition: background-color 160ms ease, color 160ms ease; }
+    .nav-pill:hover { background: #edf2f8; color: #031f73; }
+    .nav-pill-active { background: #031f73; color: #fff; box-shadow: 0 2px 6px #031f7326; }
+    button:focus-visible { outline: 3px solid #7197c1; outline-offset: 2px; }
   }
 
   .header_title {
-    align-items: flex-end;
+    grid-column: 1 / -1;
     display: flex;
-    flex: 1;
-    justify-content: flex-start;
-    margin: 0 auto;
-    padding: 60px 32px 34px;
-    width: 100%;
-
-    .title_container {
-      color: #031f73;
-      max-width: 780px;
-      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.45);
-
-      .title {
-        font-size: 38px;
-        font-weight: 750;
-        line-height: 1.15;
-        margin: 0 0 8px;
-      }
-
-      .sub {
-        font-size: 17px;
-        font-weight: 700;
-        line-height: 1.45;
-      }
-    }
+    align-items: flex-end;
+    padding-top: 48px;
+    .title_container { max-width: 680px; color: #031f73; border-left: 4px solid #00703c; padding-left: 20px; }
+    .title { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(34px, 3.1vw, 48px); font-weight: 700; line-height: 1.15; margin: 0 0 14px; }
+    .sub { display: block; max-width: 640px; font-size: 17px; font-weight: 550; line-height: 1.65; color: #193b68; }
   }
-}
 
-@media (max-width: 767px) {
-  .header {
+  @media (max-width: 1199px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    gap: 20px;
+    .top-header { grid-row: 1; }
+    .header_nav { grid-row: 3; justify-content: flex-start; }
+    .header_title { grid-row: 2; padding: 24px 0; }
+  }
+
+  @media (max-width: 700px) {
     background-position: 58% center;
-    min-height: 520px;
-
-    .top-header {
-      align-items: stretch;
-      flex-direction: column;
-      gap: 14px;
-      padding: 20px 16px 0;
-
-      .school_logo {
-        .logo {
-          width: 74px;
-        }
-
-        .text-container {
-          .school_name {
-            font-size: 12px;
-          }
-
-          .site_name {
-            font-size: 18px;
-          }
-        }
-      }
-
-    }
-
-    .header_nav {
-      justify-content: flex-start;
-      margin-top: 14px;
-      overflow-x: auto;
-      padding: 0 16px 5px;
-      scrollbar-width: thin;
-
-      .nav_bar {
-        flex: 0 0 auto;
-
-        .nav-pill,
-        .nav-pill-active {
-          font-size: 12px;
-          padding: 9px 10px;
-          white-space: nowrap;
-        }
-      }
-    }
-
-    .header_title {
-      padding: 42px 16px 28px;
-
-      .title_container {
-        .title {
-          font-size: 31px;
-        }
-
-        .sub {
-          font-size: 15px;
-        }
-      }
-    }
+    background-image: linear-gradient(90deg, rgba(247, 250, 255, .95), rgba(247, 250, 255, .7)), url("../assets/image/login_bg.png");
+    padding: 22px 16px 28px;
+    gap: 24px;
+    .school_logo { gap: 12px; }
+    .school_logo .logo { width: 66px; }
+    .school_logo .school_name { font-size: 11px; }
+    .school_logo .site_name { font-size: 17px; margin-top: 4px; }
+    min-height: 0;
+    .header_nav { flex-direction: column; align-items: stretch; border: 1px solid #dce4ef; border-radius: 12px; background: #fffffff5; box-shadow: 0 4px 16px #00154d0a; overflow: hidden; }
+    .header_nav .nav-toggle { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 12px 16px; border: 0; border-radius: 11px; background: transparent; color: #19344f; font-size: 14px; font-weight: 700; text-align: left; }
+    .header_nav .nav-toggle svg { font-size: 20px; flex-shrink: 0; }
+    .header_nav .nav-toggle-current { margin-left: auto; color: #62758a; font-size: 12px; font-weight: 550; }
+    .header_nav .nav-toggle:hover { background: #edf2f8; }
+    .header_nav .nav-toggle:focus-visible { outline-offset: -4px; }
+    .header_nav .nav_bar { display: none; border: 0; border-top: 1px solid #e1e7ef; border-radius: 0; box-shadow: none; background: transparent; }
+    .header_nav.is-open .nav_bar { display: flex; flex-direction: column; gap: 4px; }
+    .header_nav .nav-pill, .header_nav .nav-pill-active { width: 100%; font-size: 13px; padding: 12px; text-align: left; }
+    .header_title { padding: 8px 0; }
+    .header_title .title_container { padding-left: 14px; }
+    .header_title .title { font-size: 34px; margin-bottom: 10px; }
+    .header_title .sub { font-size: 15px; line-height: 1.65; }
   }
 }
 
 .footer {
-  background-color: #00154d;
+  background: #00154d;
   color: #fff;
-  padding: 2rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  padding: clamp(20px, 2vw, 28px) clamp(20px, 3vw, 48px);
 
-  &__school {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex: 1 1 350px;
-
-    & .footer__logo {
-      width: 150px;
-      height: auto;
-    }
-
-    & .footer__name {
-      display: flex;
-      flex-direction: column;
-
-      & .footer__adamson {
-        font-size: 3rem;
-      }
-
-      & .footer__university {
-        font-size: 2rem;
-      }
-    }
+  &__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 32px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
   }
 
-  &__contact {
-    flex: 2 1 500px;
-    padding: 0 1.5rem;
-    border-left: 1px solid white;
+  a.footer__map-link { text-decoration: none; }
 
-    & h5 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-    }
+  &__school {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    min-width: 0;
+  }
+
+  &__logo { width: 120px; height: auto; flex-shrink: 0; }
+  &__name { display: flex; flex-direction: column; gap: 4px; line-height: 1.15; text-align: center; }
+  &__adamson { font-size: clamp(32px, 3.5vw, 46px); letter-spacing: .025em; }
+  &__university { font-size: clamp(21px, 2.2vw, 29px); letter-spacing: .12em; }
+
+  &__contact {
+    min-width: 0;
+    border-top: 1px solid rgba(255, 255, 255, .18);
+    padding-top: 24px;
+
+    h5 { font-size: 19px; font-weight: 650; margin: 0 0 20px; }
 
     &-info {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px 28px;
 
       &__item {
         display: flex;
         align-items: flex-start;
-        gap: 0.5rem;
+        gap: 12px;
+        min-width: 0;
+        color: #dce5f5;
+        font-size: 14px;
+        line-height: 1.75;
 
-        div {
-          display: block;
-          line-height: 1.5;
+        > div:first-child {
+          display: grid;
+          place-items: center;
+          width: 32px;
+          height: 32px;
+          flex-shrink: 0;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, .07);
+          color: #fff;
         }
+        > div:last-child { min-width: 0; overflow-wrap: anywhere; }
+        a { color: inherit; text-underline-offset: 4px; }
+        a:hover { color: #fff; }
+        a:focus-visible { outline: 2px solid #fff; outline-offset: 5px; border-radius: 2px; }
+        u { text-underline-offset: 4px; }
       }
     }
   }
 
   &__legal {
-    flex: 1 1 150px;
-    background-color: #1e3163;
-    padding: 1rem;
-    border-radius: 1rem 1rem 0 0;
-    margin-bottom: -30px;
+    min-width: 0;
+    align-self: start;
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .07);
+    color: #dce5f5;
 
-    p {
-      margin: 0.5rem 0;
-      font-size: 0.95rem;
-    }
+    a { color: inherit; text-underline-offset: 4px; }
+    a:hover { color: #fff; }
+    a:focus-visible { outline: 2px solid #fff; outline-offset: 5px; border-radius: 2px; }
+
+    p { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+    p:last-child { margin-bottom: 0; }
+    svg { flex-shrink: 0; align-self: center; }
+    p:nth-child(3) { border-top: 1px solid rgba(255, 255, 255, .14); margin-top: 18px; padding-top: 16px; }
   }
 
-  @media (max-width: 768px) {
-    flex-direction: column;
+  @media (min-width: 1440px) {
+    &__inner { grid-template-columns: 360px minmax(0, 1fr) 210px; gap: 32px; }
+    &__school { grid-column: auto; align-self: stretch; gap: 16px; }
+    &__logo { width: 112px; }
+    &__adamson { font-size: 40px; }
+    &__university { font-size: 26px; }
+    &__contact { border-top: 0; border-left: 1px solid rgba(255, 255, 255, .18); padding: 0 0 0 28px; }
+  }
 
-    &__school,
-    &__contact,
-    &__legal {
-      flex: 1 1 100%;
-      min-width: 0;
-      width: 100%;
-    }
+  @media (min-width: 701px) and (max-width: 900px) {
+    &__contact-info { grid-template-columns: minmax(0, 1fr); }
+  }
 
-    &__school {
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
+  @media (max-width: 700px) {
+    &__inner { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    &__school { gap: 16px; }
+    &__logo { width: 88px; }
+    &__contact-info { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    &__legal { width: 100%; padding: 20px; }
+  }
 
-      .footer__logo {
-        width: 96px;
-      }
-
-      .footer__name {
-        align-items: center;
-
-        .footer__adamson {
-          font-size: 1.75rem;
-        }
-
-        .footer__university {
-          font-size: 1.15rem;
-        }
-      }
-    }
-
-    &__contact {
-      border: none;
-      padding: 1rem 0;
-
-      &-info {
-        grid-template-columns: 1fr;
-
-        &__item div {
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-      }
-    }
-
-    &__legal {
-      text-align: center;
-    }
+  @media (max-width: 359px) {
+    &__school { flex-direction: column; align-items: center; }
+    &__logo { width: 100px; }
   }
 }
 

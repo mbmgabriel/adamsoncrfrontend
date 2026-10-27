@@ -8,6 +8,7 @@ import "./urb-review.scss";
 import DashboardBackButton from "../../components/Navigation/DashboardBackButton";
 import ResearchApplicationAPI from "../../api/ResearchApplicationAPI";
 import usePagination from "../../hooks/usePagination";
+import Loader from '../../components/Loader/Loader';
 import Pagination from "../../components/PaginationComponent/Pagination";
 import Auth from "../../api/Auth";
 
@@ -99,7 +100,7 @@ export default function URBReviewBoard() {
             <span className="urb-header-tag"><FiUsers /> {id ? `${selectedCount} selected` : `${researches.length} applications`}</span>
           </header>
           {error && <Alert variant="danger" role="alert">{error}</Alert>}
-          {busy && <p className="urb-loading" role="status">Loading…</p>}
+          {busy && <Loader />}
           {!isStaff && !isUrbMember ? null : !id ? (
             <FormCard className="urb-card urb-queue">
               <div className="urb-card-heading"><span className="urb-icon"><FiFileText /></span><div><h2>Research applications</h2><p>{isStaff ? "URB assignment is available after dean endorsement." : "Open an application to review its details and leave your decision."}</p></div></div>

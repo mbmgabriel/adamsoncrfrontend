@@ -16,6 +16,7 @@ import {
 import FormCard from "../../../components/Card/FormCard";
 import TextInputCustom from "../../../components/Input/TextInputCustom";
 import TransparentLoader from "../../../components/Loader/TransparentLoader";
+import Loader from "../../../components/Loader/Loader";
 import ResearchApplicationAPI from "../../../api/ResearchApplicationAPI";
 import { useHistory, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -651,7 +652,7 @@ function ResearchApplicationReviewForm() {
       <div className="form-container">
         <section className="review-workflow" aria-label="Research application">
           <h1>Review Research Application</h1>
-          <p role={pending ? "status" : "alert"}>{pending ? "Loading application…" : workflowError || "This application is unavailable."}</p>
+          {pending ? <Loader label="Loading application…" /> : <p role="alert">{workflowError || "This application is unavailable."}</p>}
           {!pending && <Button type="button" className="btn-outline-custom" onClick={() => setReviewLoadAttempt(attempt => attempt + 1)}>Retry application</Button>}
           <Button type="button" className="btn-outline-custom" onClick={() => history.push("/dashboard")}>Back to dashboard</Button>
         </section>

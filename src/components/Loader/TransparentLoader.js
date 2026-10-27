@@ -1,12 +1,10 @@
 import React from 'react';
-import { Spinner } from 'react-bootstrap';
+import Loader from './Loader';
 
 const TransparentLoader = () => {
   return (
-    <div className='loader-container'>
-    <Spinner animation="border" size='xl' role="status">
-      <span className="visually-hidden">Loading...</span>
-    </Spinner>
+    <div className='portal-loader-overlay'>
+      <Loader />
     </div>
   );
 };

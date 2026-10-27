@@ -1,6 +1,7 @@
 import usePagination from "../../hooks/usePagination";
 import Pagination from "../PaginationComponent/Pagination";
 import React from "react";
+import Loader from '../Loader/Loader';
 import { FiArrowLeft, FiFileText, FiPlus, FiPrinter } from "react-icons/fi";
 
 const getStatusTone = (status) => {
@@ -149,9 +150,8 @@ function ApplicationHistory({
                 {isLoading && (
                   <tr className="application-history__empty-row">
                     <td colSpan={columnCount}>
-                      <div className="application-history__empty-state" role="status">
-                        <FiFileText aria-hidden="true" />
-                        <strong>Loading applications…</strong>
+                      <div className="application-history__empty-state">
+                        <Loader label="Loading applications…" />
                         <span>Please wait while your requests are retrieved.</span>
                       </div>
                     </td>

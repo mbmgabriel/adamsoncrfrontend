@@ -27,6 +27,7 @@ function Login() {
   const privacyAndTerms = () => (
     <CustomModal
       title="Privacy and Terms of Use"
+      className="login-modal login-modal--privacy" keyboard scrollable
       size="xl"
       onClose={() => setPrivacyModal(false)}
     >
@@ -62,7 +63,8 @@ function Login() {
   const accountReset = () => (
     <CustomModal
       title="Account Reset or Reactivation"
-      size="xl"
+      className="login-modal" keyboard scrollable
+      size="lg"
       onClose={() => setAccountResetModal(false)}
     >
       <div className="account_reset">
@@ -108,63 +110,71 @@ function Login() {
   return (
     <div className="login_container">
       <div className="login_logo">
-        <img src={Logo} alt="logo" className="logo" />
+        <img src={Logo} alt="Adamson University Center for Research and Development" className="logo" />
         <h1 className="text-center login_title">Research Management Portal</h1>
       </div>
       <div className="login_form_container">
         <Form className="login_form" onSubmit={login}>
-          <h3>Welcome Back! Please Sign In your credentials to start.</h3>
+          <div className="login_form_heading">
+            <h2>Welcome back</h2>
+            <p>Sign in with your credentials to get started.</p>
+          </div>
 
-          <Form.Group style={{ position: "relative" }}>
+          <Form.Group className="login_field" controlId="login-username">
             <Form.Label>Username</Form.Label>
             <Form.Control
               className="password_input form-control-login"
               type="text"
-              placeholder="(Enter you username)"
+              placeholder="Enter your username"
+              autoComplete="username"
               onChange={(e) => setUsername(e.target.value)}
             />
-            <span className="input_icon">
+            <span className="input_icon" aria-hidden="true">
               <FaUser />
             </span>
           </Form.Group>
 
-          <Form.Group style={{ position: "relative" }}>
+          <Form.Group className="login_field" controlId="login-password">
             <Form.Label>Password</Form.Label>
             <Form.Control
               className="password_input form-control-login"
               type={showPassword ? "text" : "password"}
-              placeholder="(Enter you password)"
+              placeholder="Enter your password"
+              autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
             />
-            <span
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
               className="show_password_icon"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <FaEye /> : <FaEyeSlash />}
-            </span>
-            <span className="input_icon">
+              {showPassword ? <FaEye aria-hidden="true" /> : <FaEyeSlash aria-hidden="true" />}
+            </button>
+            <span className="input_icon" aria-hidden="true">
               <FaLock />
             </span>
           </Form.Group>
           <div>
-            <p className="forgot_password" onClick={() => setForgotPasswordModal(true)}>Forgot Password?</p>
+            <button type="button" className="forgot_password" onClick={() => setForgotPasswordModal(true)}>Forgot Password?</button>
           </div>
 
           <Button className="primary" type="submit"> Sign In</Button>
-          <Button className="secondary">Sign In with Outlook</Button>
+          <Button type="button" className="secondary">Sign In with Outlook</Button>
 
-          <div className="between">
-            <span
+          <div className="login_help">
+            <button type="button"
               onClick={() => setPrivacyModal(true)}
               className="login-hover">
               Privacy and Terms of Use
-            </span>
-            <span
+            </button>
+            <button type="button"
               onClick={() => setAccountResetModal(true)}
-              className="text-end login-hover"
+              className="login-hover"
             >
               Account Reset or Reactivation
-            </span>
+            </button>
           </div>
         </Form>
       </div>

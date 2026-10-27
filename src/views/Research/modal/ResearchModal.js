@@ -1,7 +1,6 @@
-import usePagination from "../../../hooks/usePagination";
-import Pagination from "../../../components/PaginationComponent/Pagination";
 import React from "react";
-import { Modal, Button, Tab, Tabs, Table, Badge, Spinner } from "react-bootstrap";
+import { Modal, Button, Tab, Tabs, Table, Badge } from "react-bootstrap";
+import Loader from '../../../components/Loader/Loader';
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { BASE_URL } from "../../../constants/url";
 import { formatDisplayName } from "../../../utils/formatName";
@@ -95,7 +94,6 @@ const EmptySection = ({ message }) => (
 );
 
 const ResearchModal = ({ showModal, handleClose, research }) => {
-  const { displayedItems: investigators, ...pagination } = usePagination(research?.research_investigators || [], `${showModal}:${research?.id}`);
   return (
     <Modal
       show={showModal}
@@ -114,9 +112,8 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
       </Modal.Header>
       <Modal.Body className="research-detail-body">
         {!research ? (
-          <div className="research-detail-loading" role="status">
-            <Spinner animation="border" size="sm" />
-            <span>Loading proposal details...</span>
+          <div className="research-detail-loading">
+            <Loader label="Loading proposal details…" />
           </div>
         ) : (
           <Tabs defaultActiveKey="general" className="research-detail-tabs" fill>
@@ -259,7 +256,7 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {investigators.map((investigator, index) => (
+                      {research.research_investigators.map((investigator, index) => (
                         <tr key={`${investigator.id_number}-${index}`}>
                           <td>{investigator.id_number || "Not available"}</td>
                           <td>{investigator.name || "Not available"}</td>
@@ -271,7 +268,6 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
                       ))}
                     </tbody>
                   </Table>
-                  <Pagination currentPage={pagination.page} onPageChange={pagination.setPage} {...pagination} />
                 </div>
               ) : (
                 <EmptySection message="No investigators are listed." />

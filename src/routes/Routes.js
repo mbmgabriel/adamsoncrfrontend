@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Loader from '../components/Loader/Loader';
 import {
   BrowserRouter as Router,
   Switch
@@ -29,7 +30,7 @@ export default function Routing() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="portal-loader-page"><Loader /></div>;
   }
 
   return (

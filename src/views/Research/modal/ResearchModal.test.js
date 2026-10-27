@@ -73,3 +73,21 @@ test("shows an empty state without a progress bar when no endorsements exist", (
   expect(panel.textContent).toContain("No endorsements are available.");
   expect(panel.querySelector('[role="progressbar"]')).toBeNull();
 });
+
+test("shows all investigators without pagination even beyond ten entries", () => {
+  const investigators = Array.from({ length: 12 }, (_, index) => ({
+    id_number: `ID-${index + 1}`, name: `Investigator ${index + 1}`,
+  }));
+  act(() => root.render(
+    <ResearchModal showModal handleClose={() => {}}
+      research={{ id: 1, title: "Research proposal", research_investigators: investigators }} />
+  ));
+  const tab = Array.from(document.querySelectorAll('[role="tab"]'))
+    .find((element) => element.textContent === "Investigators");
+  act(() => tab.click());
+  const panel = document.getElementById(tab.getAttribute("aria-controls"));
+  expect(panel.querySelectorAll('tbody tr')).toHaveLength(12);
+  expect(panel.textContent).toContain('Investigator 12');
+  expect(panel.querySelector('[aria-label="Table pagination"]')).toBeNull();
+  expect(panel.textContent).not.toContain('per page');
+});

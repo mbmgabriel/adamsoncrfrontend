@@ -40,19 +40,19 @@ function ForgotPassword({ onHide }) {
               Your current password remains active until you change it.
             </p>
             <Row className='center'>
-              <Col sm={12} md={5}>
+              <Col sm={12} md={12}>
                 <div className='forgot_password_form'>
-                  <Form.Group>
+                  <Form.Group controlId="recovery-first-name">
                     <Form.Label>First Name</Form.Label>
-                    <Form.Control name="firstName" placeholder="(Enter your first name)" />
+                    <Form.Control autoComplete="given-name" name="firstName" placeholder="(Enter your first name)" />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group controlId="recovery-last-name">
                     <Form.Label>Last Name</Form.Label>
-                    <Form.Control name="lastName" placeholder="(Enter your last name)" />
+                    <Form.Control autoComplete="family-name" name="lastName" placeholder="(Enter your last name)" />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group controlId="recovery-email">
                     <Form.Label>Email</Form.Label>
-                    <Form.Control name="email" placeholder="(Enter your email)" />
+                    <Form.Control type="email" autoComplete="email" name="email" placeholder="(Enter your email)" />
                   </Form.Group>
                 </div>
                 <div className="between mt-5">
@@ -73,7 +73,8 @@ function ForgotPassword({ onHide }) {
                 onChange={setOtp}
                 numInputs={6}
                 inputStyle="otp_input"
-                renderSeparator={<span>&nbsp; &nbsp; &nbsp;</span>}
+                containerStyle="login-otp"
+                renderSeparator={null}
                 renderInput={(props) => <input {...props} />}
               />
             </div>
@@ -85,15 +86,15 @@ function ForgotPassword({ onHide }) {
           <div>
             <p>Enter your new password.</p>
             <Row className='center'>
-              <Col sm={12} md={5}>
+              <Col sm={12} md={12}>
                 <div className='forgot_password_form'>
-                  <Form.Group>
+                  <Form.Group controlId="recovery-password">
                     <Form.Label>New Password</Form.Label>
-                    <Form.Control name="password" placeholder="(Enter your password)" />
+                    <Form.Control type="password" autoComplete="new-password" name="password" placeholder="(Enter your password)" />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group controlId="recovery-password-confirmation">
                     <Form.Label>Re-Type New Password</Form.Label>
-                    <Form.Control name="retypePassword" placeholder="(Re-type your password)" />
+                    <Form.Control type="password" autoComplete="new-password" name="retypePassword" placeholder="(Re-type your password)" />
                   </Form.Group>
                 </div>
                 <div className="between mt-5">
@@ -128,7 +129,8 @@ function ForgotPassword({ onHide }) {
   return (
     <CustomModal
       title={stepTitles[step]}
-      size="xl" onClose={onHide}>
+      className="login-modal" keyboard scrollable
+      size="lg" onClose={onHide}>
       {renderStep()}
     </CustomModal>
   );
