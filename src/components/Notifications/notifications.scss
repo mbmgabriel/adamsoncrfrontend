@@ -31,6 +31,12 @@
 .notification-feed .notification-count { display: inline-flex; align-items: center; border-radius: 20px; background: #e8f5ed; color: #006b3c; padding: 4px 10px; font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; white-space: nowrap; }
 .notification-feed .notification-count.is-current { background: #f0f3f7; color: #64768a; }
 .notification-feed-body { padding: 0; }
+.notification-holder .notification-feed-body {
+  max-height: min(360px, 50vh);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
 .notification-feed-footer { display: flex; justify-content: flex-end; padding: 13px 24px; border-top: 1px solid #e8edf3; }
 .notification-feed .notification-view-all { display: inline-flex; align-items: center; gap: 8px; color: #006b3c; font-size: 13px; font-weight: 600; text-decoration: none; }
 .notification-view-all:hover { text-decoration: underline; }

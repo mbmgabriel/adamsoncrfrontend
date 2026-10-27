@@ -60,14 +60,16 @@ const getRepresentativeName = (endorsement) => {
 const getEndorsementStatus = (endorsement) =>
   endorsement.status || endorsement.StatusTable?.status || "Pending";
 
-const isEndorsed = (endorsement) =>
-  Number(endorsement.status_id) === 6 ||
-  getEndorsementStatus(endorsement).toLowerCase() === "endorsed";
+const isEndorsementComplete = (endorsement) =>
+  [2, 6].includes(Number(endorsement.status_id)) ||
+  ["endorsed", "approved", "completed"].includes(
+    String(getEndorsementStatus(endorsement)).trim().toLowerCase()
+  );
 
 const getProgressState = (endorsement) => {
-  if (isEndorsed(endorsement)) return "complete";
+  if (isEndorsementComplete(endorsement)) return "complete";
 
-  const status = getEndorsementStatus(endorsement).toLowerCase();
+  const status = String(getEndorsementStatus(endorsement)).trim().toLowerCase();
   if (
     Number(endorsement.status_id) === 5 ||
     status.includes("revis") ||
@@ -165,9 +167,9 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
               {research.endorsements?.length ? (
                 <div className="research-endorsement-progress">
                   {(() => {
-                    const endorsedCount = research.endorsements.filter(isEndorsed).length;
+                    const completedCount = research.endorsements.filter(isEndorsementComplete).length;
                     const progress = Math.round(
-                      (endorsedCount / research.endorsements.length) * 100
+                      (completedCount / research.endorsements.length) * 100
                     );
 
                     return (
@@ -175,7 +177,7 @@ const ResearchModal = ({ showModal, handleClose, research }) => {
                         <div className="research-endorsement-progress__summary-text">
                           <strong>Endorsement progress</strong>
                           <span>
-                            {endorsedCount} of {research.endorsements.length} endorsed
+                            {completedCount} of {research.endorsements.length} complete
                           </span>
                         </div>
                         <div

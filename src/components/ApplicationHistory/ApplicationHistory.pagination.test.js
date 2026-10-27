@@ -53,3 +53,18 @@ test('retains disabled page controls and correct counts for an empty table', () 
   expect(previous().disabled).toBe(true);
   expect(next().disabled).toBe(true);
 });
+
+test('print actions do not open the row or intercept keyboard activation', () => {
+  const onSelect = jest.fn();
+  const onPrint = jest.fn();
+  act(() => root.render(<ApplicationHistory applications={applications.slice(0, 1)} title="Applications"
+    showCreate={false} onSelect={onSelect} onPrint={onPrint} canPrint={() => true} />));
+  const button = container.querySelector('.application-history__print-button');
+  act(() => button.click());
+  expect(onPrint).toHaveBeenCalledWith(applications[0]);
+  expect(onSelect).not.toHaveBeenCalled();
+  const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+  act(() => button.dispatchEvent(event));
+  expect(event.defaultPrevented).toBe(false);
+  expect(onSelect).not.toHaveBeenCalled();
+});

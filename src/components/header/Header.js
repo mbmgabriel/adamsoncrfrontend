@@ -1,7 +1,5 @@
 import React from 'react'
 import Logo from '../../assets/image/crd-logo.png'
-import { IoIosSearch } from "react-icons/io";
-import { Form, InputGroup } from 'react-bootstrap'
 import { useHistory } from 'react-router-dom'; 
 import { toast } from 'react-toastify';
 
@@ -39,16 +37,6 @@ function Header({ activeHeader }) {
           </div>
         </div>
 
-        <div className='search-div'>
-          <InputGroup>
-            <InputGroup.Text><IoIosSearch className='icon' /></InputGroup.Text>
-            <Form.Control
-              className='header-search'
-              placeholder="(Search within AdU-CRD REMAP)"
-              aria-label="Search within AdU-CRD REMAP"
-            />
-          </InputGroup>
-        </div>
       </div>
 
       <nav className='header_nav' aria-label='Primary navigation'>
