@@ -15,13 +15,13 @@ export class UserContextProvider extends Component {
 
   refreshUser = async () => {
     await this.setState({loading: true})
-    const id = localStorage.getItem("id")
+    const id = localStorage.getItem("account_id") || localStorage.getItem("id")
     let response = await new Auth().profile(id)
     if(response.ok) {
       localStorage.setItem('role_id', response?.data?.role_id)
       let user = response?.data
 
-      user.role = user?.UserAccount?.role_name
+      user.role = user?.UserRole?.role_name || user?.UserAccount?.role_name
       switch (user.role) {
         case "Administrator":
           user.userId = user?.UserAccount?.user_id

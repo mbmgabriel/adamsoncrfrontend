@@ -92,6 +92,7 @@ export function ResearcherSection({
   setValue,
   departments = [],
   departmentsLoading = false,
+  savedAffiliation = null,
 }) {
   const researcherLabel = isMain
     ? "Researcher 1 (Main Author)"
@@ -112,6 +113,8 @@ export function ResearcherSection({
     .filter((item) => item.dept_desc === college)
     .map((item) => item.dept_name)
     .filter(Boolean))];
+  if (savedAffiliation?.college && !colleges.includes(savedAffiliation.college)) colleges.push(savedAffiliation.college);
+  if (college === savedAffiliation?.college && savedAffiliation?.dept && !departmentOptions.includes(savedAffiliation.dept)) departmentOptions.push(savedAffiliation.dept);
   const enabled = isMain || Boolean(researcherEnabled);
   const fieldErrors = errors?.[index] || {};
 
@@ -489,6 +492,7 @@ function ApplicationForm() {
   const history = useHistory();
   const revisionId = new URLSearchParams(window.location.search).get("revise");
   const [revisionDocuments, setRevisionDocuments] = useState([]);
+  const [savedAffiliations, setSavedAffiliations] = useState([]);
   const [isMinorRevision, setIsMinorRevision] = useState(false);
   const [revisionReady, setRevisionReady] = useState(!revisionId);
   const userContext = useContext(UserContext);
@@ -705,6 +709,7 @@ function ApplicationForm() {
         setIsMinorRevision(minorRevision);
         setRevisionDocuments(research.ResearchDocuments || []);
         const investigators = research.ResearchInvestigators || [];
+        setSavedAffiliations(investigators.map(({college,dept}) => ({college,dept})));
         reset({
           ...createDefaultValues(),
           title: research.title,
@@ -1066,6 +1071,7 @@ function ApplicationForm() {
                       setValue={setValue}
                       departments={departments}
                       departmentsLoading={departmentsLoading}
+                      savedAffiliation={savedAffiliations[index]}
                     />
                   ))}
                 </div>

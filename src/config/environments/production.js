@@ -1,4 +1,6 @@
+import { PRODUCTION_API_URL } from '../productionSettings';
+
 const productionConfig = {
-  API: 'https://adamsoncr.tekteachlms.com',
+  API: PRODUCTION_API_URL,
 };
 export default productionConfig;

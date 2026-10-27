@@ -11,6 +11,8 @@ import Auth from "../api/Auth";
 import { UserContext } from "../context/UserContext";
 import { formatDisplayName } from "../utils/formatName";
 
+import { getLandingPath } from '../utils/userLanding';
+
 function Login() {
   const userContext = useContext(UserContext);
   const { refreshUser } = userContext.data
@@ -100,7 +102,9 @@ function Login() {
       window.localStorage.setItem("id", response.data.UserAccount.user_id)
       window.localStorage.setItem("name", user)
       window.localStorage.setItem("role", response.data.UserAccount.role_name)
-      history.push("/dashboard")
+      window.localStorage.setItem("account_id", response.data.UserAccount.user_account_id || response.data.UserAccount.user_id)
+      if (response.data.UserAccount.role_id) window.localStorage.setItem("role_id", response.data.UserAccount.role_id)
+      history.push(getLandingPath(response.data.UserAccount.role_name))
       refreshUser()
     } else {
       alert(response.network_error ? response.data.message : "Login Failed: " + response.data.message)

@@ -19,7 +19,11 @@ import ResearchProposalsChart from "../../components/DashboardCharts/ResearchPro
 import PresentedResearchChart from "../../components/DashboardCharts/PresentedResearchChart";
 import PublishedResearchChart from "../../components/DashboardCharts/PublishedResearchChart";
 
+import { useSiteContent } from '../../context/SiteContentContext';
+import SiteAnnouncements from '../../components/SiteContent/SiteAnnouncements';
+
 function Dashboard() {
+  const announcements = useSiteContent().filter(row => row.kind === 'announcement');
   const history = useHistory();
   const role_id = localStorage.getItem("role_id");
   const roleName = (localStorage.getItem("role") || "").toLowerCase();
@@ -168,6 +172,7 @@ function Dashboard() {
   return (
     <MainContainer activeHeader={"Home"}>
       <div className="home">
+        <SiteAnnouncements announcements={announcements} />
         <section className="dashboard-actions">
           <div className="dashboard-section-heading">
             <span>Workspace</span>
@@ -189,7 +194,7 @@ function Dashboard() {
         <div className="center notification-holder">
           <Notifications />
         </div>
-        {!isResearcherRole && (
+        {!isResearcherRole && roleName !== "administrator" && (
           <section className="graph-containers dashboard-analytics">
             <div className="dashboard-analytics-header">
               <div>

@@ -102,10 +102,13 @@ export default class Auth extends Base {
   }
 
   fetchDepartments = async () => {
-    return this.sendRequest ({
-      path: `/api/v1/departments/all`,
-      method: 'GET'
-    })
+    const response = await this.sendRequest({path: '/api/v1/organization', method: 'GET'});
+    if (!response.ok) return response;
+    const { colleges = [], departments = [] } = response.data;
+    return {...response, data: {Departments: [
+      ...departments.map(d => ({...d, dept_desc: colleges.find(c => c.id === d.college_id)?.name || d.dept_desc})),
+      ...colleges.filter(c => !departments.some(d => d.college_id === c.id)).map(c => ({college_id:c.id, dept_desc:c.name, dept_name:''})),
+    ]}};
   }
 
   fetchStatus = async () => {

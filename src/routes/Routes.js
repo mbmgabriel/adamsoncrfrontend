@@ -20,12 +20,15 @@ import ResearchIncentiveReview from "../views/ResearchIncentive/ResearchIncentiv
 import ResearchPresentationAssistance from "../views/ResearchPresentationAssistance/ResearchPresentationAssistance";
 import ResearchPresentationAssistanceReview from "../views/ResearchPresentationAssistance/ResearchPresentationAssistanceReview";
 
+import AdminPortal from '../views/Admin/AdminPortal';
+import ContentPage from '../views/Content/ContentPage';
+import { SiteContentProvider } from '../context/SiteContentContext';
+
 export default function Routing() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = window.localStorage.getItem("token");
-    console.log({ token });
+
     setLoading(false);
   }, []);
 
@@ -36,22 +39,25 @@ export default function Routing() {
   return (
     <div className="content">
       <Router>
-        <NotificationProvider>
+        <SiteContentProvider><NotificationProvider>
         <Switch>
           <AuthRoute path='/' exact component={Login} />
+          <PrivateRoute path='/admin' component={AdminPortal} />
+          <PrivateRoute path='/faqs' exact component={ContentPage} />
+          <PrivateRoute path='/about-crd' exact component={ContentPage} />
           <PrivateRoute path='/notifications' exact component={Notifications} />
-          <PrivateRoute path='/dashboard' exact component={Dashboard} />
-          <PrivateRoute path='/new-research-application' exact component={NewResearchApplication} />
-          <PrivateRoute path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
-          <PrivateRoute path='/research-incentive-review' exact component={ResearchIncentiveReview} />
-          <PrivateRoute path='/research-presentation-assistance' exact component={ResearchPresentationAssistance} />
-          <PrivateRoute path='/research-presentation-assistance-review' exact component={ResearchPresentationAssistanceReview} />
-          <PrivateRoute path='/research' exact component={Research} />
-          <PrivateRoute path='/research-application-review' exact component={ResearchApplicationReviewTable} />
-          <PrivateRoute path='/review-form/:id' exact component={ResearchApplicationReviewForm} />
-          <PrivateRoute path='/urb-review' exact component={URBReviewBoard} />
+          <PrivateRoute workspaceOnly path='/dashboard' exact component={Dashboard} />
+          <PrivateRoute workspaceOnly path='/new-research-application' exact component={NewResearchApplication} />
+          <PrivateRoute workspaceOnly path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
+          <PrivateRoute workspaceOnly path='/research-incentive-review' exact component={ResearchIncentiveReview} />
+          <PrivateRoute workspaceOnly path='/research-presentation-assistance' exact component={ResearchPresentationAssistance} />
+          <PrivateRoute workspaceOnly path='/research-presentation-assistance-review' exact component={ResearchPresentationAssistanceReview} />
+          <PrivateRoute workspaceOnly path='/research' exact component={Research} />
+          <PrivateRoute workspaceOnly path='/research-application-review' exact component={ResearchApplicationReviewTable} />
+          <PrivateRoute workspaceOnly path='/review-form/:id' exact component={ResearchApplicationReviewForm} />
+          <PrivateRoute workspaceOnly path='/urb-review' exact component={URBReviewBoard} />
         </Switch>
-        </NotificationProvider>
+        </NotificationProvider></SiteContentProvider>
       </Router>
     </div>
   );

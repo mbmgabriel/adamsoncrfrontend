@@ -1,24 +1,17 @@
-import {ENV, ENV_LIST} from './env';
+import { ENV, ENV_LIST } from './env';
 import developmentConfig from './environments/development';
 import productionConfig from './environments/production';
 import stagingConfig from './environments/staging';
+import { validateProductionSettings } from './productionSettings';
 
-let config = {};
-
-switch (ENV) {
-  case ENV_LIST.DEVELOPMENT:
-    config = developmentConfig;
-    break;
-  case ENV_LIST.STAGING:
-    config = stagingConfig;
-    break;
-  case ENV_LIST.PRODUCTION:
-    config = productionConfig;
-    break;
-  default:
-    break;
-}
-
-// config.FROALA_LICENSE = 'lSA3D-17E4B3A2B2E1F1rXYb1VPUGRHYZNRJd1JVOOb1HAc1zG2B1A2D3D6B1A1C4E1A3=='
-
+const environments = {
+  [ENV_LIST.DEVELOPMENT]: developmentConfig,
+  [ENV_LIST.STAGING]: stagingConfig,
+  [ENV_LIST.PRODUCTION]: productionConfig,
+};
+const config = {
+  ...environments[ENV],
+  API: process.env.REACT_APP_API_URL || environments[ENV].API,
+};
+if (ENV === ENV_LIST.PRODUCTION) validateProductionSettings(config.API);
 export default config;

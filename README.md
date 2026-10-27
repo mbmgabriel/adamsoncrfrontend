@@ -1,70 +1,55 @@
-# Getting Started with Create React App
+# Local Admin Portal
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The admin portal runs at [http://localhost:3002/admin](http://localhost:3002/admin).
+Use the local test account **local_admin** with password **password**. These credentials are for the local fixture database.
 
-## Available Scripts
+Start the backend first in `../adamsoncr` using its README, then start this frontend:
 
-In the project directory, you can run:
+```bash
+npm start
+```
 
-### `npm start`
+The ignored `.env.development.local` should contain:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```dotenv
+REACT_APP_ENV=development
+REACT_APP_API_URL=http://localhost:3000
+PORT=3002
+HOST=127.0.0.1
+BROWSER=none
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Copy `.env.development.example` to `.env.development.local` to reproduce these settings. `npm start` uses development configuration and the local API by default. `npm run build` validates production configuration; it does not load `.env.development.local`. Production builds reject development/staging targets, HTTP API URLs, and loopback API addresses. `REACT_APP_API_URL` overrides the API URL for the selected environment.
 
-### `npm test`
+Run the backend with `npm run start:development` in `../adamsoncr` for automatic reloads. Both local services listen on the loopback interface. Restart the frontend after changing environment values. The local backend uses the persistent Docker database `adamsoncr_local`; admin edits survive page reloads and service restarts. This configuration does not change hosted data.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Administration includes live totals, user creation and existing-role assignment, colleges, departments, application inspection, website content, and CSV reports. Create a college before its departments, then assign user affiliations. Edit a record and turn **Active** off to deactivate it. Colleges with active departments cannot be deactivated. Historical submissions retain their original affiliation text. Application approval decisions remain with assigned reviewers and directors. Audit records remain stored by the backend.
 
-### `npm run build`
+Content types include homepage, About CRD, FAQs, and announcements. Save with **Published on website** off for a draft; turn it on to publish. Content is plain text. Announcements appear on the dashboard. FAQs and About CRD navigation currently shows an under-development toast, controlled by `src/config/features.js`.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Run frontend checks with:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+CI=true npm test -- --watchAll=false --runInBand
+npm run build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The backend README documents migration and local integration tests.
 
-### `npm run eject`
+## Production release
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Copy `.env.production.example` to the ignored `.env.production.local`, then set the deployed HTTPS API URL. These values are embedded in the browser bundle at build time. Never put passwords, database settings, JWT secrets, or other credentials in frontend environment files.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The committed lockfile fixes dependency versions. The repository's `.npmrc` retains legacy peer resolution because the existing `react-table-v6` package declares older React peers; use the same configuration for installation and CI.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+npm ci
+CI=true npm test -- --watchAll=false --runInBand
+npm run build
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Deploy the resulting `build/` directory to your HTTPS static host. Source maps are disabled for production releases. Configure the host to serve `index.html` for application routes such as `/admin/users` and `/dashboard`, so direct navigation and reloads work. Missing files under `/static/` should return 404. Serve `index.html` with `Cache-Control: no-cache`; hashed files under `/static/` may use `Cache-Control: public, max-age=31536000, immutable`. Revalidate other public files. Do not use `npm start` as the production web server.
 
-## Learn More
+Set the backend's production `FRONTEND_URL` to the exact frontend HTTPS origin for CORS. Follow `../adamsoncr/docs/production-environment.md` for backend secrets, database TLS, reviewed migrations, persistent upload storage, and process management. Keep local fixture accounts and the `adamsoncr_local` database in development only. Frontend changes do not apply backend migrations or deploy either service.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Before release, verify login, admin authorization, application submissions, attachment access, CSV exports, and direct-route reloads against the deployed environment. FAQs and About CRD remain under development until their feature flag is deliberately changed. Production configuration and build checks do not replace a full security review of the backend and hosting environment.
