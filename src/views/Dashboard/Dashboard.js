@@ -162,6 +162,16 @@ function Dashboard() {
         ? approvalCardContent
         : defaultCardContent;
 
+  const quickActions = cardContent.filter(item => item.isVisible !== false);
+  if ([2, 6, 7].includes(Number(role_id))) {
+    quickActions.splice(2, 0, {
+      icon: <MdOutlineScience />,
+      title: "Track approved research, requirements, and project progress.",
+      footer: "Project monitoring",
+      path: "/project-monitoring",
+    });
+  }
+
   const analyticsSummary = [
     { label: "Applications reviewed", value: 35, icon: <MdOutlineRateReview /> },
     { label: "Research proposals", value: 60, icon: <MdOutlineScience /> },
@@ -179,7 +189,7 @@ function Dashboard() {
             <h2>Quick actions</h2>
           </div>
           <div className="card-holder">
-            {cardContent.map((item, index) => (
+            {quickActions.map((item, index) => (
               <CardCustom
                 key={index}
                 icon={item.icon}

@@ -36,6 +36,14 @@ npm run build
 
 The backend README documents migration and local integration tests.
 
+## Project monitoring
+
+Researchers, CRD staff, and directors have a **Project monitoring** dashboard card at `/project-monitoring`. Completed approvals appear once, with the F-CRD-003 checklist and a shared progress bar. Researchers submit PDF, PNG, or JPEG files up to 20 MB; CRD staff and directors update dates, remarks, status, and conditional applicability. Submissions await review before contributing to completion. Earlier file versions and monitoring changes remain available.
+
+Once every applicable requirement is complete, **Download monitoring PDF** exports the saved checklist and **Fill out clearance form** opens F-CRD-006. The researcher saves completion date, college/department, and faculty/student names, then downloads the populated PDF or prints the form. CRD staff and directors can view and print saved clearance details. A blank clearance form can also be printed before saving details, for completion on paper. Office checks, signatures, and dates remain blank for the responsible offices. New requirement submissions can reopen monitoring and lock document exports until review is complete again. Apply both backend monitoring migrations, including `20261029000000-monitoring-clearance.js`.
+
+For local testing, use `.env.development.example` settings and the backend's `adamsoncr_local` database. Fixture usernames are `local_researcher`, `local_crd_staff`, and `local_crd_director`, with password `password`. Apply the backend monitoring migration first. The backend's `docs/project-monitoring.md` describes the APIs, progress calculation, and private file storage.
+
 ## Production release
 
 Copy `.env.production.example` to the ignored `.env.production.local`, then set the deployed HTTPS API URL. These values are embedded in the browser bundle at build time. Never put passwords, database settings, JWT secrets, or other credentials in frontend environment files.
