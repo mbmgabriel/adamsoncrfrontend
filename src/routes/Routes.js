@@ -22,6 +22,8 @@ import ResearchPresentationAssistanceReview from "../views/ResearchPresentationA
 
 import AdminPortal from '../views/Admin/AdminPortal';
 import ContentPage from '../views/Content/ContentPage';
+import ProjectMonitoring from '../views/Monitoring/ProjectMonitoring';
+import ClearanceForm from '../views/Monitoring/ClearanceForm';
 import { SiteContentProvider } from '../context/SiteContentContext';
 
 export default function Routing() {
@@ -47,6 +49,8 @@ export default function Routing() {
           <PrivateRoute path='/about-crd' exact component={ContentPage} />
           <PrivateRoute path='/notifications' exact component={Notifications} />
           <PrivateRoute workspaceOnly path='/dashboard' exact component={Dashboard} />
+          <PrivateRoute workspaceOnly path='/project-monitoring/:id/clearance' exact component={ClearanceForm} />
+          <PrivateRoute workspaceOnly path='/project-monitoring/:id?' exact component={ProjectMonitoring} />
           <PrivateRoute workspaceOnly path='/new-research-application' exact component={NewResearchApplication} />
           <PrivateRoute workspaceOnly path='/research-incentive-request' exact component={ResearchIncentiveRequest} />
           <PrivateRoute workspaceOnly path='/research-incentive-review' exact component={ResearchIncentiveReview} />
