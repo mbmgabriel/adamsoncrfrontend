@@ -19,7 +19,7 @@ HOST=127.0.0.1
 BROWSER=none
 ```
 
-Copy `.env.development.example` to `.env.development.local` to reproduce these settings. `npm start` uses development configuration and the local API by default. `npm run build` validates production configuration; it does not load `.env.development.local`. Production builds reject development/staging targets, HTTP API URLs, and loopback API addresses. `REACT_APP_API_URL` overrides the API URL for the selected environment.
+Create the ignored `.env.development.local` with the settings above. Environment files and templates are not tracked in Git. `npm start` uses development configuration and the local API by default. `npm run build` validates production configuration; it does not load `.env.development.local`. Production builds reject development/staging targets, HTTP API URLs, and loopback API addresses. `REACT_APP_API_URL` overrides the API URL for the selected environment.
 
 Run the backend with `npm run start:development` in `../adamsoncr` for automatic reloads. Both local services listen on the loopback interface. Restart the frontend after changing environment values. The local backend uses the persistent Docker database `adamsoncr_local`; admin edits survive page reloads and service restarts. This configuration does not change hosted data.
 
@@ -42,11 +42,11 @@ Researchers, CRD staff, and directors have a **Project monitoring** dashboard ca
 
 Once every applicable requirement is complete, **Download monitoring PDF** exports the saved checklist and **Fill out clearance form** opens F-CRD-006. The researcher saves completion date, college/department, and faculty/student names, then downloads the populated PDF or prints the form. CRD staff and directors can view and print saved clearance details. A blank clearance form can also be printed before saving details, for completion on paper. Office checks, signatures, and dates remain blank for the responsible offices. New requirement submissions can reopen monitoring and lock document exports until review is complete again. Apply both backend monitoring migrations, including `20261029000000-monitoring-clearance.js`.
 
-For local testing, use `.env.development.example` settings and the backend's `adamsoncr_local` database. Fixture usernames are `local_researcher`, `local_crd_staff`, and `local_crd_director`, with password `password`. Apply the backend monitoring migration first. The backend's `docs/project-monitoring.md` describes the APIs, progress calculation, and private file storage.
+For local testing, use the local environment settings above and the backend's `adamsoncr_local` database. Fixture usernames are `local_researcher`, `local_crd_staff`, and `local_crd_director`, with password `password`. Apply the backend monitoring migration first. The backend's `docs/project-monitoring.md` describes the APIs, progress calculation, and private file storage.
 
 ## Production release
 
-Copy `.env.production.example` to the ignored `.env.production.local`, then set the deployed HTTPS API URL. These values are embedded in the browser bundle at build time. Never put passwords, database settings, JWT secrets, or other credentials in frontend environment files.
+Create the ignored `.env.production.local` with `REACT_APP_ENV=production` and `REACT_APP_API_URL` set to the deployed HTTPS API URL. These values are embedded in the browser bundle at build time. Never put passwords, database settings, JWT secrets, or other credentials in frontend environment files.
 
 The committed lockfile fixes dependency versions. The repository's `.npmrc` retains legacy peer resolution because the existing `react-table-v6` package declares older React peers; use the same configuration for installation and CI.
 
