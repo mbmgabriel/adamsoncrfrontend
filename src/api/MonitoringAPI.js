@@ -1,5 +1,5 @@
 import Base from './Base';
-import { BASE_URL } from '../constants/url';
+import { API_REQUEST_BASE_URL } from '../constants/url';
 
 export default class MonitoringAPI extends Base {
   list = () => this.sendRequest({ path: '/api/v1/monitoring' });
@@ -16,7 +16,7 @@ export default class MonitoringAPI extends Base {
     return this.sendRequest({ path: `/api/v1/monitoring/${id}/items/${itemId}/files`, method: 'POST', data });
   };
   download = async (id, attachment) => {
-    const response = await fetch(`${BASE_URL}/api/v1/monitoring/${id}/files/${attachment.id}`, {
+    const response = await fetch(`${API_REQUEST_BASE_URL}/api/v1/monitoring/${id}/files/${attachment.id}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     if (!response.ok) throw new Error('The attachment could not be downloaded. Please sign in again or retry.');

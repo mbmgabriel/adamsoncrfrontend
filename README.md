@@ -61,3 +61,7 @@ Deploy the resulting `build/` directory to your HTTPS static host. Source maps a
 Set the backend's production `FRONTEND_URL` to the exact frontend HTTPS origin for CORS. Follow `../adamsoncr/docs/production-environment.md` for backend secrets, database TLS, reviewed migrations, persistent upload storage, and process management. Keep local fixture accounts and the `adamsoncr_local` database in development only. Frontend changes do not apply backend migrations or deploy either service.
 
 Before release, verify login, admin authorization, application submissions, attachment access, CSV exports, and direct-route reloads against the deployed environment. FAQs and About CRD remain under development until their feature flag is deliberately changed. Production configuration and build checks do not replace a full security review of the backend and hosting environment.
+
+### Preview against the production API locally
+
+To sign in with production accounts from localhost, set `REACT_APP_ENV=production`, `REACT_APP_API_URL=https://adamsoncr.tekteachlms.com`, and `REACT_APP_USE_API_PROXY=true` in `.env.development.local`, then restart `npm start`. The development server forwards `/api` requests over HTTPS, avoiding production browser CORS restrictions. Uploaded document URLs still target the API host. This flag has no effect in production builds. Requests in this mode use live production data.

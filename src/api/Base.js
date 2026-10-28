@@ -1,8 +1,8 @@
-import { BASE_URL } from '../constants/url';
+import { API_REQUEST_BASE_URL } from '../constants/url';
 
 export default class Base {
   sendRequest = async ({ path, method = 'GET', data = {}, base, headers }) => {
-    let url = base ? base + path : BASE_URL + path;
+    let url = base ? base + path : API_REQUEST_BASE_URL + path;
     const isFormData = data instanceof FormData;
     const token = window.localStorage.getItem("token");
 
