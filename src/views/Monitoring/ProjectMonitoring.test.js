@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { MemoryRouter, Route } from 'react-router-dom';
 import ProjectMonitoring from './ProjectMonitoring';
 import MonitoringAPI from '../../api/MonitoringAPI';
+import { monitoringToday } from '../../utils/monitoringDates';
 jest.mock('../../components/Layout/MainContainer', () => ({ children }) => <div>{children}</div>);
 jest.mock('../../utils/monitoringDocuments', () => ({ createMonitoringPdf: jest.fn(() => ({ save: jest.fn() })) }));
 jest.mock('../../api/MonitoringAPI', () => {
@@ -113,4 +114,54 @@ test('single-page cards preserve full long text for hover and accessible reading
   expect(container.querySelector('.monitoring-project-names').title).toBe(names[0]);
   expect(container.querySelector('[aria-label="Next page"]').disabled).toBe(true);
   expect(container.querySelector('[aria-label="Previous page"]').disabled).toBe(true);
+});
+test('saving refreshes server values without unmounting the checklist or selected editor', async () => {
+  await render(6);
+  const formElement = container.querySelector('form[aria-label="Edit checklist"]');
+  const row = container.querySelector('.monitoring-checklist-row');
+  const progressElement = container.querySelector('progress');
+  let resolveDetail;
+  api.detail.mockImplementationOnce(() => new Promise(resolve => { resolveDetail = resolve; }));
+  await act(async () => formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+  expect(container.querySelector('form[aria-label="Edit checklist"]')).toBe(formElement);
+  expect(container.querySelector('.monitoring-checklist-row')).toBe(row);
+  expect(formElement.querySelector('fieldset').disabled).toBe(true);
+  expect(container.textContent).not.toContain('Loading project monitoring');
+  await act(async () => resolveDetail({ ok: true, data: { project, progress: { ...progress, percent: 67 }, items: [{ ...item, status: 'complete', revision: 3 }], events: [] } }));
+  expect(container.querySelector('form[aria-label="Edit checklist"]')).toBe(formElement);
+  expect(container.querySelector('progress')).toBe(progressElement);
+  expect(progressElement.value).toBe(67);
+  expect(formElement.querySelector('select').value).toBe('complete');
+  expect(formElement.querySelector('fieldset').disabled).toBe(false);
+  await act(async () => formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+  expect(api.update.mock.calls[1][2].revision).toBe(3);
+});
+test('conflicting edits refresh in place and retain the conflict message', async () => {
+  await render(7);
+  const formElement = container.querySelector('form[aria-label="Edit checklist"]');
+  api.update.mockResolvedValueOnce({ ok: false, status: 409, data: { message: 'This requirement changed. Reload the project before saving.' } });
+  api.detail.mockResolvedValueOnce({ ok: true, data: { project, progress, items: [{ ...item, status: 'complete', revision: 4 }], events: [] } });
+  await act(async () => formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+  expect(container.querySelector('form[aria-label="Edit checklist"]')).toBe(formElement);
+  expect(formElement.querySelector('select').value).toBe('complete');
+  expect(container.querySelector('[role=alert]').textContent).toContain('This requirement changed');
+});
+test('marking an undated requirement complete fills and saves the Philippine submitted date', async () => {
+  api.detail.mockResolvedValue({ ok: true, data: { project, progress, items: [{ ...item, status: 'pending', submitted_on: '', returned_on: '' }], events: [] } });
+  await render(6);
+  const formElement = container.querySelector('form[aria-label="Edit checklist"]');
+  const select = formElement.querySelector('select');
+  await act(async () => { select.value = 'complete'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+  expect(formElement.querySelector('input[type=date]').value).toBe(monitoringToday());
+  await act(async () => formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+  expect(api.update).toHaveBeenCalledWith('1', 10, expect.objectContaining({ status: 'complete', submitted_on: monitoringToday() }));
+});
+test('completing a requirement preserves an already recorded submitted date', async () => {
+  await render(7);
+  const formElement = container.querySelector('form[aria-label="Edit checklist"]');
+  const select = formElement.querySelector('select');
+  await act(async () => { select.value = 'complete'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+  expect(formElement.querySelector('input[type=date]').value).toBe('2026-10-26');
+  await act(async () => formElement.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+  expect(api.update).toHaveBeenCalledWith('1', 10, expect.objectContaining({ status: 'complete', submitted_on: '2026-10-26' }));
 });

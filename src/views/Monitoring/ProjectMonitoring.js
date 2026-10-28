@@ -6,6 +6,7 @@ import Loader from '../../components/Loader/Loader';
 import MonitoringAPI from '../../api/MonitoringAPI';
 import './monitoring.scss';
 import { createMonitoringPdf } from '../../utils/monitoringDocuments';
+import { monitoringToday } from '../../utils/monitoringDates';
 
 const api = new MonitoringAPI();
 const statuses = { pending: 'Pending', submitted: 'For review', changes: 'Changes requested', complete: 'Complete', na: 'Not applicable' };
@@ -33,6 +34,7 @@ export default function ProjectMonitoring() {
   const [refresh, setRefresh] = useState(0);
   const [selected, setSelected] = useState(null);
   const selectedRef = useRef(null);
+  const requestScope = useRef(null);
   const [section, setSection] = useState('proposal');
   const [form, setForm] = useState({});
   const [file, setFile] = useState(null);
@@ -42,8 +44,11 @@ export default function ProjectMonitoring() {
 
   useEffect(() => {
     let active = true;
+    const scope = { active: true };
+    requestScope.current = scope;
+    setBusy(false);
     setLoading(true); setError(''); setData(null);
-    if (!allowed) { setLoading(false); return () => { active = false; }; }
+    if (!allowed) { setLoading(false); return () => { active = false; scope.active = false; }; }
     (id ? api.detail(id) : api.list()).then(response => {
       if (!active) return;
       if (!response.ok) { setError(failure(response)); return; }
@@ -54,7 +59,7 @@ export default function ProjectMonitoring() {
         setSelected(chosen?.id); setSection(chosen?.section || 'proposal');
       }
     }).catch(() => { if (active) setError('Cannot connect to project monitoring. Please retry.'); }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
+    return () => { active = false; scope.active = false; };
   }, [id, allowed, editor, refresh]);
 
   const item = data?.items?.find(i => i.id === selected);
@@ -65,16 +70,37 @@ export default function ProjectMonitoring() {
     if (fileInput.current) fileInput.current.value = '';
   }, [item]);
 
+  async function refreshDetail(scope) {
+    const response = await api.detail(id);
+    if (!scope?.active) return;
+    if (!response.ok) throw new Error('The latest checklist could not be loaded. Please retry.');
+    // Replace server values in place; keep the selected row, section, and mounted page.
+    setData(response.data);
+  }
   async function mutate(action) {
+    const scope = requestScope.current;
+    let saved = false;
     setBusy(true); setActionError(''); setNotice('');
     try {
       const response = await action();
-      if (!response.ok) { setActionError(failure(response)); if (response.status === 409) setRefresh(n => n + 1); return; }
-      setNotice(response.data.message); setRefresh(n => n + 1);
-    } catch { setActionError('The operation could not be completed. Please retry.'); }
-    finally { setBusy(false); }
+      if (!scope?.active) return;
+      if (!response.ok) {
+        setActionError(failure(response));
+        if (response.status === 409) await refreshDetail(scope);
+        return;
+      }
+      saved = true;
+      setNotice(response.data.message);
+      await refreshDetail(scope);
+    } catch {
+      if (scope?.active) setActionError(saved ? 'Your changes were saved, but the latest checklist could not be loaded. Refresh the checklist before making more changes.' : 'The operation could not be completed. Please retry.');
+    } finally { if (scope?.active) setBusy(false); }
   }
-  function save(event) { event.preventDefault(); mutate(() => api.update(id, item.id, form)); }
+  function save(event) {
+    event.preventDefault();
+    const values = { ...form, submitted_on: form.status === 'complete' && !form.submitted_on ? monitoringToday() : form.submitted_on };
+    mutate(() => api.update(id, item.id, values));
+  }
   function submitFile(event) {
     event.preventDefault();
     if (!file) { setActionError('Choose a file to upload.'); return; }
@@ -88,10 +114,12 @@ export default function ProjectMonitoring() {
   }
 
   async function exportChecklist() {
+    const scope = requestScope.current;
     setBusy(true); setActionError('');
     try {
       const response = await api.exportChecklist(id);
-      if (!response.ok) { setActionError(failure(response)); if (response.status === 409) setRefresh(n => n + 1); return; }
+      if (!scope?.active) return;
+      if (!response.ok) { setActionError(failure(response)); if (response.status === 409) await refreshDetail(scope); return; }
       createMonitoringPdf(response.data).save(`research-monitoring-${response.data.project.research_id}.pdf`);
     } catch { setActionError('The monitoring PDF could not be prepared. Please retry.'); }
     finally { setBusy(false); }
@@ -135,7 +163,7 @@ export default function ProjectMonitoring() {
       <div className="monitoring-layout"><section className="monitoring-checklist" aria-label="Research process checklist"><div className="monitoring-table-head"><span>Research process</span><span>Submitted</span><span>Returned</span></div>{data.items.filter(row => row.section === section).map(row => <button className="monitoring-checklist-row" key={row.id} disabled={busy} aria-pressed={selected === row.id} onClick={() => { setSelected(row.id); setNotice(''); }}><span><strong>{row.label}</strong><Badge status={row.status} /></span><span>{day(row.submitted_on)}</span><span>{day(row.returned_on)}</span></button>)}</section>
       {item && <aside className="monitoring-detail" aria-label="Selected requirement"><Badge status={item.status} /><h3>{item.label}</h3><p className="monitoring-muted">{item.requires_file ? 'Researcher document' : 'CRD process record'}{item.conditional ? ' · Conditional requirement' : ' · Required'}</p>
         <section className="monitoring-files" aria-label="Attachment history"><h4>Attachments</h4>{item.attachments.length ? item.attachments.map((attachment, index) => <div className="monitoring-file" key={attachment.id}><FiFileText aria-hidden="true" /><div><strong>{attachment.filename}</strong><span>{index === 0 ? 'Latest' : 'Previous version'} · {day(attachment.created_at)} · {Math.max(1, Math.ceil(attachment.byte_size / 1024))} KB</span></div><button aria-label={`Download ${attachment.filename}`} disabled={downloading !== null} onClick={() => download(attachment)}>{downloading === attachment.id ? '…' : <FiDownload />}</button></div>) : <p className="monitoring-muted">No attachment submitted.</p>}</section>
-        {editor ? <form onSubmit={save} aria-label="Edit checklist"><fieldset disabled={busy}><div className="monitoring-dates"><label>Date submitted<input type="date" value={form.submitted_on || ''} onChange={e => setForm({ ...form, submitted_on: e.target.value })} /></label><label>Date returned<input type="date" value={form.returned_on || ''} onChange={e => setForm({ ...form, returned_on: e.target.value })} /></label></div><label>Remarks<textarea rows="4" maxLength="5000" value={form.remarks || ''} onChange={e => setForm({ ...form, remarks: e.target.value })} placeholder="Feedback, consultation notes, or reason for applicability…" required={['na','changes'].includes(form.status)} /></label><label>Checklist status<select value={form.status || 'pending'} onChange={e => setForm({ ...form, status: e.target.value })}>{Object.entries(statuses).filter(([key]) => key !== 'na' || item.conditional).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><button type="submit" className="monitoring-primary">{busy ? 'Saving…' : 'Save checklist'}</button></fieldset></form> : <><h4><FiMessageSquare /> CRD remarks</h4><p className="monitoring-remarks">{item.remarks || 'No remarks yet.'}</p><p className="monitoring-muted">Submitted: {day(item.submitted_on)}<br />Returned: {day(item.returned_on)}</p>{item.requires_file && item.status !== 'na' ? <form onSubmit={submitFile} aria-label="Submit requirement"><fieldset disabled={busy}><label>{item.attachments.length ? 'Attach a new version' : 'Attach requirement'}<input ref={fileInput} type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => setFile(e.target.files[0] || null)} /></label><p className="monitoring-muted">PDF, PNG, or JPEG · Maximum 20 MB. New versions require CRD review.</p><button type="submit" className="monitoring-primary"><FiUpload /> {busy ? 'Submitting…' : 'Submit file'}</button></fieldset></form> : <p className="monitoring-muted">This record is maintained by CRD staff and the director.</p>}</>}
+        {editor ? <form onSubmit={save} aria-label="Edit checklist"><fieldset disabled={busy}><div className="monitoring-dates"><label>Date submitted<input type="date" value={form.submitted_on || ''} onChange={e => setForm({ ...form, submitted_on: e.target.value })} /></label><label>Date returned<input type="date" value={form.returned_on || ''} onChange={e => setForm({ ...form, returned_on: e.target.value })} /></label></div><label>Remarks<textarea rows="4" maxLength="5000" value={form.remarks || ''} onChange={e => setForm({ ...form, remarks: e.target.value })} placeholder="Feedback, consultation notes, or reason for applicability…" required={['na','changes'].includes(form.status)} /></label><label>Checklist status<select value={form.status || 'pending'} onChange={e => setForm({ ...form, status: e.target.value, submitted_on: e.target.value === 'complete' && !form.submitted_on ? monitoringToday() : form.submitted_on })}>{Object.entries(statuses).filter(([key]) => key !== 'na' || item.conditional).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><button type="submit" className="monitoring-primary">{busy ? 'Saving…' : 'Save checklist'}</button></fieldset></form> : <><h4><FiMessageSquare /> CRD remarks</h4><p className="monitoring-remarks">{item.remarks || 'No remarks yet.'}</p><p className="monitoring-muted">Submitted: {day(item.submitted_on)}<br />Returned: {day(item.returned_on)}</p>{item.requires_file && item.status !== 'na' ? <form onSubmit={submitFile} aria-label="Submit requirement"><fieldset disabled={busy}><label>{item.attachments.length ? 'Attach a new version' : 'Attach requirement'}<input ref={fileInput} type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={e => setFile(e.target.files[0] || null)} /></label><p className="monitoring-muted">PDF, PNG, or JPEG · Maximum 20 MB. New versions require CRD review.</p><button type="submit" className="monitoring-primary"><FiUpload /> {busy ? 'Submitting…' : 'Submit file'}</button></fieldset></form> : <p className="monitoring-muted">This record is maintained by CRD staff and the director.</p>}</>}
       </aside>}</div>
       <section className="monitoring-history"><h2>Monitoring history</h2><div className="monitoring-history-content" role="region" aria-label="Monitoring history entries" tabIndex="0">{data.events.map(event => <article key={event.id}><span className="monitoring-history-dot" /><div><strong>{event.action === 'enrolled' ? 'Research entered project monitoring' : event.action === 'file_submitted' ? 'Requirement file submitted' : event.action === 'clearance_saved' ? 'Researcher clearance details saved' : 'Checklist updated'}</strong><p>{data.items.find(i => i.id === event.item_id)?.label}</p><span>{event.actor_name || 'System'} · {day(event.created_at)}</span>{event.changes && event.action === 'checklist_updated' && <details><summary>View changes</summary><ChangeDetails changes={event.changes} /></details>}</div></article>)}</div></section>
     </>}
