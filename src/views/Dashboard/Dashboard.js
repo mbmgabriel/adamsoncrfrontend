@@ -7,6 +7,7 @@ import {
   MdMenuBook,
   MdOutlineRateReview,
   MdOutlineScience,
+  MdOutlineChecklist,
 } from "react-icons/md";
 import { FaFileCircleCheck } from "react-icons/fa6";
 import { FaChalkboardTeacher } from "react-icons/fa";
@@ -93,6 +94,7 @@ function Dashboard() {
       icon: <MdMenuBook />,
       title: "View presented and/or published researches.",
       footer: "Presented/Published Researches",
+      isVisible: false, // Temporarily hidden while under development.
       onClick: () => toast.info("Research presentation and publication is under development."),
     },
   ];
@@ -114,6 +116,7 @@ function Dashboard() {
       icon: <MdCoPresent />,
       title: "View presented and/or published researches.",
       footer: "Presented/Published Researches",
+      isVisible: false, // Temporarily hidden while under development.
       onClick: () => toast.info("Research presentation and publication is under development."),
     },
     {
@@ -165,7 +168,7 @@ function Dashboard() {
   const quickActions = cardContent.filter(item => item.isVisible !== false);
   if ([2, 6, 7].includes(Number(role_id))) {
     quickActions.splice(2, 0, {
-      icon: <MdOutlineScience />,
+      icon: <MdOutlineChecklist />,
       title: "Track approved research, requirements, and project progress.",
       footer: "Project monitoring",
       path: "/project-monitoring",

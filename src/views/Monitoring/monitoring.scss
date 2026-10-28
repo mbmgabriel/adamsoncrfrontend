@@ -66,3 +66,35 @@
 }
 .clearance-details,.clearance-offices{background:white;border:1px solid #dbe5f0;border-radius:12px;padding:25px;margin:22px 0}.clearance-fields{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:18px 0;section{min-width:0}h3{font-size:15px;margin-bottom:18px}}.clearance-readonly{padding:12px;background:#f3f6fa;border:1px solid #dbe5f0;border-radius:6px;font-size:15px;font-weight:500;overflow-wrap:anywhere}.clearance-office-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0;article{padding:20px;border:1px solid #dbe5f0;border-radius:8px}h3{font-size:15px;line-height:1.5}p{white-space:pre-wrap;font-size:13px;color:#526b89;line-height:1.8}span{display:block;border-top:1px dashed #c6d3e2;margin-top:25px;padding-top:12px;font-size:12px;color:#627a95}}.clearance-page fieldset:disabled input{color:#365371;opacity:1;background:#f5f7fa}
 @media(max-width:700px){.clearance-fields,.clearance-office-grid{grid-template-columns:1fr}.clearance-toolbar{align-items:flex-start;flex-direction:column}.clearance-details,.clearance-offices{padding:18px}}
+
+// Keep project cards aligned regardless of title, author, or affiliation length.
+.monitoring-projects { grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:1fr; }
+.monitoring-project-card {
+  display:flex; flex-direction:column; min-width:0;
+  .monitoring-project-top { min-height:28px; align-items:center; }
+  .monitoring-progress { margin-top:auto; padding-top:22px; }
+  .monitoring-progress>.monitoring-muted { display:flex; flex-direction:column; gap:5px; line-height:1.6; }
+  .monitoring-open { align-self:flex-start; font-size:13px; margin-top:18px; }
+}
+.monitoring-project-info {
+  min-width:0;
+  h2,.monitoring-project-names,.monitoring-project-affiliation {
+    display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere;
+  }
+  h2 { -webkit-line-clamp:2; line-clamp:2; font-size:18px; line-height:1.5; min-height:3em; margin:18px 0 12px; }
+  .monitoring-project-names { -webkit-line-clamp:2; line-clamp:2; font-size:14px; line-height:1.6; min-height:3.2em; margin:0 0 10px; }
+  .monitoring-project-affiliation { -webkit-line-clamp:3; line-clamp:3; font-size:12px; line-height:1.65; min-height:4.95em; margin:0; }
+}
+.monitoring-pagination {
+  display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  margin-top:24px; padding-top:20px; border-top:1px solid #dbe5f0; color:#58708e; font-size:12px;
+  p { margin:0; }
+  >div { display:flex; align-items:center; gap:16px; }
+  button { display:inline-flex; align-items:center; gap:6px; font-size:13px; min-height:40px; }
+  button:disabled { background:#f0f3f7; }
+}
+@media(max-width:1000px) { .monitoring-projects { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) {
+  .monitoring-projects { grid-template-columns:minmax(0,1fr); }
+  .monitoring-pagination { justify-content:center; >div { width:100%; justify-content:space-between; gap:8px; } }
+}

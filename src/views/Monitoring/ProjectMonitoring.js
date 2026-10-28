@@ -25,6 +25,7 @@ export default function ProjectMonitoring() {
   const allowed = [2, 6, 7].includes(role);
   const editor = [6, 7].includes(role);
   const [data, setData] = useState(null);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
@@ -96,11 +97,34 @@ export default function ProjectMonitoring() {
     finally { setBusy(false); }
   }
 
+  const projects = data?.projects || [];
+  const pageSize = 6;
+  const pageCount = Math.max(1, Math.ceil(projects.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleProjects = projects.slice(pageStart, pageStart + pageSize);
+
   return <MainContainer compactHeader activeHeader="Project monitoring"><main className="monitoring-page">
     <Link className="monitoring-back" to={id ? '/project-monitoring' : '/dashboard'}><FiArrowLeft /> {id ? 'All monitored projects' : 'Dashboard'}</Link>
-    <header className="monitoring-heading"><div><span className="monitoring-eyebrow">F-CRD-003 · Research lifecycle</span><h1>Project monitoring</h1><p>{editor ? 'Review submissions and maintain research monitoring checklists.' : 'Track your approved projects, submit requirements, and view CRD feedback.'}</p></div><FiClipboard aria-hidden="true" /></header>
+    <header className="monitoring-heading"><div><span className="monitoring-eyebrow">F-CRD-003 · Research lifecycle</span><h1>Project monitoring</h1><p>{editor ? 'Review submissions and maintain research monitoring checklists.' : 'Track your approved projects, submit requirements, and view CRD feedback.'}</p></div></header>
     {!allowed ? <p role="alert">Project monitoring is available to researchers, CRD staff, and directors.</p> : loading ? <div className="monitoring-loading"><Loader label="Loading project monitoring…" /></div> : error ? <div className="monitoring-empty" role="alert"><h2>Unable to load project monitoring</h2><p>{error}</p><button onClick={() => setRefresh(n => n + 1)}>Retry</button></div> : !id ? <>
-      {!data?.projects?.length ? <div className="monitoring-empty"><FiClipboard /><h2>No projects in monitoring yet</h2><p>Research appears here after the director completes its approval.</p></div> : <div className="monitoring-projects">{data.projects.map(project => <article className="monitoring-project-card" key={project.id}><div className="monitoring-project-top"><span>Research #{project.research_id}</span><span className={`monitoring-badge ${project.progress.finished ? 'is-complete' : 'is-submitted'}`}>{project.progress.finished ? 'Monitoring complete' : 'In progress'}</span></div><h2>{project.snapshot.title}</h2><p>{project.snapshot.researchers.join(', ')}</p><p className="monitoring-muted">{[project.snapshot.college, project.snapshot.department].filter(Boolean).join(' / ')}</p><Progress value={project.progress} /><Link className="monitoring-primary monitoring-open" to={`/project-monitoring/${project.id}`}>{editor ? 'Review checklist' : 'View project'} <FiArrowRight /></Link></article>)}</div>}
+      {!projects.length ? <div className="monitoring-empty"><FiClipboard /><h2>No projects in monitoring yet</h2><p>Research appears here after the director completes its approval.</p></div> : <>
+        <div className="monitoring-projects">{visibleProjects.map(project => {
+          const names = project.snapshot.researchers.join(', ');
+          const affiliation = [project.snapshot.college, project.snapshot.department].filter(Boolean).join(' / ');
+          return <article className="monitoring-project-card" key={project.id}>
+            <div className="monitoring-project-top"><span>Research #{project.research_id}</span><span className={`monitoring-badge ${project.progress.finished ? 'is-complete' : 'is-submitted'}`}>{project.progress.finished ? 'Monitoring complete' : 'In progress'}</span></div>
+            <div className="monitoring-project-info"><h2 title={project.snapshot.title}>{project.snapshot.title}</h2><p className="monitoring-project-names" title={names}>{names || 'Researcher not specified'}</p><p className="monitoring-project-affiliation monitoring-muted" title={affiliation}>{affiliation || 'Affiliation not specified'}</p></div>
+            <Progress value={project.progress} />
+            <Link className="monitoring-primary monitoring-open" to={`/project-monitoring/${project.id}`}>{editor ? 'Review checklist' : 'View project'} <FiArrowRight /></Link>
+          </article>;
+        })}</div>
+        <nav className="monitoring-pagination" aria-label="Project pagination">
+          <p aria-live="polite">Showing <strong>{pageStart + 1}–{Math.min(pageStart + pageSize, projects.length)}</strong> of <strong>{projects.length}</strong> projects</p>
+          <div><button aria-label="Previous page" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><FiArrowLeft /> Previous</button><span>Page {currentPage} of {pageCount}</span><button aria-label="Next page" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Next <FiArrowRight /></button></div>
+        </nav>
+      </>}
+
     </> : data?.project?.id === Number(id) && <>
       <section className="monitoring-summary"><div className="monitoring-project-top"><span>Research #{data.project.research_id} · {data.project.form_version}</span><span className={`monitoring-badge ${data.progress.finished ? 'is-complete' : 'is-submitted'}`}>{data.progress.finished ? 'Monitoring complete' : 'In progress'}</span></div><h2>{data.project.snapshot.title}</h2><dl className="monitoring-metadata"><div><dt>Researcher/s</dt><dd>{data.project.snapshot.researchers.join(', ')}</dd></div><div><dt>College / Department</dt><dd>{[data.project.snapshot.college, data.project.snapshot.department].filter(Boolean).join(' / ') || '—'}</dd></div><div><dt>Duration of research</dt><dd>{duration(data.project.snapshot.duration)}</dd></div></dl><Progress value={data.progress} /><div className="monitoring-summary-footer"><Link to={`/review-form/${data.project.research_id}`}>View approval record</Link><span>{data.progress.submitted} for review · {data.progress.changes} changes requested</span></div></section>
       {data.progress.finished ? <section className="monitoring-completed" aria-label="Completed monitoring documents"><div className="monitoring-completed-info"><span className="monitoring-completed-icon" aria-hidden="true"><FiCheckCircle /></span><div><span className="monitoring-completed-label">Ready for clearance</span><h3>Monitoring complete</h3><p>Download the verified checklist or prepare your researcher clearance form.</p></div></div><div className="clearance-actions"><button disabled={busy} onClick={exportChecklist}><FiDownload /> {busy ? 'Preparing…' : 'Download monitoring PDF'}</button><Link className="monitoring-primary" to={`/project-monitoring/${id}/clearance`}>{editor ? 'View clearance form' : 'Fill out clearance form'} <FiArrowRight /></Link></div></section> : <p className="monitoring-muted">Checklist PDF and the researcher clearance form become available when all applicable monitoring requirements are complete.</p>}

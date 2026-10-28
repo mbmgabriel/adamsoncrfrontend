@@ -87,3 +87,30 @@ test('incomplete monitoring keeps the final documents locked', async () => {
   expect(container.querySelector('a[href="/project-monitoring/1/clearance"]')).toBeNull();
   expect(container.textContent).toContain('become available when all applicable monitoring requirements are complete');
 });
+test('projects paginate in groups of six with no duplicates or skipped records', async () => {
+  const projects = Array.from({ length: 14 }, (_, i) => ({ ...project, id: i + 1, research_id: i + 101, snapshot: { ...project.snapshot, title: `Project ${i + 1}` } }));
+  api.list.mockResolvedValue({ ok: true, data: { projects } });
+  await render(6, '/project-monitoring');
+  expect(container.querySelectorAll('.monitoring-project-card')).toHaveLength(6);
+  expect(container.querySelector('[aria-label="Previous page"]').disabled).toBe(true);
+  expect(container.querySelector('.monitoring-pagination').textContent).toContain('Showing 1–6 of 14 projects');
+  await act(async () => container.querySelector('[aria-label="Next page"]').click());
+  expect(container.querySelectorAll('.monitoring-project-card')).toHaveLength(6);
+  expect(container.querySelector('.monitoring-project-card h2').textContent).toBe('Project 7');
+  expect(container.querySelector('.monitoring-pagination').textContent).toContain('Page 2 of 3');
+  await act(async () => container.querySelector('[aria-label="Next page"]').click());
+  expect(container.querySelectorAll('.monitoring-project-card')).toHaveLength(2);
+  expect(container.querySelector('.monitoring-project-card h2').textContent).toBe('Project 13');
+  expect(container.querySelector('[aria-label="Next page"]').disabled).toBe(true);
+  await act(async () => container.querySelector('[aria-label="Previous page"]').click());
+  expect(container.querySelector('.monitoring-project-card h2').textContent).toBe('Project 7');
+});
+test('single-page cards preserve full long text for hover and accessible reading', async () => {
+  const title = 'Very long research title '.repeat(20), names = ['Researcher with a very long full name '.repeat(10)];
+  api.list.mockResolvedValue({ ok: true, data: { projects: [{ ...project, snapshot: { ...project.snapshot, title, researchers: names } }] } });
+  await render(2, '/project-monitoring');
+  expect(container.querySelector('.monitoring-project-card h2').title).toBe(title);
+  expect(container.querySelector('.monitoring-project-names').title).toBe(names[0]);
+  expect(container.querySelector('[aria-label="Next page"]').disabled).toBe(true);
+  expect(container.querySelector('[aria-label="Previous page"]').disabled).toBe(true);
+});
